@@ -32,6 +32,12 @@ import { WorkerWorkPage } from './pages/worker/WorkerWorkPage';
 import { WorkerOnboarding } from './pages/worker/WorkerOnboarding';
 import { WorkerToolBank } from './pages/worker/WorkerToolBank';
 import { WorkerEmergencyAid } from './pages/worker/WorkerEmergencyAid';
+import { WorkerJobsPage } from './pages/worker/WorkerJobsPage';
+import { WorkerNotificationsPage } from './pages/worker/WorkerNotificationsPage';
+import { WorkerProfilePage } from './pages/worker/WorkerProfilePage';
+import { WorkerEarningsPage } from './pages/worker/WorkerEarningsPage';
+import { WorkerSupportPage } from './pages/worker/WorkerSupportPage';
+import { WorkerJobDetails } from './pages/worker/WorkerJobDetails';
 
 import { SocietyManagerDashboard } from './pages/admin/SocietyManagerDashboard';
 import { FederationManagerDashboard } from './pages/admin/FederationManagerDashboard';
@@ -214,13 +220,37 @@ function AppContent() {
                 onOpenEmergencyAid={() => setCurrentTab('worker_emergency')}
                 onOpenVerification={() => setCurrentTab('worker_verification')}
                 onOpenCommunity={() => setCurrentTab('worker_community')}
-                onOpenMyWork={() => setCurrentTab('worker_work')}
+                onOpenMyWork={() => setCurrentTab('worker_jobs')}
+                onOpenNotifications={() => setCurrentTab('worker_notifications')}
+                onOpenProfile={() => setCurrentTab('worker_profile')}
+                onOpenEarnings={() => setCurrentTab('worker_earnings')}
+                onOpenSupport={() => setCurrentTab('worker_support')}
+                onOpenJobs={() => setCurrentTab('worker_jobs')}
               />
             )}
 
             {currentTab === 'worker_work' && (
               <WorkerWorkPage />
             )}
+            
+            {currentTab === 'worker_jobs' && (
+              <WorkerJobsPage onOpenJobDetails={(id) => setCurrentTab(`worker_job_details_${id}`)} />
+            )}
+
+            {currentTab.startsWith('worker_job_details_') && (
+              <WorkerJobDetails 
+                jobId={currentTab.replace('worker_job_details_', '')} 
+                onBack={() => setCurrentTab('worker_jobs')} 
+              />
+            )}
+            
+            {currentTab === 'worker_notifications' && <WorkerNotificationsPage />}
+            
+            {currentTab === 'worker_profile' && <WorkerProfilePage />}
+            
+            {currentTab === 'worker_earnings' && <WorkerEarningsPage />}
+            
+            {currentTab === 'worker_support' && <WorkerSupportPage />}
 
             {currentTab === 'worker_community' && (
               <CommunityBookingsPage />

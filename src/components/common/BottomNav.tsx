@@ -13,6 +13,7 @@ import {
   Briefcase,
   Sliders,
   ShieldAlert,
+  User,
 } from 'lucide-react';
 
 interface BottomNavProps {
@@ -74,11 +75,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     );
   }
 
-  // 2. WORKER MOBILE NAVIGATION: Home, My Work, Community, Tool Bank
+  // 2. WORKER MOBILE NAVIGATION
   if (currentRole === 'worker') {
     return (
       <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[#FCF9F3]/95 backdrop-blur-md border-t border-[#E8E2D5] shadow-float safe-bottom">
-        <div className="flex items-center justify-around px-2 h-16 max-w-lg mx-auto">
+        <div className="flex items-center justify-around px-1 h-16 max-w-lg mx-auto">
           <button
             onClick={() => onSelectTab('worker_dashboard')}
             className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
@@ -90,23 +91,23 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           </button>
 
           <button
-            onClick={() => onSelectTab('worker_work')}
+            onClick={() => onSelectTab('worker_jobs')}
             className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
-              currentTab === 'worker_work' ? 'text-[#324F66] font-bold' : 'text-[#77736B] hover:text-[#292824]'
+              currentTab === 'worker_jobs' ? 'text-[#324F66] font-bold' : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
             <Briefcase className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px]">My Work</span>
+            <span className="text-[10px]">Jobs</span>
           </button>
-
+          
           <button
-            onClick={() => onSelectTab('worker_community')}
+            onClick={() => onSelectTab('worker_earnings')}
             className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
-              currentTab === 'worker_community' ? 'text-[#324F66] font-bold' : 'text-[#77736B] hover:text-[#292824]'
+              currentTab === 'worker_earnings' ? 'text-[#364A32] font-bold' : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
-            <Users className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px]">Community</span>
+            <DollarSign className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px]">Earnings</span>
           </button>
 
           <button
@@ -116,7 +117,17 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             }`}
           >
             <Wrench className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px]">Tool Bank</span>
+            <span className="text-[10px]">Tools</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('worker_profile')}
+            className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
+              currentTab === 'worker_profile' ? 'text-[#3D314C] font-bold' : 'text-[#77736B] hover:text-[#292824]'
+            }`}
+          >
+            <User className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px]">Profile</span>
           </button>
         </div>
       </nav>
