@@ -29,6 +29,7 @@ import { ActiveJobSOSModal } from './pages/customer/ActiveJobSOSModal';
 import { CommunityBookingsPage } from './pages/community/CommunityBookingsPage';
 import { WorkerDashboard } from './pages/worker/WorkerDashboard';
 import { WorkerWorkPage } from './pages/worker/WorkerWorkPage';
+import { WorkerCommunityPage } from './pages/worker/WorkerCommunityPage';
 import { WorkerOnboarding } from './pages/worker/WorkerOnboarding';
 import { WorkerToolBank } from './pages/worker/WorkerToolBank';
 import { WorkerEmergencyAid } from './pages/worker/WorkerEmergencyAid';
@@ -220,27 +221,40 @@ function AppContent() {
                 onOpenEmergencyAid={() => setCurrentTab('worker_emergency')}
                 onOpenVerification={() => setCurrentTab('worker_verification')}
                 onOpenCommunity={() => setCurrentTab('worker_community')}
-                onOpenMyWork={() => setCurrentTab('worker_jobs')}
+                onOpenMyWork={() => setCurrentTab('worker_work')}
                 onOpenNotifications={() => setCurrentTab('worker_notifications')}
                 onOpenProfile={() => setCurrentTab('worker_profile')}
                 onOpenEarnings={() => setCurrentTab('worker_earnings')}
-                onOpenSupport={() => setCurrentTab('worker_support')}
-                onOpenJobs={() => setCurrentTab('worker_jobs')}
+                onOpenSupport={() => setCurrentTab('worker_profile')}
+                onOpenJobs={() => setCurrentTab('worker_work')}
               />
             )}
 
             {currentTab === 'worker_work' && (
-              <WorkerWorkPage />
+              <WorkerWorkPage
+                initialTab="jobs"
+                onOpenJobDetails={(id) => setCurrentTab(`worker_job_details_${id}`)}
+              />
             )}
             
             {currentTab === 'worker_jobs' && (
-              <WorkerJobsPage onOpenJobDetails={(id) => setCurrentTab(`worker_job_details_${id}`)} />
+              <WorkerWorkPage
+                initialTab="jobs"
+                onOpenJobDetails={(id) => setCurrentTab(`worker_job_details_${id}`)}
+              />
+            )}
+
+            {currentTab === 'worker_earnings' && (
+              <WorkerWorkPage
+                initialTab="earnings"
+                onOpenJobDetails={(id) => setCurrentTab(`worker_job_details_${id}`)}
+              />
             )}
 
             {currentTab.startsWith('worker_job_details_') && (
               <WorkerJobDetails 
                 jobId={currentTab.replace('worker_job_details_', '')} 
-                onBack={() => setCurrentTab('worker_jobs')} 
+                onBack={() => setCurrentTab('worker_work')} 
               />
             )}
             
@@ -248,12 +262,12 @@ function AppContent() {
             
             {currentTab === 'worker_profile' && <WorkerProfilePage />}
             
-            {currentTab === 'worker_earnings' && <WorkerEarningsPage />}
-            
-            {currentTab === 'worker_support' && <WorkerSupportPage />}
+            {currentTab === 'worker_support' && <WorkerProfilePage />}
 
             {currentTab === 'worker_community' && (
-              <CommunityBookingsPage />
+              <WorkerCommunityPage
+                onOpenEmergencyAid={() => setCurrentTab('worker_emergency')}
+              />
             )}
 
             {currentTab === 'worker_tools' && <WorkerToolBank />}

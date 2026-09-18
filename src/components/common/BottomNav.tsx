@@ -75,8 +75,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     );
   }
 
-  // 2. WORKER MOBILE NAVIGATION
+  // 2. WORKER MOBILE NAVIGATION: Home, My Work, Community, Tool Bank, Profile
   if (currentRole === 'worker') {
+    const isMyWorkActive =
+      currentTab === 'worker_work' ||
+      currentTab === 'worker_jobs' ||
+      currentTab === 'worker_earnings' ||
+      currentTab.startsWith('worker_job_details_');
+
     return (
       <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[#FCF9F3]/95 backdrop-blur-md border-t border-[#E8E2D5] shadow-float safe-bottom">
         <div className="flex items-center justify-around px-1 h-16 max-w-lg mx-auto">
@@ -91,33 +97,33 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           </button>
 
           <button
-            onClick={() => onSelectTab('worker_jobs')}
+            onClick={() => onSelectTab('worker_work')}
             className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
-              currentTab === 'worker_jobs' ? 'text-[#324F66] font-bold' : 'text-[#77736B] hover:text-[#292824]'
+              isMyWorkActive ? 'text-[#324F66] font-bold' : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
             <Briefcase className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px]">Jobs</span>
+            <span className="text-[10px]">My Work</span>
           </button>
-          
+
           <button
-            onClick={() => onSelectTab('worker_earnings')}
+            onClick={() => onSelectTab('worker_community')}
             className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
-              currentTab === 'worker_earnings' ? 'text-[#364A32] font-bold' : 'text-[#77736B] hover:text-[#292824]'
+              currentTab === 'worker_community' ? 'text-[#364A32] font-bold' : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
-            <DollarSign className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px]">Earnings</span>
+            <Users className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px]">Community</span>
           </button>
 
           <button
             onClick={() => onSelectTab('worker_tools')}
             className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
-              currentTab === 'worker_tools' ? 'text-[#324F66] font-bold' : 'text-[#77736B] hover:text-[#292824]'
+              currentTab === 'worker_tools' ? 'text-[#80432E] font-bold' : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
             <Wrench className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px]">Tools</span>
+            <span className="text-[10px]">Tool Bank</span>
           </button>
 
           <button

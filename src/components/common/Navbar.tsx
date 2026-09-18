@@ -182,7 +182,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   onClick={() => onSelectTab('worker_work')}
                   className={`px-3 py-1.5 rounded-xl transition-colors cursor-pointer ${
-                    currentTab === 'worker_work'
+                    currentTab === 'worker_work' || currentTab === 'worker_jobs' || currentTab === 'worker_earnings' || currentTab.startsWith('worker_job_details_')
                       ? 'text-[#1C2C3A] bg-[#E4EDF4] font-bold'
                       : 'hover:text-[#292824] hover:bg-[#F3EEE4]'
                   }`}
@@ -208,6 +208,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                 >
                   Tool Bank
+                </button>
+                <button
+                  onClick={() => onSelectTab('worker_profile')}
+                  className={`px-3 py-1.5 rounded-xl transition-colors cursor-pointer ${
+                    currentTab === 'worker_profile'
+                      ? 'text-[#1C2C3A] bg-[#E4EDF4] font-bold'
+                      : 'hover:text-[#292824] hover:bg-[#F3EEE4]'
+                  }`}
+                >
+                  Profile
                 </button>
               </>
             )}
