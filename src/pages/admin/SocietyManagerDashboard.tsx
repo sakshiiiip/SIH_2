@@ -4,6 +4,8 @@ import { Badge } from '../../components/common/Badge';
 import { Worker } from '../../types';
 import { WorkerProfileModal } from '../customer/WorkerProfileModal';
 import { SocietyWorkerMap } from '../../components/admin/SocietyWorkerMap';
+import { AddWorkerModal } from '../../components/admin/AddWorkerModal';
+import { workerAuthService } from '../../services/workerAuthService';
 import {
   Building2,
   ShieldCheck,
@@ -17,6 +19,12 @@ import {
   HardHat,
   FileCheck,
   Eye,
+  EyeOff,
+  UserPlus,
+  Key,
+  Copy,
+  Check,
+  Lock,
 } from 'lucide-react';
 
 interface SocietyManagerDashboardProps {
@@ -40,6 +48,12 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
   const [workerSearch, setWorkerSearch] = useState('');
   const [selectedTrade, setSelectedTrade] = useState<string>('All');
   const [selectedWorkerForProfile, setSelectedWorkerForProfile] = useState<Worker | null>(null);
+  const [isAddWorkerOpen, setIsAddWorkerOpen] = useState(false);
+  const [showCredentialsDesk, setShowCredentialsDesk] = useState(false);
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
+  const [copiedCredentialId, setCopiedCredentialId] = useState<string | null>(null);
+
+  const registeredWorkerAccounts = workerAuthService.getRegisteredWorkers();
 
   // Society-scoped data
   const currentSocietyId = currentUser.societyId || 'soc_green';
@@ -262,28 +276,155 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
               />
             </div>
 
-            {/* Trade Filters */}
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-              {['All', 'Plumbing', 'Electrical', 'Carpentry', 'Cleaning', 'Appliance Repairs'].map((trade) => (
-                <button
-                  key={trade}
-                  type="button"
-                  onClick={() => setSelectedTrade(trade)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap cursor-pointer transition-colors ${
-                    selectedTrade === trade
-                      ? 'bg-[#FAEDE8] text-[#80432E] border border-[#F3C5B8]'
-                      : 'bg-[#FCF9F3] text-[#77736B] border border-[#E8E2D5] hover:text-[#292824]'
-                  }`}
-                >
-                  {trade}
-                </button>
-              ))}
+            {/* Right side actions: Credentials View & + Add Worker */}
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setShowCredentialsDesk(!showCredentialsDesk)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  showCredentialsDesk
+                    ? 'bg-[#80432E] text-white shadow-xs'
+                    : 'bg-[#FAEDE8] text-[#80432E] border border-[#F3C5B8] hover:bg-[#F3C5B8]'
+                }`}
+              >
+                <Key className="w-3.5 h-3.5" />
+                <span>{showCredentialsDesk ? 'Show Cards View' : 'Credentials & Passwords'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsAddWorkerOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#B37055] hover:bg-[#9C583E] text-white shadow-xs cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>+ Add Worker</span>
+              </button>
             </div>
           </div>
 
-          {/* Workers Grid with Progressive Disclosure */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredWorkers.map((w) => {
+          {/* CREDENTIALS DESK TABLE VIEW */}
+          {showCredentialsDesk ? (
+            <div className="bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl p-4 sm:p-5 space-y-4 shadow-card">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8E2D5]">
+                <div>
+                  <h3 className="text-sm font-bold text-[#292824] flex items-center gap-2">
+                    <Key className="w-4 h-4 text-[#80432E]" />
+                    <span>Worker Credentials Ledger ({registeredWorkerAccounts.length} Accounts)</span>
+                  </h3>
+                  <p className="text-xs text-[#77736B] mt-0.5">
+                    Share registered Worker ID and Temporary Password with workers for their first-time login.
+                  </p>
+                </div>
+                <Badge variant="pending" size="sm">Manager Vault</Badge>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[#E8E2D5] text-[#77736B] font-bold uppercase text-[10px] tracking-wider">
+                      <th className="py-2.5 px-3">Worker</th>
+                      <th className="py-2.5 px-3">Worker ID</th>
+                      <th className="py-2.5 px-3">Registered Email</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3">Temporary Password</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E8E2D5]">
+                    {registeredWorkerAccounts.map((acc) => {
+                      const isRevealed = revealedPasswords[acc.workerId];
+                      const isCopied = copiedCredentialId === acc.workerId;
+                      return (
+                        <tr key={acc.workerId} className="hover:bg-[#F3EEE4]/60 transition-colors">
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-2.5">
+                              {acc.avatar ? (
+                                <img
+                                  src={acc.avatar}
+                                  alt={acc.name}
+                                  className="w-8 h-8 rounded-full object-cover border border-[#E8E2D5]"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-[#FAEDE8] text-[#80432E] flex items-center justify-center font-bold text-xs">
+                                  {acc.name[0]}
+                                </div>
+                              )}
+                              <div>
+                                <strong className="font-bold text-[#292824] block">{acc.name}</strong>
+                                <span className="text-[11px] text-[#80432E]">{acc.skills[0]}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 font-mono font-bold text-[#292824]">
+                            {acc.workerId}
+                          </td>
+                          <td className="py-3 px-3 text-[#524E47]">
+                            {acc.email}
+                          </td>
+                          <td className="py-3 px-3">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                acc.firstLogin
+                                  ? 'bg-[#FFF3D6] text-[#8F6B00] border border-[#F5E2B3]'
+                                  : 'bg-[#E6ECE4] text-[#364A32] border border-[#CFDDD0]'
+                              }`}
+                            >
+                              {acc.firstLogin ? 'Temp Pass' : 'Activated'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3">
+                            {acc.firstLogin ? (
+                              <div className="flex items-center gap-1.5 font-mono">
+                                <span className="bg-[#FAEDE8] px-2 py-1 rounded-lg border border-[#F3C5B8] text-[#80432E] font-bold">
+                                  {isRevealed ? (acc.tempPasswordPlain || 'temp123') : '••••••••'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setRevealedPasswords((prev) => ({
+                                      ...prev,
+                                      [acc.workerId]: !isRevealed,
+                                    }))
+                                  }
+                                  className="p-1 text-[#9A958B] hover:text-[#524E47]"
+                                  aria-label={isRevealed ? 'Hide' : 'Show'}
+                                >
+                                  {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[#9A958B] text-[11px] italic flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67]" />
+                                Set by worker
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const pass = acc.tempPasswordPlain || (acc.firstLogin ? 'temp123' : '[Private]');
+                                navigator.clipboard.writeText(`Worker ID: ${acc.workerId}\nEmail: ${acc.email}\nPassword: ${pass}`);
+                                setCopiedCredentialId(acc.workerId);
+                                setTimeout(() => setCopiedCredentialId(null), 2000);
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-[#E8E2D5] hover:border-[#80432E] text-[#80432E] font-bold text-[11px] transition-colors"
+                            >
+                              {isCopied ? <Check className="w-3 h-3 text-[#364A32]" /> : <Copy className="w-3 h-3" />}
+                              <span>{isCopied ? 'Copied' : 'Copy All'}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            /* Workers Grid with Progressive Disclosure */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredWorkers.map((w) => {
               const approvedDocs = (w.documents || []).filter((d) => d.status === 'APPROVED').length;
               const totalDocs = (w.documents || []).length;
               return (
@@ -329,8 +470,9 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
               );
             })}
           </div>
+        )}
 
-          {filteredWorkers.length === 0 && (
+        {filteredWorkers.length === 0 && !showCredentialsDesk && (
             <div className="p-8 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center text-xs text-[#77736B]">
               No workers matched your search filter.
             </div>
@@ -521,6 +663,14 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
         worker={selectedWorkerForProfile}
         isOpen={selectedWorkerForProfile !== null}
         onClose={() => setSelectedWorkerForProfile(null)}
+      />
+
+      {/* SOCIETY MANAGER: ADD WORKER MODAL */}
+      <AddWorkerModal
+        isOpen={isAddWorkerOpen}
+        onClose={() => setIsAddWorkerOpen(false)}
+        societyId={currentSocietyId}
+        societyName={currentSocietyName}
       />
     </div>
   );

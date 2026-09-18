@@ -28,6 +28,8 @@ import {
   useBackgroundParallax,
 } from '../../hooks/useCursorReactive';
 
+import { WorkerLoginScreen } from './WorkerLoginScreen';
+
 interface RoleLoginScreenProps {
   role: UserRole;
   onBack: () => void;
@@ -264,376 +266,282 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
             }}
           />
 
-          {/* Header */}
-          <div className="relative z-10 space-y-2 pb-4 border-b border-[#E8E2D5]">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 rounded-2xl bg-[#F3EEE4] border border-[#E8E2D5] flex items-center justify-center shadow-xs">
-                {config.icon}
+          {/* Header (Only for non-worker roles, since WorkerLoginScreen renders its own header) */}
+          {role !== 'worker' && (
+            <div className="relative z-10 space-y-2 pb-4 border-b border-[#E8E2D5]">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-[#F3EEE4] border border-[#E8E2D5] flex items-center justify-center shadow-xs">
+                  {config.icon}
+                </div>
+                <Badge variant={config.badgeVariant} size="sm">
+                  {config.badge}
+                </Badge>
               </div>
-              <Badge variant={config.badgeVariant} size="sm">
-                {config.badge}
-              </Badge>
-            </div>
 
-            <div>
-              <h1 className="font-display text-2xl sm:text-3xl text-[#292824] tracking-tight leading-tight">
-                {config.title}
-              </h1>
-              <p className="text-xs sm:text-sm text-[#77736B] mt-0.5 leading-relaxed font-normal">
-                {config.subtitle}
-              </p>
+              <div>
+                <h1 className="font-display text-2xl sm:text-3xl text-[#292824] tracking-tight leading-tight">
+                  {config.title}
+                </h1>
+                <p className="text-xs sm:text-sm text-[#77736B] mt-0.5 leading-relaxed font-normal">
+                  {config.subtitle}
+                </p>
+              </div>
             </div>
-          </div>
-
+          )}
           {/* ========================================================================= */}
           {/* MULTI-ACCOUNT SELECTOR SECTION */}
           {/* ========================================================================= */}
 
-          {/* 1. WORKER MULTIPLE ACCOUNTS LIST */}
-          {role === 'worker' && (
-            <div className="space-y-3.5 relative z-10">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#324F66] flex items-center gap-1.5">
-                  <HardHat className="w-4 h-4 text-[#324F66]" />
-                  <span>Choose Worker Profile <span className="font-mono">({filteredWorkerAccounts.length})</span></span>
-                </span>
+          {role === 'worker' ? (
+            <WorkerLoginScreen 
+              onSuccess={(userObj) => {
+                login('worker', userObj);
+                onSuccess();
+              }} 
+            />
+          ) : (
+            <>
+              {/* 2. SOCIETY MANAGER MULTIPLE ACCOUNTS LIST */}
+              {role === 'society_manager' && (
+                <div className="space-y-3.5 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#80432E] flex items-center gap-1.5">
+                      <Building2 className="w-4 h-4 text-[#80432E]" />
+                      <span>Choose Society Manager ({filteredManagerAccounts.length} Societies)</span>
+                    </span>
+                  </div>
 
-                {/* Trade Filter Pills */}
-                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
-                  {['All', 'Plumbing', 'Electrical', 'Carpentry', 'Cleaning', 'Appliance Repairs'].map((trade) => (
-                    <button
-                      key={trade}
-                      onClick={() => setWorkerTradeFilter(trade)}
-                      className={`px-2 py-0.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors cursor-pointer ${
-                        workerTradeFilter === trade
-                          ? 'bg-[#E4EDF4] text-[#324F66] border border-[#B8CBDD]'
-                          : 'bg-[#FCF9F3] text-[#77736B] border border-[#E8E2D5] hover:text-[#292824]'
-                      }`}
-                    >
-                      {trade}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                  {/* Search Bar for Managers */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-[#9A958B] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search society (Green Residency, Lakeview...) or manager name..."
+                      value={accountSearch}
+                      onChange={(e) => setAccountSearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-xs font-medium text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#80432E]"
+                    />
+                  </div>
 
-              {/* Search Bar for Workers */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-[#9A958B] absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search by worker name, skill, society, or phone..."
-                  value={accountSearch}
-                  onChange={(e) => setAccountSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-xs font-medium text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#537895]"
-                />
-              </div>
+                  {/* Managers Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+                    {filteredManagerAccounts.map((m) => {
+                      const isSelected = selectedUser.id === m.id;
+                      return (
+                        <div
+                          key={m.id}
+                          onClick={() => handleSelectManager(m)}
+                          className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                            isSelected
+                              ? 'bg-[#FAEDE8] border-2 border-[#B37055] shadow-xs'
+                              : 'bg-[#FCF9F3] border-[#E8E2D5] hover:border-[#F3C5B8] hover:bg-[#F3EEE4]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <img
+                              src={m.avatar}
+                              alt={m.name}
+                              className="w-10 h-10 rounded-full object-cover border border-[#E8E2D5] shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1">
+                                <strong className="text-xs font-bold text-[#292824] truncate block">
+                                  {m.name}
+                                </strong>
+                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#B37055] shrink-0" />}
+                              </div>
+                              <div className="text-[11px] text-[#80432E] font-semibold truncate">
+                                {m.societyName}
+                              </div>
+                              <div className="text-[10px] text-[#77736B] truncate">
+                                {m.workersCount} Assigned Workers
+                              </div>
+                            </div>
+                          </div>
 
-              {/* Workers Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
-                {filteredWorkerAccounts.map((w) => {
-                  const isSelected = selectedUser.id === w.id;
-                  return (
-                    <div
-                      key={w.id}
-                      onClick={() => handleSelectWorker(w)}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
-                        isSelected
-                          ? 'bg-[#E4EDF4] border-2 border-[#537895] shadow-xs'
-                          : 'bg-[#FCF9F3] border-[#E8E2D5] hover:border-[#B8CBDD] hover:bg-[#F3EEE4]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <img
-                          src={w.avatar}
-                          alt={w.name}
-                          className="w-10 h-10 rounded-full object-cover border border-[#E8E2D5] shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1">
-                            <strong className="text-xs font-bold text-[#292824] truncate block">
-                              {w.name}
-                            </strong>
-                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#537895] shrink-0" />}
-                          </div>
-                          <div className="text-[11px] text-[#324F66] font-semibold truncate">
-                            {w.skills[0]} · {w.societyName}
-                          </div>
-                          <div className="flex items-center gap-1 text-[10px] text-[#77736B]">
-                            <Star className="w-2.5 h-2.5 fill-[#B37055] text-[#B37055]" />
-                            <span className="font-bold text-[#80432E]">{w.rating}</span>
-                            <span>· {w.completedJobs} jobs</span>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const userObj: User = {
+                                id: m.id,
+                                name: m.name,
+                                email: m.email,
+                                phone: m.phone,
+                                role: 'society_manager',
+                                avatar: m.avatar,
+                                address: `Manager Office, ${m.societyName}`,
+                                societyId: m.societyId,
+                                societyName: m.societyName,
+                                designation: `Society Manager (${m.societyName})`,
+                              };
+                              handleDirectLogin(userObj);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-[#B37055] hover:bg-[#9C583E] text-white text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
+                          >
+                            Sign In →
+                          </button>
                         </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const userObj: User = {
-                            id: w.id,
-                            name: w.name,
-                            email: w.email,
-                            phone: w.phone,
-                            role: 'worker',
-                            avatar: w.avatar,
-                            address: `Flat 101, Staff Block, ${w.societyName || 'Green Residency'}`,
-                            societyId: w.societyId,
-                            societyName: w.societyName || 'Green Residency',
-                            tradeProfession: w.profession || w.skills[0],
-                          };
-                          handleDirectLogin(userObj);
-                        }}
-                        className="px-2.5 py-1 rounded-lg bg-[#537895] hover:bg-[#41637E] text-white text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
-                      >
-                        Sign In →
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* 2. SOCIETY MANAGER MULTIPLE ACCOUNTS LIST */}
-          {role === 'society_manager' && (
-            <div className="space-y-3.5 relative z-10">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#80432E] flex items-center gap-1.5">
-                  <Building2 className="w-4 h-4 text-[#80432E]" />
-                  <span>Choose Society Manager ({filteredManagerAccounts.length} Societies)</span>
-                </span>
-              </div>
-
-              {/* Search Bar for Managers */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-[#9A958B] absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search society (Green Residency, Lakeview...) or manager name..."
-                  value={accountSearch}
-                  onChange={(e) => setAccountSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-xs font-medium text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#80432E]"
-                />
-              </div>
-
-              {/* Managers Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
-                {filteredManagerAccounts.map((m) => {
-                  const isSelected = selectedUser.id === m.id;
-                  return (
-                    <div
-                      key={m.id}
-                      onClick={() => handleSelectManager(m)}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
-                        isSelected
-                          ? 'bg-[#FAEDE8] border-2 border-[#B37055] shadow-xs'
-                          : 'bg-[#FCF9F3] border-[#E8E2D5] hover:border-[#F3C5B8] hover:bg-[#F3EEE4]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <img
-                          src={m.avatar}
-                          alt={m.name}
-                          className="w-10 h-10 rounded-full object-cover border border-[#E8E2D5] shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1">
-                            <strong className="text-xs font-bold text-[#292824] truncate block">
-                              {m.name}
-                            </strong>
-                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#B37055] shrink-0" />}
-                          </div>
-                          <div className="text-[11px] text-[#80432E] font-semibold truncate">
-                            {m.societyName}
-                          </div>
-                          <div className="text-[10px] text-[#77736B] truncate">
-                            {m.workersCount} Assigned Workers
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const userObj: User = {
-                            id: m.id,
-                            name: m.name,
-                            email: m.email,
-                            phone: m.phone,
-                            role: 'society_manager',
-                            avatar: m.avatar,
-                            address: `Manager Office, ${m.societyName}`,
-                            societyId: m.societyId,
-                            societyName: m.societyName,
-                            designation: `Society Manager (${m.societyName})`,
-                          };
-                          handleDirectLogin(userObj);
-                        }}
-                        className="px-2.5 py-1 rounded-lg bg-[#B37055] hover:bg-[#9C583E] text-white text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
-                      >
-                        Sign In →
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* 3. CUSTOMER ACCOUNTS LIST */}
-          {role === 'customer' && (
-            <div className="space-y-3 relative z-10">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#364A32] flex items-center gap-1.5">
-                <UserIcon className="w-4 h-4 text-[#445D3E]" />
-                <span>Demo Resident Accounts</span>
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {[
-                  { name: 'Ananya Deshmukh', society: 'Green Residency', flat: 'Flat 402', phone: '+91 98201 55432', email: 'ananya@greenresidency.coop' },
-                  { name: 'Priya Nair', society: 'Lakeview Society', flat: 'Flat 204', phone: '+91 98203 77812', email: 'priya.nair@lakeview.coop' },
-                  { name: 'Rahul Gupta', society: 'Sunrise Apartments', flat: 'Flat 108', phone: '+91 98205 99341', email: 'rahul.gupta@sunrise.coop' },
-                ].map((cust) => {
-                  const isSelected = selectedUser.name === cust.name;
-                  return (
-                    <div
-                      key={cust.name}
-                      onClick={() => handleSelectCustomer(cust.name, cust.society, cust.phone, cust.email)}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-[#E6ECE4] border-2 border-[#6E8B67]'
-                          : 'bg-[#FCF9F3] border-[#E8E2D5] hover:border-[#CFDDD0]'
-                      }`}
-                    >
-                      <strong className="text-xs font-bold text-[#292824] block">{cust.name}</strong>
-                      <span className="text-[10px] text-[#445D3E] font-medium block">{cust.society}</span>
-                      <span className="text-[10px] text-[#77736B] block">{cust.flat}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* 4. FEDERATION ADMIN ACCOUNT */}
-          {(role === 'federation_admin' || role === 'federation_manager') && (
-            <div className="p-3.5 bg-[#EFEBF4] rounded-2xl border border-[#DFD8E8] flex items-center justify-between text-xs relative z-10">
-              <div className="flex items-center gap-3">
-                <img
-                  src={selectedUser.avatar || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'}
-                  alt={selectedUser.name}
-                  className="w-10 h-10 rounded-full object-cover border border-[#DFD8E8]"
-                />
-                <div>
-                  <span className="text-[10px] text-[#504161] font-bold uppercase block leading-none">Federation Admin</span>
-                  <strong className="text-sm font-bold text-[#292824] block mt-0.5">{selectedUser.name}</strong>
-                  <span className="text-[11px] text-[#77736B]">{selectedUser.federationName || 'Maharashtra Community Federation'}</span>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-              <Badge variant="coop" size="sm">Level 3 Admin</Badge>
-            </div>
-          )}
+              )}
 
-          {/* Selected Account Active Preview & Form */}
-          <form onSubmit={handleSubmit} className="relative z-10 space-y-4 pt-2 border-t border-[#E8E2D5]">
-            <div className="p-3.5 bg-[#F3EEE4] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
-              <div className="flex items-center gap-3">
-                {selectedUser.avatar && (
-                  <img
-                    src={selectedUser.avatar}
-                    alt={selectedUser.name}
-                    className="w-9 h-9 rounded-full object-cover border border-[#E8E2D5]"
-                  />
-                )}
-                <div>
-                  <span className="text-[10px] text-[#77736B] block font-medium uppercase tracking-wider">Active Selected Persona:</span>
-                  <strong className="text-sm text-[#292824] font-bold block">{selectedUser.name}</strong>
-                  <span className="text-[11px] text-[#80432E] font-medium block">
-                    {selectedUser.tradeProfession ? `${selectedUser.tradeProfession} · ` : ''}
-                    {selectedUser.societyName || selectedUser.federationName || 'Cooperative'}
+              {/* 3. CUSTOMER ACCOUNTS LIST */}
+              {role === 'customer' && (
+                <div className="space-y-3 relative z-10">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#364A32] flex items-center gap-1.5">
+                    <UserIcon className="w-4 h-4 text-[#445D3E]" />
+                    <span>Demo Resident Accounts</span>
+                  </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      { name: 'Ananya Deshmukh', society: 'Green Residency', flat: 'Flat 402', phone: '+91 98201 55432', email: 'ananya@greenresidency.coop' },
+                      { name: 'Priya Nair', society: 'Lakeview Society', flat: 'Flat 204', phone: '+91 98203 77812', email: 'priya.nair@lakeview.coop' },
+                      { name: 'Rahul Gupta', society: 'Sunrise Apartments', flat: 'Flat 108', phone: '+91 98205 99341', email: 'rahul.gupta@sunrise.coop' },
+                    ].map((cust) => {
+                      const isSelected = selectedUser.name === cust.name;
+                      return (
+                        <div
+                          key={cust.name}
+                          onClick={() => handleSelectCustomer(cust.name, cust.society, cust.phone, cust.email)}
+                          className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#E6ECE4] border-2 border-[#6E8B67]'
+                              : 'bg-[#FCF9F3] border-[#E8E2D5] hover:border-[#CFDDD0]'
+                          }`}
+                        >
+                          <strong className="text-xs font-bold text-[#292824] block">{cust.name}</strong>
+                          <span className="text-[10px] text-[#445D3E] font-medium block">{cust.society}</span>
+                          <span className="text-[10px] text-[#77736B] block">{cust.flat}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 4. FEDERATION ADMIN ACCOUNT */}
+              {(role === 'federation_admin' || role === 'federation_manager') && (
+                <div className="p-3.5 bg-[#EFEBF4] rounded-2xl border border-[#DFD8E8] flex items-center justify-between text-xs relative z-10">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={selectedUser.avatar || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'}
+                      alt={selectedUser.name}
+                      className="w-10 h-10 rounded-full object-cover border border-[#DFD8E8]"
+                    />
+                    <div>
+                      <span className="text-[10px] text-[#504161] font-bold uppercase block leading-none">Federation Admin</span>
+                      <strong className="text-sm font-bold text-[#292824] block mt-0.5">{selectedUser.name}</strong>
+                      <span className="text-[11px] text-[#77736B]">{selectedUser.federationName || 'Maharashtra Community Federation'}</span>
+                    </div>
+                  </div>
+                  <Badge variant="coop" size="sm">Level 3 Admin</Badge>
+                </div>
+              )}
+
+              {/* Selected Account Active Preview & Form */}
+              <form onSubmit={handleSubmit} className="relative z-10 space-y-4 pt-2 border-t border-[#E8E2D5]">
+                <div className="p-3.5 bg-[#F3EEE4] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    {selectedUser.avatar && (
+                      <img
+                        src={selectedUser.avatar}
+                        alt={selectedUser.name}
+                        className="w-9 h-9 rounded-full object-cover border border-[#E8E2D5]"
+                      />
+                    )}
+                    <div>
+                      <span className="text-[10px] text-[#77736B] block font-medium uppercase tracking-wider">Active Selected Persona:</span>
+                      <strong className="text-sm text-[#292824] font-bold block">{selectedUser.name}</strong>
+                      <span className="text-[11px] text-[#80432E] font-medium block">
+                        {selectedUser.tradeProfession ? `${selectedUser.tradeProfession} · ` : ''}
+                        {selectedUser.societyName || selectedUser.federationName || 'Cooperative'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#364A32] bg-[#E6ECE4] border border-[#CFDDD0] px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
+                    <span>Selected</span>
                   </span>
                 </div>
-              </div>
-              <span className="text-[11px] font-semibold text-[#364A32] bg-[#E6ECE4] border border-[#CFDDD0] px-2.5 py-1 rounded-full flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
-                <span>Selected</span>
-              </span>
-            </div>
 
-            <div>
-              <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-                {isEmailRole ? 'Official Cooperative Email' : 'Phone Number or Email'}
-              </label>
-              <div className="relative">
-                {isEmailRole ? (
-                  <Mail className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                ) : (
-                  <Phone className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                )}
-                <input
-                  type={isEmailRole ? 'email' : 'text'}
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm font-medium text-[#292824] focus:outline-none focus:ring-2 shadow-subtle transition-all ${config.focusRing}`}
-                  required
-                />
-              </div>
-            </div>
+                <div>
+                  <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
+                    {isEmailRole ? 'Official Cooperative Email' : 'Phone Number or Email'}
+                  </label>
+                  <div className="relative">
+                    {isEmailRole ? (
+                      <Mail className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    ) : (
+                      <Phone className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    )}
+                    <input
+                      type={isEmailRole ? 'email' : 'text'}
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      className={`w-full pl-10 pr-4 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm font-medium text-[#292824] focus:outline-none focus:ring-2 shadow-subtle transition-all ${config.focusRing}`}
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-[#524E47] uppercase tracking-wider">
-                  Password
-                </label>
-                <span className="text-[11px] text-[#9A958B]">
-                  Pre-filled in demo
-                </span>
-              </div>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 shadow-subtle transition-all ${config.focusRing}`}
-                  required
-                />
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-[#524E47] uppercase tracking-wider">
+                      Password
+                    </label>
+                    <span className="text-[11px] text-[#9A958B]">
+                      Pre-filled in demo
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={`w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 shadow-subtle transition-all ${config.focusRing}`}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] transition-colors p-0.5 cursor-pointer"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Magnetic Submit Button */}
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] transition-colors p-0.5 cursor-pointer"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  ref={btnRef}
+                  onPointerMove={onBtnMove}
+                  onPointerLeave={onBtnLeave}
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer shadow-sm active:scale-[0.98] will-change-transform ${config.btnClass}`}
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
+                  {isLoading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
-                    <Eye className="w-4 h-4" />
+                    <>
+                      <span>{config.buttonLabel}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
                   )}
                 </button>
-              </div>
-            </div>
-
-            {/* Magnetic Submit Button */}
-            <button
-              ref={btnRef}
-              onPointerMove={onBtnMove}
-              onPointerLeave={onBtnLeave}
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer shadow-sm active:scale-[0.98] will-change-transform ${config.btnClass}`}
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>{config.buttonLabel}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
+              </form>
+            </>
+          )}
         </div>
 
         {/* Footer info */}
@@ -644,4 +552,3 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
     </div>
   );
 };
-

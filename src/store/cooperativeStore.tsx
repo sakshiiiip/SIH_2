@@ -45,6 +45,7 @@ import {
   INITIAL_COMMUNITY_MESSAGES,
 } from './initialData';
 import { calculateCandidateScores } from '../utils/matchingEngine';
+import { workerAuthService } from '../services/workerAuthService';
 
 const STORAGE_KEY = 'cooperative_platform_state_v4';
 
@@ -81,6 +82,7 @@ interface CooperativeStoreContextType {
   reviewWorkerDocument: (workerId: string, documentId: string, status: DocumentStatus, notes?: string) => void;
   updateWorkerLocation: (workerId: string, lat: number, lng: number, status?: WorkerLocationStatus) => void;
   toggleWorkerAvailability: (workerId: string) => void;
+  addWorker: (workerData: Partial<Worker> & { name: string; email: string; phone: string; skills: string[] }) => Worker;
   // Bookings
   bookings: Booking[];
   createBooking: (data: {
@@ -168,6 +170,11 @@ const CooperativeStoreContext = createContext<CooperativeStoreContextType | null
 export function CooperativeStoreProvider({ children }: { children: React.ReactNode }) {
   // Authentication & Role Session
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const savedRole = localStorage.getItem(STORAGE_KEY + '_role') as UserRole;
+    if (savedRole === 'worker') {
+      const workerSession = workerAuthService.getActiveSession();
+      if (workerSession) return true;
+    }
     const saved = localStorage.getItem(STORAGE_KEY + '_auth');
     return saved === 'true';
   });
@@ -317,6 +324,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
   // Logout handler
   const logout = () => {
+    workerAuthService.clearSession();
     setIsAuthenticated(false);
     localStorage.setItem(STORAGE_KEY + '_auth', 'false');
     showToast({
@@ -534,6 +542,48 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         return w;
       })
     );
+  };
+
+  const addWorker = (workerData: Partial<Worker> & { name: string; email: string; phone: string; skills: string[] }): Worker => {
+    const newWorker: Worker = {
+      ...workerData,
+      id: workerData.id || `w_${Date.now()}`,
+      name: workerData.name,
+      email: workerData.email,
+      phone: workerData.phone,
+      avatar: workerData.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+      profession: workerData.profession || workerData.skills[0] || 'General Maintenance',
+      societyId: workerData.societyId || 'soc_gr',
+      societyName: workerData.societyName || 'Green Residency',
+      managerId: workerData.managerId || 'mgr_priya',
+      managerName: workerData.managerName || 'Priya Sharma',
+      rating: 5.0,
+      totalReviews: 0,
+      completedJobs: 0,
+      hourlyRate: workerData.hourlyRate || 350,
+      distanceKm: 0.5,
+      availability: 'online',
+      currentWorkload: 0,
+      proficiencyScore: 88,
+      skills: workerData.skills.length > 0 ? workerData.skills : ['General Maintenance'],
+      certificates: workerData.certificates || ['Cooperative Verified Tradesperson'],
+      verificationStatus: workerData.verificationStatus || 'PENDING',
+      kycDocumentsCount: 4,
+      localVerificationStatus: workerData.verificationStatus === 'VERIFIED' ? 'verified' : 'pending',
+      cooperativeMemberId: `COP-PUN-${Math.floor(1000 + Math.random() * 9000)}`,
+      joinedDate: new Date().toISOString().split('T')[0],
+      bio: workerData.bio || `${workerData.skills[0] || 'Tradesperson'} registered under cooperative governance.`,
+      locationStatus: 'AVAILABLE',
+    };
+
+    setWorkers((prev) => [newWorker, ...prev]);
+    showToast({
+      title: 'Worker Registered',
+      message: `${newWorker.name} added to ${newWorker.societyName} roster.`,
+      type: 'success',
+    });
+    addAuditLog('ADD_WORKER', `Added worker ${newWorker.name} (${newWorker.id}) to ${newWorker.societyName}`);
+    return newWorker;
   };
 
   // CREATE BOOKING
@@ -1414,6 +1464,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         reviewWorkerDocument,
         updateWorkerLocation,
         toggleWorkerAvailability,
+        addWorker,
         bookings,
         createBooking,
         acceptBookingByWorker,
