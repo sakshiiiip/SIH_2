@@ -6,6 +6,8 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { JobStatusBadge } from '../../components/worker/JobStatusBadge';
 import { WorkerSOSModal } from './WorkerSOSModal';
+import { WorkerJobExecutionModal } from './WorkerJobExecutionModal';
+import { isWorkerSkillMatching } from '../../utils/matchingEngine';
 import {
   MOCK_UPCOMING_JOBS,
   MOCK_IN_PROGRESS_JOB,
@@ -28,35 +30,85 @@ import {
   Camera,
   Briefcase,
   KeyRound,
+  RotateCcw,
+  Filter,
+  ImageIcon,
 } from 'lucide-react';
 
-type JobTab = 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
+type JobTab = 'upcoming' | 'in_progress' | 'completed' | 'cancelled' | 'history';
+type HistoryFilter = 'all' | 'finished' | 'revisited' | 'cancelled';
 
 interface WorkerJobsPageProps {
   onOpenJobDetails?: (jobId: string) => void;
 }
 
 export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails }) => {
-  const { currentUser, bookings, updateBookingState, verifyOTPAndStartJob } = useCooperativeStore();
+  const { currentUser, bookings, workers, updateBookingState, verifyOTPAndStartJob, acceptJob } = useCooperativeStore();
   const [activeTab, setActiveTab] = useState<JobTab>('upcoming');
+  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
   const [sosJob, setSosJob] = useState<Booking | null>(null);
+  const [executionBooking, setExecutionBooking] = useState<Booking | null>(null);
   const [otpInputs, setOtpInputs] = useState<Record<string, string>>({});
   const [otpErrors, setOtpErrors] = useState<Record<string, string>>({});
 
-  // Filter store bookings
-  const workerBookings = bookings.filter(
-    (b) => b.matchedWorkerId === currentUser.id || b.matchedWorkerId === 'w_rahul'
+  // Resolve current logged-in worker
+  const currentWorker =
+    workers.find((w) => w.id === currentUser.id) ||
+    workers.find((w) => w.name === currentUser.name) ||
+    workers.find((w) => w.id === 'w_rahul') ||
+    {
+      id: currentUser.id || 'w_rahul',
+      name: currentUser.name || 'Rahul Sharma',
+      profession: currentUser.tradeProfession || 'Plumber',
+      skills: currentUser.tradeProfession ? [currentUser.tradeProfession] : ['Plumbing'],
+    };
+
+  // Open pending jobs awaiting worker assignment filtered strictly by trade
+  const openPendingJobs = bookings.filter(
+    (b) =>
+      b.state === 'PENDING_ASSIGNMENT' &&
+      isWorkerSkillMatching(currentWorker, b.category || b.serviceCategory)
   );
 
-  const storeUpcoming = workerBookings.filter((b) =>
-    ['PENDING_WORKER_ACCEPTANCE', 'CONFIRMED'].includes(b.state)
+  // Filter store bookings assigned to this worker and matching trade
+  const workerBookings = bookings.filter(
+    (b) =>
+      (b.matchedWorkerId === currentWorker.id ||
+        b.workerId === currentWorker.id ||
+        (currentWorker.id === 'w_rahul' && b.matchedWorkerId === 'w_rahul') ||
+        b.matchedWorkerId === currentUser.id) &&
+      isWorkerSkillMatching(currentWorker, b.category || b.serviceCategory)
   );
+
+  const storeUpcoming = [
+    ...workerBookings.filter((b) =>
+      ['PENDING_WORKER_ACCEPTANCE', 'WORKER_ASSIGNED', 'CONFIRMED'].includes(b.state)
+    ),
+    ...openPendingJobs,
+  ];
   const storeInProgress = workerBookings.filter((b) =>
-    ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(b.state)
+    ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'AWAITING_VERIFICATION'].includes(b.state)
   );
   const storeCompleted = workerBookings.filter((b) =>
     ['COMPLETED', 'PAID', 'RATED'].includes(b.state)
   );
+  const storeHistory = workerBookings.filter((b) =>
+    ['COMPLETED', 'PAID', 'RATED', 'REVISIT', 'REVISIT_REQUESTED', 'REVISIT_SCHEDULED', 'CANCELLED'].includes(b.state)
+  );
+
+  // Mock data filtered strictly by worker trade to prevent cross-trade job leaks
+  const filteredMockUpcoming = MOCK_UPCOMING_JOBS.filter((job) =>
+    isWorkerSkillMatching(currentWorker, job.serviceType)
+  );
+  const filteredMockCompleted = MOCK_COMPLETED_JOBS.filter((job) =>
+    isWorkerSkillMatching(currentWorker, job.serviceType)
+  );
+  const filteredMockCancelled = MOCK_CANCELLED_JOBS.filter((job) =>
+    isWorkerSkillMatching(currentWorker, job.serviceType)
+  );
+  const showMockInProgress =
+    storeInProgress.length === 0 &&
+    isWorkerSkillMatching(currentWorker, MOCK_IN_PROGRESS_JOB.serviceType);
 
   const handleOtpVerify = (job: Booking) => {
     const entered = otpInputs[job.id] || '';
@@ -73,10 +125,11 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
   };
 
   const TABS: { id: JobTab; label: string; count: number }[] = [
-    { id: 'upcoming',    label: 'Upcoming',    count: storeUpcoming.length + MOCK_UPCOMING_JOBS.length },
-    { id: 'in_progress', label: 'In Progress', count: storeInProgress.length + 1 },
-    { id: 'completed',   label: 'Completed',   count: storeCompleted.length + MOCK_COMPLETED_JOBS.length },
-    { id: 'cancelled',   label: 'Cancelled',   count: MOCK_CANCELLED_JOBS.length },
+    { id: 'upcoming',    label: 'Upcoming',    count: storeUpcoming.length + filteredMockUpcoming.length },
+    { id: 'in_progress', label: 'In Progress', count: storeInProgress.length + (showMockInProgress ? 1 : 0) },
+    { id: 'completed',   label: 'Completed',   count: storeCompleted.length + filteredMockCompleted.length },
+    { id: 'cancelled',   label: 'Cancelled',   count: filteredMockCancelled.length },
+    { id: 'history',     label: 'Job History & Filter', count: storeHistory.length + filteredMockCompleted.length + filteredMockCancelled.length },
   ];
 
   return (
@@ -126,8 +179,8 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
       {/* ============================================================ */}
       {activeTab === 'upcoming' && (
         <div className="space-y-4">
-          {storeUpcoming.length === 0 && MOCK_UPCOMING_JOBS.length === 0 ? (
-            <EmptyState icon={<Clock />} message="No upcoming jobs" sub="New accepted jobs will appear here." />
+          {storeUpcoming.length === 0 && filteredMockUpcoming.length === 0 ? (
+            <EmptyState icon={<Clock />} message="No upcoming jobs" sub="New accepted or assigned jobs for your trade will appear here." />
           ) : (
             <>
               {/* Store-sourced upcoming jobs */}
@@ -135,20 +188,29 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                 <UpcomingJobCard
                   key={job.id}
                   jobId={job.id}
-                  serviceType={job.serviceCategory}
+                  serviceType={job.category || job.serviceCategory}
                   problemType={job.problemType}
                   customerName={job.customerName}
                   address={job.customerAddress}
-                  date="Scheduled"
-                  time={job.state}
-                  earnings={job.pricing.workerShare}
+                  date={job.scheduledDate || 'Scheduled'}
+                  time={job.scheduledTimeSlot || job.state}
+                  earnings={job.pricing?.workerShare || 400}
                   status={job.state}
-                  onStartJob={() => updateBookingState(job.id, 'TRAVELLING')}
+                  onAcceptJob={
+                    job.state === 'PENDING_ASSIGNMENT' || job.state === 'PENDING_WORKER_ACCEPTANCE'
+                      ? () => acceptJob(job.id, currentWorker.id)
+                      : undefined
+                  }
+                  onStartJob={
+                    job.state === 'CONFIRMED' || job.state === 'WORKER_ASSIGNED'
+                      ? () => updateBookingState(job.id, 'TRAVELLING')
+                      : undefined
+                  }
                   onViewDetails={() => onOpenJobDetails?.(job.id)}
                 />
               ))}
               {/* Mock upcoming jobs */}
-              {MOCK_UPCOMING_JOBS.map((job) => (
+              {filteredMockUpcoming.map((job) => (
                 <UpcomingJobCard
                   key={job.jobId}
                   jobId={job.jobId}
@@ -173,12 +235,15 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
       {/* ============================================================ */}
       {activeTab === 'in_progress' && (
         <div className="space-y-4">
-          {storeInProgress.length === 0 && (
+          {showMockInProgress && (
             /* Mock in-progress job */
             <InProgressJobCard
               job={MOCK_IN_PROGRESS_JOB}
               onSOS={() => {}} // Would open SOS modal — Person 5 support
             />
+          )}
+          {storeInProgress.length === 0 && !showMockInProgress && (
+            <EmptyState icon={<Briefcase />} message="No active jobs in progress" sub="Jobs will appear here once you start travel or work." />
           )}
           {storeInProgress.map((job) => (
             <Card key={job.id} className="p-5 border-[#DFD8E8] bg-[#FCF9F3] shadow-card space-y-4">
@@ -248,16 +313,29 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                   )}
                   {job.state === 'IN_PROGRESS' && (
                     <>
-                      {/* Job Verification — Integration point for Person 2 */}
-                      <Button variant="outline" size="sm" leftIcon={<Camera className="w-3.5 h-3.5" />}
-                        onClick={() => alert('📸 Job Verification — Person 2\'s Before/After photo module will connect here.')}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Camera className="w-3.5 h-3.5" />}
+                        onClick={() => setExecutionBooking(job)}
+                      >
                         Job Verification
                       </Button>
-                      <Button variant="primary" size="sm" onClick={() => updateBookingState(job.id, 'COMPLETED')}
-                        leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}>
-                        Mark Complete
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => setExecutionBooking(job)}
+                        leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                      >
+                        Execution Wizard
                       </Button>
                     </>
+                  )}
+                  {job.state === 'AWAITING_VERIFICATION' && (
+                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      Awaiting Manager Verification
+                    </span>
                   )}
                 </div>
               </div>
@@ -274,7 +352,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
       {/* ============================================================ */}
       {activeTab === 'completed' && (
         <div className="space-y-4">
-          {storeCompleted.length === 0 && MOCK_COMPLETED_JOBS.length === 0 ? (
+          {storeCompleted.length === 0 && filteredMockCompleted.length === 0 ? (
             <EmptyState icon={<CheckCircle2 />} message="No completed jobs yet" sub="Completed jobs will appear here." />
           ) : (
             <>
@@ -282,16 +360,16 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                 <CompletedJobCard
                   key={job.id}
                   jobId={job.id}
-                  serviceType={job.serviceCategory}
+                  serviceType={job.category || job.serviceCategory}
                   problemType={job.problemType}
                   customerName={job.customerName}
                   date={job.completedAt || job.updatedAt}
-                  earnings={job.pricing.workerShare}
+                  earnings={job.pricing?.workerShare || 400}
                   paymentStatus={['PAID', 'RATED'].includes(job.state) ? 'paid' : 'pending'}
                   rating={job.rating?.stars}
                 />
               ))}
-              {MOCK_COMPLETED_JOBS.map((job) => (
+              {filteredMockCompleted.map((job) => (
                 <CompletedJobCard
                   key={job.jobId}
                   jobId={job.jobId}
@@ -315,10 +393,10 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
       {/* ============================================================ */}
       {activeTab === 'cancelled' && (
         <div className="space-y-4">
-          {MOCK_CANCELLED_JOBS.length === 0 ? (
+          {filteredMockCancelled.length === 0 ? (
             <EmptyState icon={<XCircle />} message="No cancelled jobs" sub="Cancelled jobs will appear here." />
           ) : (
-            MOCK_CANCELLED_JOBS.map((job) => (
+            filteredMockCancelled.map((job) => (
               <Card key={job.jobId} className="p-5 border-[#E8E2D5] bg-[#FCF9F3] shadow-card space-y-3 opacity-80">
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -356,8 +434,199 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
         </div>
       )}
 
+      {/* ============================================================ */}
+      {/* HISTORY & FILTER TAB                                         */}
+      {/* ============================================================ */}
+      {activeTab === 'history' && (
+        <div className="space-y-4">
+          {/* Subfilter pills */}
+          <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-[#E8E2D5]">
+            <span className="text-xs text-[#77736B] font-semibold flex items-center gap-1 mr-1">
+              <Filter className="w-3.5 h-3.5" />
+              Filter By:
+            </span>
+            {[
+              { id: 'all', label: 'All History' },
+              { id: 'finished', label: 'Finished' },
+              { id: 'revisited', label: 'Revisited' },
+              { id: 'cancelled', label: 'Cancelled' },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setHistoryFilter(f.id as HistoryFilter)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  historyFilter === f.id
+                    ? 'bg-[#445D3E] text-white shadow-xs'
+                    : 'bg-[#FCF9F3] border border-[#E8E2D5] text-[#524E47] hover:bg-[#F3EEE4]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Filtered History List */}
+          {(() => {
+            const filtered = storeHistory.filter((b) => {
+              if (historyFilter === 'finished') return ['COMPLETED', 'PAID', 'RATED'].includes(b.state);
+              if (historyFilter === 'revisited') return ['REVISIT', 'REVISIT_REQUESTED', 'REVISIT_SCHEDULED'].includes(b.state);
+              if (historyFilter === 'cancelled') return b.state === 'CANCELLED';
+              return true;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <EmptyState
+                  icon={<RotateCcw />}
+                  message="No matching history records"
+                  sub="Jobs that are finished, revisited, or cancelled will appear here."
+                />
+              );
+            }
+
+            return (
+              <div className="space-y-3">
+                {filtered.map((job) => {
+                  const isFinished = ['COMPLETED', 'PAID', 'RATED'].includes(job.state);
+                  const isRevisit = ['REVISIT', 'REVISIT_REQUESTED', 'REVISIT_SCHEDULED'].includes(job.state);
+                  const isCancelled = job.state === 'CANCELLED';
+
+                  return (
+                    <Card
+                      key={job.id}
+                      className={`p-4 border bg-[#FCF9F3] shadow-card space-y-3 transition-all ${
+                        isCancelled
+                          ? 'border-rose-200 opacity-80'
+                          : isRevisit
+                          ? 'border-amber-200'
+                          : 'border-[#CFDDD0]'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-[#F3EEE4] text-[#524E47] border border-[#E8E2D5] rounded-md">
+                              {job.serviceCategory}
+                            </span>
+                            <Badge
+                              variant={
+                                isCancelled ? 'danger' : isRevisit ? 'urgent' : 'coop'
+                              }
+                              size="sm"
+                            >
+                              {job.state}
+                            </Badge>
+                            <span className="text-[10px] font-mono text-[#9A958B]">#{job.id}</span>
+                          </div>
+                          <h3 className="text-sm font-bold text-[#292824]">{job.problemType}</h3>
+                          <p className="text-xs text-[#77736B] mt-0.5">
+                            Customer: <strong className="text-[#292824]">{job.customerName}</strong> · {job.societyName}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`text-sm font-bold font-mono block ${
+                              isCancelled ? 'line-through text-slate-400' : 'text-[#445D3E]'
+                            }`}
+                          >
+                            ₹{job.pricing.workerShare}
+                          </span>
+                          <span className="text-[10px] text-[#77736B]">
+                            {isCancelled ? 'Cancelled' : 'Worker Share'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Photo evidence previews if available */}
+                      {(job.beforeImage || job.afterImage) && (
+                        <div className="p-3 bg-white rounded-xl border border-slate-100 flex items-center gap-3">
+                          <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
+                            <ImageIcon className="w-3.5 h-3.5 text-[#6E8B67]" />
+                            Photo Proof:
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {job.beforeImage && (
+                              <div className="relative group">
+                                <img
+                                  src={job.beforeImage}
+                                  alt="Before"
+                                  className="w-12 h-12 object-cover rounded-lg border border-slate-200"
+                                />
+                                <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] text-center rounded-b-lg">
+                                  Before
+                                </span>
+                              </div>
+                            )}
+                            {job.afterImage && (
+                              <div className="relative group">
+                                <img
+                                  src={job.afterImage}
+                                  alt="After"
+                                  className="w-12 h-12 object-cover rounded-lg border border-[#6E8B67]"
+                                />
+                                <span className="absolute bottom-0 inset-x-0 bg-[#445D3E] text-white text-[8px] text-center rounded-b-lg">
+                                  After ✓
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Revisit detail note */}
+                      {job.revisitDetails && (
+                        <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+                          <strong className="block font-bold">Revisit Details:</strong>
+                          <span>Reason: "{job.revisitDetails.reason}"</span>
+                          {job.revisitDetails.scheduledDate && (
+                            <span className="block mt-0.5 text-amber-800 font-semibold">
+                              Scheduled Date: {job.revisitDetails.scheduledDate}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Cancellation note */}
+                      {job.cancellationDetails && (
+                        <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900">
+                          <strong className="block font-bold">Cancellation Info:</strong>
+                          <span>Cancelled by {job.cancellationDetails.cancelledBy}: "{job.cancellationDetails.reason}"</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-xs text-[#77736B] pt-1 border-t border-[#E8E2D5]">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          Updated: {job.updatedAt?.split('T')[0] || 'Recently'}
+                        </span>
+                        {job.rating && (
+                          <span className="flex items-center gap-1 text-amber-600 font-bold">
+                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                            {job.rating.stars} ★
+                          </span>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {sosJob && (
         <WorkerSOSModal isOpen={sosJob !== null} onClose={() => setSosJob(null)} job={sosJob} />
+      )}
+
+      {/* Worker Job Execution Wizard Modal */}
+      {executionBooking && (
+        <WorkerJobExecutionModal
+          isOpen={executionBooking !== null}
+          onClose={() => setExecutionBooking(null)}
+          booking={executionBooking}
+        />
       )}
     </div>
   );
@@ -379,11 +648,11 @@ function EmptyState({ icon, message, sub }: { icon: React.ReactNode; message: st
 
 function UpcomingJobCard({
   jobId, serviceType, problemType, customerName, address,
-  date, time, earnings, status, onStartJob, onViewDetails,
+  date, time, earnings, status, onAcceptJob, onStartJob, onViewDetails,
 }: {
   jobId: string; serviceType: string; problemType: string; customerName: string;
   address: string; date: string; time: string; earnings: number;
-  status: string; onStartJob?: () => void; onViewDetails?: () => void;
+  status: string; onAcceptJob?: () => void; onStartJob?: () => void; onViewDetails?: () => void;
 }) {
   return (
     <Card className="p-5 border-[#B8CBDD] bg-[#F4F8FC] shadow-card space-y-3">
@@ -393,7 +662,7 @@ function UpcomingJobCard({
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-[#E4EDF4] text-[#324F66] border border-[#B8CBDD] rounded-md">
               {serviceType}
             </span>
-            <JobStatusBadge state={status as 'upcoming'} />
+            <JobStatusBadge state={status as any} />
             <span className="text-[10px] font-mono text-[#9A958B]">#{jobId}</span>
           </div>
           <h3 className="text-base font-bold text-[#292824]">{problemType}</h3>
@@ -421,6 +690,16 @@ function UpcomingJobCard({
         >
           View Details <ChevronRight className="w-3.5 h-3.5" />
         </button>
+        {onAcceptJob && (
+          <button
+            type="button"
+            onClick={onAcceptJob}
+            className="px-4 py-2 bg-[#445D3E] hover:bg-[#33462F] text-white text-xs font-bold rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Accept Job
+          </button>
+        )}
         {onStartJob && (
           <button
             type="button"

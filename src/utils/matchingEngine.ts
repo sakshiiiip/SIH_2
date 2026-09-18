@@ -14,6 +14,62 @@ function calculateHaversineKm(lat1: number, lon1: number, lat2: number, lon2: nu
   return parseFloat((R * c).toFixed(1));
 }
 
+/**
+ * Normalizes trade names and strictly tests if a worker's trade/skills match the job category.
+ * Prevents cross-category job leaks (e.g. plumbing jobs showing to electricians).
+ */
+export function isWorkerSkillMatching(
+  worker: { skill?: string; skills?: string[]; profession?: string; tradeProfession?: string },
+  jobCategory?: string
+): boolean {
+  if (!jobCategory) return false;
+  const category = jobCategory.toLowerCase().trim();
+
+  const workerSkills = [
+    worker.skill,
+    worker.profession,
+    worker.tradeProfession,
+    ...(worker.skills || []),
+  ]
+    .filter(Boolean)
+    .map((s) => s!.toLowerCase().trim());
+
+  if (workerSkills.length === 0) return false;
+
+  // Exact or substring match
+  const directMatch = workerSkills.some(
+    (s) => s === category || s.includes(category) || category.includes(s)
+  );
+  if (directMatch) return true;
+
+  // Trade-specific semantic equivalences
+  const TRADE_GROUPS: Record<string, string[]> = {
+    plumbing: ['plumb', 'pipe', 'tap', 'leak', 'drain', 'siphon', 'water', 'valve'],
+    electrical: ['electr', 'wire', 'wiring', 'socket', 'switch', 'mcb', 'fuse', 'spark', 'short circuit'],
+    carpentry: ['carpent', 'wood', 'door', 'furniture', 'hinge', 'lock'],
+    cleaning: ['clean', 'deep clean', 'descaling', 'maid', 'sanitiz', 'housekeeping'],
+    painting: ['paint', 'waterproof', 'wall'],
+    appliance: ['appliance', 'ac', 'fridge', 'refrigerator', 'microwave', 'washing machine', 'geyser'],
+    pest: ['pest', 'termite', 'cockroach', 'mosquito'],
+    gardening: ['garden', 'greenery', 'plant', 'tree', 'trimming'],
+    security: ['cctv', 'security', 'camera', 'surveillance'],
+  };
+
+  for (const [key, aliases] of Object.entries(TRADE_GROUPS)) {
+    const categoryMatchesGroup = category.includes(key) || aliases.some((a) => category.includes(a));
+    if (categoryMatchesGroup) {
+      const workerMatchesGroup = workerSkills.some(
+        (s) => s.includes(key) || aliases.some((a) => s.includes(a))
+      );
+      if (workerMatchesGroup) return true;
+      // If category belongs to this group, but worker does not, reject to prevent cross-leak
+      return false;
+    }
+  }
+
+  return false;
+}
+
 export function calculateCandidateScores(
   serviceCategory: string,
   workers: Worker[],
@@ -21,19 +77,20 @@ export function calculateCandidateScores(
   excludedWorkerIds: string[] = [],
   customerLocation?: { lat: number; lng: number }
 ): CandidateScore[] {
+  // STRICT filter: Exclude workers who do not match the required trade category
   const eligibleWorkers = workers.filter(
-    (w) => !excludedWorkerIds.includes(w.id) && w.verificationStatus === 'VERIFIED'
+    (w) =>
+      !excludedWorkerIds.includes(w.id) &&
+      w.verificationStatus === 'VERIFIED' &&
+      isWorkerSkillMatching(w, serviceCategory)
   );
 
   const scoredCandidates: CandidateScore[] = eligibleWorkers.map((worker) => {
-    // 1. Skill Compatibility (0 - 100)
+    // 1. Skill Compatibility (Strict Match: 90 - 100)
     const hasCategory = worker.skills.some(
       (s) => s.toLowerCase() === serviceCategory.toLowerCase()
     );
-    const hasGeneralSkill = worker.skills.some(
-      (s) => s.toLowerCase().includes('repairs') || s.toLowerCase().includes('general')
-    );
-    const skillCompatibility = hasCategory ? 100 : hasGeneralSkill ? 65 : 25;
+    const skillCompatibility = hasCategory ? 100 : 90;
 
     // 2. Worker Proficiency (0 - 100)
     const proficiency = Math.min(100, Math.max(0, worker.proficiencyScore));

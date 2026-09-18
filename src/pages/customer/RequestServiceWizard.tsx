@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { INITIAL_SERVICES } from '../../store/initialData';
 import { UrgencyTier } from '../../types';
@@ -26,6 +26,8 @@ import {
   Trees,
   Cctv,
   CheckCircle2,
+  X,
+  ImageIcon,
 } from 'lucide-react';
 
 interface RequestServiceWizardProps {
@@ -70,14 +72,37 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
   const [urgencyTier, setUrgencyTier] = useState<UrgencyTier>('STANDARD');
   const [address, setAddress] = useState<string>(currentUser.address || 'Flat 402, Block B, Green Residency');
   const [society, setSociety] = useState<string>(currentUser.societyName || 'Green Residency');
-  const [mockPhotoUploaded, setMockPhotoUploaded] = useState<boolean>(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Hidden camera / file input ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync if props change
   React.useEffect(() => {
     if (preselectedService) setSelectedService(preselectedService);
     if (preselectedProblem) setSelectedProblem(preselectedProblem);
   }, [preselectedService, preselectedProblem]);
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setSelectedPhoto(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setSelectedPhoto(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const activeServiceObj =
     INITIAL_SERVICES.find(
@@ -113,9 +138,7 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
         serviceCategory: selectedService,
         problemType: finalProblem,
         details: details || 'Standard residential inspection and fix requested.',
-        photos: mockPhotoUploaded
-          ? ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400']
-          : [],
+        photos: selectedPhoto ? [selectedPhoto] : [],
         urgencyTier,
         societyName: society,
         customAddress: address,
@@ -125,6 +148,8 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
       onClose();
       // Reset for next use
       setStep(1);
+      setSelectedPhoto(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       if (onBookingCreated) {
         onBookingCreated(booking.id);
       }
@@ -143,6 +168,8 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
       onClose={() => {
         onClose();
         setStep(1);
+        setSelectedPhoto(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
       }}
       title={stepMeta[step - 1].title}
       subtitle={`Screen ${step} of 3 · ${stepMeta[step - 1].subtitle}`}
@@ -293,22 +320,71 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
 
             {/* Photo Attachment & Location */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Photo Upload Simulation */}
-              <div className="p-3 rounded-2xl border border-[#E8E2D5] bg-[#FCF9F3] flex flex-col justify-between">
-                <span className="text-xs font-bold text-[#292824] block mb-1">Attach Photo</span>
-                <p className="text-[11px] text-[#77736B] mb-2.5">Helps worker bring exact parts.</p>
-                <button
-                  type="button"
-                  onClick={() => setMockPhotoUploaded(!mockPhotoUploaded)}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
-                    mockPhotoUploaded
-                      ? 'bg-[#E6ECE4] text-[#2A3927] border border-[#CFDDD0]'
-                      : 'bg-[#F3EEE4] text-[#524E47] hover:bg-[#E8E2D5]'
-                  }`}
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>{mockPhotoUploaded ? '✓ Photo Attached' : 'Take / Upload Photo'}</span>
-                </button>
+              {/* Photo Upload Section */}
+              <div className="p-3.5 rounded-2xl border border-[#E8E2D5] bg-[#FCF9F3] flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-[#292824]">Attach Photo</span>
+                    {selectedPhoto && (
+                      <span className="text-[10px] font-bold text-[#445D3E] bg-[#E6ECE4] px-1.5 py-0.5 rounded flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
+                        Attached
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#77736B] mb-2.5">
+                    Helps worker diagnose problem & bring exact replacement parts.
+                  </p>
+                </div>
+
+                {/* Hidden File Input with camera capture */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handlePhotoSelect}
+                />
+
+                {selectedPhoto ? (
+                  <div className="space-y-2">
+                    <div className="relative rounded-xl overflow-hidden border border-[#CFDDD0] bg-black/5 aspect-video sm:aspect-auto sm:h-28 flex items-center justify-center">
+                      <img
+                        src={selectedPhoto}
+                        alt="Problem preview"
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 py-1.5 px-2 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] rounded-lg text-[11px] font-bold text-[#524E47] transition-colors cursor-pointer flex items-center justify-center gap-1"
+                      >
+                        <Camera className="w-3 h-3 text-[#537895]" />
+                        <span>Retake</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-[11px] font-bold text-rose-700 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer bg-[#F3EEE4] text-[#524E47] hover:bg-[#E8E2D5] border border-transparent hover:border-[#CFDDD0]"
+                  >
+                    <Camera className="w-3.5 h-3.5 text-[#537895]" />
+                    <span>Take / Upload Photo</span>
+                  </button>
+                )}
               </div>
 
               {/* Society & Flat Location */}
@@ -417,6 +493,15 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
                 <span>Specialist:</span>
                 <strong className="text-[#292824]">Verified {selectedService} Specialist</strong>
               </div>
+              {selectedPhoto && (
+                <div className="flex justify-between items-center pt-1 border-t border-[#E8E2D5]/60">
+                  <span>Photo:</span>
+                  <span className="text-[#445D3E] font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
+                    Attached
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         )}

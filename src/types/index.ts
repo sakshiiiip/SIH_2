@@ -159,11 +159,14 @@ export type BookingState =
   | 'SUBMITTED'
   | 'MATCHING'
   | 'MATCHED'
+  | 'PENDING_ASSIGNMENT'
+  | 'WORKER_ASSIGNED'
   | 'PENDING_WORKER_ACCEPTANCE'
   | 'CONFIRMED'
   | 'TRAVELLING'
   | 'ARRIVED'
   | 'IN_PROGRESS'
+  | 'AWAITING_VERIFICATION'
   | 'COMPLETED'
   | 'PAID'
   | 'RATED'
@@ -172,7 +175,10 @@ export type BookingState =
   | 'QUALITY_ISSUE'
   | 'REVIEW'
   | 'REVISIT'
-  | 'REASSIGNED';
+  | 'REVISIT_REQUESTED'
+  | 'REVISIT_SCHEDULED'
+  | 'REASSIGNED'
+  | 'CANCELLED';
 
 export interface CandidateScore {
   worker: Worker;
@@ -237,7 +243,39 @@ export interface Booking {
   workPhotos?: string[];
   startedAt?: string;
   completedAt?: string;
+  // Before/After job photo evidence
+  beforeImage?: string;
+  afterImage?: string;
+  // Customer confirms work was done satisfactorily
+  customerConfirmation?: boolean;
+  customerConfirmedAt?: string;
+  // Manager verification record
+  managerVerification?: {
+    verifiedBy: string;
+    status: 'APPROVED' | 'REJECTED' | 'REVISIT_NEEDED';
+    notes?: string;
+    verifiedAt?: string;
+  };
+  // Revisit flow details
+  revisitDetails?: {
+    reason: string;
+    scheduledDate?: string;
+    status: 'PENDING' | 'SCHEDULED' | 'COMPLETED';
+    requestedAt?: string;
+  };
+  // Cancellation audit
+  cancellationDetails?: {
+    cancelledBy: string;
+    reason: string;
+    cancelledAt?: string;
+  };
+  // Compatibility aliases
+  category?: string;
+  workerId?: string;
+  scheduledDate?: string;
+  scheduledTimeSlot?: string;
 }
+
 
 export type ServiceRequest = Booking;
 

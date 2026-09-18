@@ -64,15 +64,30 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   const [selectedWorkerForProfile, setSelectedWorkerForProfile] = useState<Worker | null>(null);
   const [sosJob, setSosJob] = useState<Booking | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const prevActiveStateRef = useRef<string | null>(null);
 
   // Find active booking for current customer
   const myBookings = bookings.filter((b) => b.customerId === currentUser.id);
   const activeBooking = myBookings.find(
-    (b) => !['PAID', 'RATED'].includes(b.state)
+    (b) => !['PAID', 'RATED', 'CANCELLED'].includes(b.state)
   );
   const pastBookings = myBookings.filter((b) =>
     ['COMPLETED', 'PAID', 'RATED'].includes(b.state)
   );
+
+  // Detect WORKER_ASSIGNED transition and notify customer
+  useEffect(() => {
+    const currentState = activeBooking?.state ?? null;
+    const prevState = prevActiveStateRef.current;
+    if (currentState === 'WORKER_ASSIGNED' && prevState !== 'WORKER_ASSIGNED' && prevState !== null) {
+      showToast({
+        title: '🎉 Worker Assigned!',
+        message: `${activeBooking?.matchedWorker?.name || 'A verified specialist'} has been assigned to your request. Track your service now.`,
+        type: 'success',
+      });
+    }
+    prevActiveStateRef.current = currentState;
+  }, [activeBooking?.state]);
 
   // Is SOS relevant for current active booking state?
   const isSOSActiveState = activeBooking && ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(activeBooking.state);
@@ -260,7 +275,11 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             <span className="text-xs text-[#77736B] font-mono">Booking #{activeBooking.id}</span>
           </div>
 
-          <div className="p-4 sm:p-5 bg-[#FCF9F3] border-2 border-[#B8CBDD] rounded-2xl shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
+          <div className={`p-4 sm:p-5 bg-[#FCF9F3] rounded-2xl shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative border-2 transition-all ${
+            activeBooking.state === 'WORKER_ASSIGNED'
+              ? 'border-[#6E8B67] ring-2 ring-[#CFDDD0] ring-offset-1'
+              : 'border-[#B8CBDD]'
+          }`}>
             {/* Contextual SOS button in top-right of active card */}
             {isSOSActiveState && (
               <button
@@ -274,7 +293,17 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               </button>
             )}
 
-            <div className="space-y-2 min-w-0 pr-12 sm:pr-0">
+            {/* WORKER_ASSIGNED banner */}
+            {activeBooking.state === 'WORKER_ASSIGNED' && (
+              <div className="absolute top-0 left-0 right-0 bg-[#E6ECE4] border-b border-[#CFDDD0] rounded-t-2xl px-4 py-1.5 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#6E8B67] animate-pulse" />
+                <span className="text-[11px] font-bold text-[#364A32]">
+                  ✓ Specialist assigned — ready to track your service
+                </span>
+              </div>
+            )}
+
+            <div className={`space-y-2 min-w-0 pr-12 sm:pr-0 ${activeBooking.state === 'WORKER_ASSIGNED' ? 'pt-6' : ''}`}>
               <div className="flex items-center gap-2">
                 <Badge variant={activeStatusInfo.badgeVariant} dot size="sm">
                   {activeStatusInfo.headline}
@@ -298,7 +327,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   />
                   <div className="flex items-center gap-2 text-xs">
                     <strong className="text-[#292824]">{activeBooking.matchedWorker.name}</strong>
-                    <span className="text-[10px] text-[#445D3E] bg-[#E6ECE4] px-1.5 py-0.2 rounded font-bold">
+                    <span className="text-[10px] text-[#445D3E] bg-[#E6ECE4] px-1.5 py-0.5 rounded font-bold">
                       ✓ Verified
                     </span>
                     <span className="text-[#77736B] flex items-center gap-0.5">
@@ -319,7 +348,11 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               <button
                 type="button"
                 onClick={() => onTrackBooking(activeBooking)}
-                className="px-4 py-2 bg-[#537895] hover:bg-[#41637E] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                className={`px-4 py-2 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  activeBooking.state === 'WORKER_ASSIGNED'
+                    ? 'bg-[#445D3E] hover:bg-[#33462F] animate-pulse'
+                    : 'bg-[#537895] hover:bg-[#41637E]'
+                }`}
               >
                 <span>Track Service</span>
                 <ChevronRight className="w-3.5 h-3.5" />

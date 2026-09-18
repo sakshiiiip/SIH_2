@@ -47,7 +47,7 @@ import {
 import { calculateCandidateScores } from '../utils/matchingEngine';
 import { workerAuthService } from '../services/workerAuthService';
 
-const STORAGE_KEY = 'cooperative_platform_state_v4';
+const STORAGE_KEY = 'cooperative_platform_state_v5';
 
 interface CooperativeStoreContextType {
   // Session & Authentication
@@ -95,11 +95,18 @@ interface CooperativeStoreContextType {
     customAddress?: string;
   }) => Booking;
   acceptBookingByWorker: (bookingId: string, workerId: string) => void;
+  acceptJob: (jobId: string, workerId: string) => void;
   rejectBookingByWorker: (bookingId: string, workerId: string) => void;
   updateBookingState: (bookingId: string, newState: BookingState) => void;
   verifyBookingOTP: (bookingId: string, enteredOtp: string) => boolean;
   verifyOTPAndStartJob: (bookingId: string, enteredOtp: string) => boolean;
   completeBooking: (bookingId: string, notes?: string, photos?: string[]) => void;
+  uploadJobPhotos: (bookingId: string, photos: { beforeImage?: string; afterImage?: string }) => void;
+  confirmCustomerJob: (bookingId: string) => void;
+  verifyJobByManager: (bookingId: string, verificationData: { verifiedBy: string; status: 'APPROVED' | 'REJECTED' | 'REVISIT_NEEDED'; notes?: string }) => void;
+  requestRevisit: (bookingId: string, revisitData: { reason: string }) => void;
+  scheduleRevisit: (bookingId: string, newDate: string) => void;
+  cancelJob: (bookingId: string, cancellationData: { cancelledBy: string; reason: string }) => void;
   payBooking: (bookingId: string) => void;
   rateBooking: (bookingId: string, stars: number, comment: string) => void;
   reportQualityIssue: (
@@ -633,6 +640,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       problemType: data.problemType,
       details: data.details,
       photos: data.photos || [],
+      beforeImage: data.photos && data.photos.length > 0 ? data.photos[0] : undefined,
       urgencyTier: data.urgencyTier,
       state: 'PENDING_WORKER_ACCEPTANCE',
       createdAt: new Date().toISOString(),
@@ -676,17 +684,19 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     return newBooking;
   };
 
-  // ACCEPT BOOKING
-  const acceptBookingByWorker = (bookingId: string, workerId: string) => {
+  // ACCEPT JOB / ASSIGN WORKER
+  const acceptJob = (jobId: string, workerId: string) => {
+    const worker = workers.find((w) => w.id === workerId);
     setBookings((prev) =>
       prev.map((b) => {
-        if (b.id === bookingId) {
-          const worker = workers.find((w) => w.id === workerId) || b.matchedWorker;
+        if (b.id === jobId) {
+          const assignedWorker = worker || b.matchedWorker;
           return {
             ...b,
-            state: 'CONFIRMED',
+            state: 'WORKER_ASSIGNED',
+            workerId: workerId,
             matchedWorkerId: workerId,
-            matchedWorker: worker,
+            matchedWorker: assignedWorker,
             updatedAt: new Date().toISOString(),
           };
         }
@@ -696,11 +706,22 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
     addNotification({
       recipientRole: 'customer',
-      title: 'Worker Confirmed!',
-      message: `Your booking has been accepted by verified cooperative worker.`,
+      title: 'Worker Assigned!',
+      message: `${worker?.name || 'Verified specialist'} has been assigned to your service request.`,
       type: 'success',
-      relatedBookingId: bookingId,
+      relatedBookingId: jobId,
     });
+
+    showToast({
+      title: 'Job Accepted',
+      message: `Assigned to request #${jobId}.`,
+      type: 'success',
+    });
+  };
+
+  // ACCEPT BOOKING (compatibility handler)
+  const acceptBookingByWorker = (bookingId: string, workerId: string) => {
+    acceptJob(bookingId, workerId);
   };
 
   // REJECT BOOKING & AUTOMATIC REMATCH
@@ -809,14 +830,14 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     return false;
   };
 
-  // COMPLETE BOOKING
+  // COMPLETE BOOKING — transitions to AWAITING_VERIFICATION for manager sign-off
   const completeBooking = (bookingId: string, notes?: string, photos?: string[]) => {
     setBookings((prev) =>
       prev.map((b) => {
         if (b.id === bookingId) {
           return {
             ...b,
-            state: 'COMPLETED',
+            state: 'AWAITING_VERIFICATION' as const,
             notes: notes || b.notes,
             workPhotos: photos || b.workPhotos,
             completedAt: new Date().toISOString(),
@@ -829,11 +850,270 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
     addNotification({
       recipientRole: 'customer',
-      title: 'Job Completed!',
-      message: 'Service has been marked complete. Please review and approve payment.',
+      title: 'Job Completed — Awaiting Verification',
+      message: 'Worker has marked the job done. Please review and confirm the work, or request a revisit.',
       type: 'success',
       relatedBookingId: bookingId,
     });
+
+    addNotification({
+      recipientRole: 'society_manager',
+      title: '🔍 Job Ready for Verification',
+      message: `Booking ${bookingId} has been completed by the worker and is pending your approval.`,
+      type: 'info',
+      relatedBookingId: bookingId,
+    });
+
+    showToast({
+      title: 'Job Submitted for Verification',
+      message: 'Awaiting customer confirmation and manager sign-off.',
+      type: 'success',
+    });
+  };
+
+  // UPLOAD JOB PHOTOS (before/after evidence)
+  const uploadJobPhotos = (
+    bookingId: string,
+    photos: { beforeImage?: string; afterImage?: string }
+  ) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              beforeImage: photos.beforeImage ?? b.beforeImage,
+              afterImage: photos.afterImage ?? b.afterImage,
+              updatedAt: new Date().toISOString(),
+            }
+          : b
+      )
+    );
+  };
+
+  // CUSTOMER CONFIRMS JOB IS DONE SATISFACTORILY
+  const confirmCustomerJob = (bookingId: string) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              customerConfirmation: true,
+              customerConfirmedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+          : b
+      )
+    );
+
+    addNotification({
+      recipientRole: 'society_manager',
+      title: '✅ Customer Confirmed Job',
+      message: `Customer has confirmed work for Booking ${bookingId}. Ready for final approval.`,
+      type: 'success',
+      relatedBookingId: bookingId,
+    });
+
+    showToast({
+      title: 'Job Confirmed',
+      message: 'Thank you! Your confirmation has been recorded.',
+      type: 'success',
+    });
+  };
+
+  // MANAGER VERIFIES COMPLETED JOB
+  const verifyJobByManager = (
+    bookingId: string,
+    verificationData: {
+      verifiedBy: string;
+      status: 'APPROVED' | 'REJECTED' | 'REVISIT_NEEDED';
+      notes?: string;
+    }
+  ) => {
+    const nextState =
+      verificationData.status === 'APPROVED'
+        ? ('COMPLETED' as const)
+        : verificationData.status === 'REVISIT_NEEDED'
+        ? ('REVISIT_REQUESTED' as const)
+        : ('QUALITY_ISSUE' as const);
+
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: nextState,
+              managerVerification: {
+                verifiedBy: verificationData.verifiedBy,
+                status: verificationData.status,
+                notes: verificationData.notes,
+                verifiedAt: new Date().toISOString(),
+              },
+              updatedAt: new Date().toISOString(),
+            }
+          : b
+      )
+    );
+
+    const toastMsg =
+      verificationData.status === 'APPROVED'
+        ? { title: 'Job Approved ✓', message: 'Job verified and marked complete.', type: 'success' as const }
+        : verificationData.status === 'REVISIT_NEEDED'
+        ? { title: 'Revisit Required', message: 'Booking flagged for revisit. Customer notified.', type: 'warning' as const }
+        : { title: 'Job Rejected', message: 'Quality issue logged for this booking.', type: 'warning' as const };
+
+    showToast(toastMsg);
+
+    addNotification({
+      recipientRole: 'customer',
+      title:
+        verificationData.status === 'APPROVED'
+          ? 'Service Approved by Manager!'
+          : verificationData.status === 'REVISIT_NEEDED'
+          ? 'Revisit Arranged by Manager'
+          : 'Service Quality Issue Noted',
+      message:
+        verificationData.status === 'APPROVED'
+          ? 'Your service has been verified and approved. You can now proceed to payment.'
+          : verificationData.status === 'REVISIT_NEEDED'
+          ? `Manager flagged this for revisit: ${verificationData.notes || 'Quality check required.'}`
+          : `Manager rejected the job: ${verificationData.notes || 'Work did not meet standards.'}`,
+      type: verificationData.status === 'APPROVED' ? 'success' : 'warning',
+      relatedBookingId: bookingId,
+    });
+
+    addAuditLog(
+      'JOB_VERIFICATION',
+      `Manager ${verificationData.verifiedBy} verified Booking ${bookingId}: ${verificationData.status}${verificationData.notes ? ` — ${verificationData.notes}` : ''}`
+    );
+  };
+
+  // CUSTOMER REQUESTS A REVISIT
+  const requestRevisit = (bookingId: string, revisitData: { reason: string }) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: 'REVISIT_REQUESTED' as const,
+              revisitDetails: {
+                reason: revisitData.reason,
+                status: 'PENDING' as const,
+                requestedAt: new Date().toISOString(),
+              },
+              updatedAt: new Date().toISOString(),
+            }
+          : b
+      )
+    );
+
+    addNotification({
+      recipientRole: 'society_manager',
+      title: '🔄 Revisit Requested by Customer',
+      message: `Booking ${bookingId}: "${revisitData.reason}"`,
+      type: 'warning',
+      relatedBookingId: bookingId,
+    });
+
+    addNotification({
+      recipientRole: 'customer',
+      title: 'Revisit Request Logged',
+      message: 'Your revisit request has been sent to the society manager. They will schedule it shortly.',
+      type: 'info',
+      relatedBookingId: bookingId,
+    });
+
+    showToast({
+      title: 'Revisit Requested',
+      message: 'Society Manager has been notified. Hang tight!',
+      type: 'info',
+    });
+  };
+
+  // MANAGER SCHEDULES A REVISIT DATE
+  const scheduleRevisit = (bookingId: string, newDate: string) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: 'REVISIT_SCHEDULED' as const,
+              revisitDetails: b.revisitDetails
+                ? { ...b.revisitDetails, scheduledDate: newDate, status: 'SCHEDULED' as const }
+                : { reason: 'Revisit arranged by manager', scheduledDate: newDate, status: 'SCHEDULED' as const },
+              updatedAt: new Date().toISOString(),
+            }
+          : b
+      )
+    );
+
+    addNotification({
+      recipientRole: 'customer',
+      title: 'Revisit Scheduled',
+      message: `Your revisit has been scheduled for ${newDate}. The worker will arrive as arranged.`,
+      type: 'success',
+      relatedBookingId: bookingId,
+    });
+
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Revisit Job Assigned',
+      message: `Please attend revisit for Booking ${bookingId} on ${newDate}.`,
+      type: 'info',
+      relatedBookingId: bookingId,
+    });
+
+    showToast({
+      title: 'Revisit Scheduled',
+      message: `Revisit confirmed for ${newDate}. Customer notified.`,
+      type: 'success',
+    });
+  };
+
+  // CANCEL A JOB
+  const cancelJob = (
+    bookingId: string,
+    cancellationData: { cancelledBy: string; reason: string }
+  ) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: 'CANCELLED' as const,
+              cancellationDetails: {
+                cancelledBy: cancellationData.cancelledBy,
+                reason: cancellationData.reason,
+                cancelledAt: new Date().toISOString(),
+              },
+              updatedAt: new Date().toISOString(),
+            }
+          : b
+      )
+    );
+
+    addNotification({
+      recipientRole: 'customer',
+      title: 'Booking Cancelled',
+      message: `Your booking has been cancelled. Reason: ${cancellationData.reason}`,
+      type: 'warning',
+      relatedBookingId: bookingId,
+    });
+
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Job Cancelled',
+      message: `Booking ${bookingId} has been cancelled.`,
+      type: 'warning',
+      relatedBookingId: bookingId,
+    });
+
+    showToast({
+      title: 'Booking Cancelled',
+      message: `Booking ${bookingId} has been cancelled.`,
+      type: 'warning',
+    });
+
+    addAuditLog('JOB_CANCEL', `Booking ${bookingId} cancelled by ${cancellationData.cancelledBy}: ${cancellationData.reason}`);
   };
 
   // PAY BOOKING
@@ -1468,11 +1748,18 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         bookings,
         createBooking,
         acceptBookingByWorker,
+        acceptJob,
         rejectBookingByWorker,
         updateBookingState,
         verifyBookingOTP,
         verifyOTPAndStartJob,
         completeBooking,
+        uploadJobPhotos,
+        confirmCustomerJob,
+        verifyJobByManager,
+        requestRevisit,
+        scheduleRevisit,
+        cancelJob,
         payBooking,
         rateBooking,
         reportQualityIssue,

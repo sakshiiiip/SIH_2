@@ -25,6 +25,11 @@ import {
   Copy,
   Check,
   Lock,
+  RotateCcw,
+  Camera,
+  ImageIcon,
+  Calendar,
+  X,
 } from 'lucide-react';
 
 interface SocietyManagerDashboardProps {
@@ -41,10 +46,14 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
     getSocietyActiveBookingsCount,
     resolveSOSTicket,
     adminReviewQualityIssue,
+    verifyJobByManager,
+    scheduleRevisit,
     showToast,
   } = useCooperativeStore();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'locations' | 'workers' | 'bookings' | 'verification' | 'quality' | 'fund'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'locations' | 'workers' | 'job_verification' | 'verification' | 'bookings' | 'quality' | 'fund'
+  >('overview');
   const [workerSearch, setWorkerSearch] = useState('');
   const [selectedTrade, setSelectedTrade] = useState<string>('All');
   const [selectedWorkerForProfile, setSelectedWorkerForProfile] = useState<Worker | null>(null);
@@ -52,6 +61,8 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
   const [showCredentialsDesk, setShowCredentialsDesk] = useState(false);
   const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
   const [copiedCredentialId, setCopiedCredentialId] = useState<string | null>(null);
+  const [verificationNotes, setVerificationNotes] = useState<Record<string, string>>({});
+  const [revisitDates, setRevisitDates] = useState<Record<string, string>>({});
 
   const registeredWorkerAccounts = workerAuthService.getRegisteredWorkers();
 
@@ -74,6 +85,12 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
   );
   const pendingWorkers = societyWorkers.filter(
     (w) => w.verificationStatus === 'PENDING' || w.verificationStatus === 'UNDER_REVIEW' || (w.documents && w.documents.some(d => d.status === 'PENDING'))
+  );
+  const awaitingJobVerifications = societyBookings.filter(
+    (b) => b.state === 'AWAITING_VERIFICATION'
+  );
+  const revisitRequests = societyBookings.filter(
+    (b) => b.state === 'REVISIT_REQUESTED'
   );
   const qualityDisputes = societyBookings.filter(
     (b) => b.state === 'QUALITY_ISSUE' || b.state === 'REVISIT' || b.qualityIssue
@@ -225,7 +242,8 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
           { key: 'overview', label: 'Overview' },
           { key: 'locations', label: `Worker Locations (${societyWorkers.length})` },
           { key: 'workers', label: `Workers (${societyWorkersCount})` },
-          { key: 'verification', label: `Verification Queue (${pendingWorkers.length})` },
+          { key: 'job_verification', label: `Job Verification (${awaitingJobVerifications.length + revisitRequests.length})` },
+          { key: 'verification', label: `Worker KYC (${pendingWorkers.length})` },
           { key: 'bookings', label: `Bookings (${societyBookings.length})` },
           { key: 'quality', label: `Service Issues (${qualityDisputes.length})` },
           { key: 'fund', label: 'Cooperative Fund' },
@@ -477,6 +495,294 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
               No workers matched your search filter.
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB: JOB VERIFICATION QUEUE (Person 2 Deliverable) */}
+      {activeTab === 'job_verification' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#E8E2D5]">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[#80432E] flex items-center gap-1.5">
+                <FileCheck className="w-4 h-4 text-[#6E8B67]" />
+                Job Verification & Revisit Queue
+              </h2>
+              <p className="text-xs text-[#77736B] mt-0.5">
+                Inspect before & after photo evidence, verify resident sign-off, and approve settlements or schedule revisits.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold bg-[#E6ECE4] text-[#364A32] border border-[#CFDDD0] px-3 py-1 rounded-xl">
+                {awaitingJobVerifications.length} Awaiting Sign-off
+              </span>
+              <span className="text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1 rounded-xl">
+                {revisitRequests.length} Revisit Requests
+              </span>
+            </div>
+          </div>
+
+          {/* Section 1: Jobs Awaiting Manager Sign-Off */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-[#292824] uppercase tracking-wider">
+              1. Jobs Pending Manager Verification ({awaitingJobVerifications.length})
+            </h3>
+
+            {awaitingJobVerifications.length === 0 ? (
+              <div className="p-8 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center space-y-1">
+                <CheckCircle2 className="w-8 h-8 text-[#6E8B67] mx-auto mb-1" />
+                <strong className="text-xs font-bold text-[#292824] block">Verification queue clear.</strong>
+                <p className="text-xs text-[#77736B]">
+                  No completed jobs are currently waiting for manager sign-off in {currentSocietyName}.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {awaitingJobVerifications.map((b) => {
+                  return (
+                    <div
+                      key={b.id}
+                      className="p-5 bg-[#FCF9F3] border-2 border-blue-200 rounded-2xl shadow-card space-y-4"
+                    >
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8E2D5]">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-blue-100 text-blue-900 border border-blue-200 rounded-md">
+                              {b.serviceCategory}
+                            </span>
+                            <Badge variant="coop" size="sm">Awaiting Sign-off</Badge>
+                            <span className="text-[11px] font-mono text-[#77736B]">#{b.id}</span>
+                          </div>
+                          <h4 className="text-sm font-extrabold text-[#292824]">{b.problemType}</h4>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {b.customerConfirmation ? (
+                            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              Resident Confirmed
+                            </span>
+                          ) : (
+                            <span className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1 rounded-xl">
+                              Resident Confirmation Pending
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Details row */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-0.5">
+                          <span className="text-[10px] uppercase font-bold text-[#77736B] block">Customer</span>
+                          <strong className="text-[#292824] block">{b.customerName}</strong>
+                          <span className="text-[#524E47] block truncate">{b.customerAddress}</span>
+                          <span className="text-[#77736B]">{b.customerPhone}</span>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-0.5">
+                          <span className="text-[10px] uppercase font-bold text-[#77736B] block">Assigned Worker</span>
+                          <strong className="text-[#292824] block">{b.matchedWorker?.name || 'Assigned Worker'}</strong>
+                          <span className="text-[#524E47] block">Worker Share: ₹{b.pricing.workerShare}</span>
+                          <span className="text-[#77736B]">Completed: {b.completedAt?.split('T')[0] || 'Today'}</span>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-0.5">
+                          <span className="text-[10px] uppercase font-bold text-[#77736B] block">Billing Breakdown</span>
+                          <strong className="text-[#445D3E] font-mono text-sm block">Total: ₹{b.pricing.total}</strong>
+                          <span className="text-[#77736B] block text-[11px]">
+                            Society: ₹{b.pricing.societyShare} · Fund: ₹{b.pricing.cooperativeFund}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Photo Evidence Side-by-Side */}
+                      <div className="space-y-1.5">
+                        <span className="text-xs font-bold text-[#524E47] flex items-center gap-1.5">
+                          <Camera className="w-3.5 h-3.5 text-[#6E8B67]" />
+                          Work Execution Evidence (Before & After)
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="relative rounded-2xl overflow-hidden border border-[#E8E2D5] bg-white h-36 flex flex-col justify-between p-2">
+                            {b.beforeImage ? (
+                              <img
+                                src={b.beforeImage}
+                                alt="Before Repair"
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs">
+                                <ImageIcon className="w-6 h-6 mb-1 text-slate-300" />
+                                No Before Photo Uploaded
+                              </div>
+                            )}
+                            <span className="relative z-10 self-start bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                              Before Work Started
+                            </span>
+                          </div>
+
+                          <div className="relative rounded-2xl overflow-hidden border-2 border-[#6E8B67] bg-[#F6FAF5] h-36 flex flex-col justify-between p-2">
+                            {b.afterImage || (b.workPhotos && b.workPhotos[0]) ? (
+                              <img
+                                src={b.afterImage || (b.workPhotos && b.workPhotos[0])}
+                                alt="After Repair"
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs">
+                                <ImageIcon className="w-6 h-6 mb-1 text-slate-300" />
+                                No After Photo Uploaded
+                              </div>
+                            )}
+                            <span className="relative z-10 self-start bg-[#445D3E] text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                              After Work Completed ✓
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Worker notes */}
+                      {b.notes && (
+                        <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-[#524E47]">
+                          <strong className="text-[#292824]">Worker Notes: </strong>
+                          <span>{b.notes}</span>
+                        </div>
+                      )}
+
+                      {/* Manager Review Notes & Actions */}
+                      <div className="space-y-2 pt-2 border-t border-[#E8E2D5]">
+                        <label className="text-xs font-semibold text-[#524E47] block">
+                          Manager Verification Notes / Instructions:
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Work confirmed in person. Pressure seals verified."
+                          value={verificationNotes[b.id] || ''}
+                          onChange={(e) =>
+                            setVerificationNotes({ ...verificationNotes, [b.id]: e.target.value })
+                          }
+                          className="w-full p-2.5 border border-[#E8E2D5] rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#6E8B67]"
+                        />
+
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+                          <span className="text-[11px] text-[#77736B]">
+                            Approving unlocks customer settlement & updates cooperative books.
+                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                verifyJobByManager(b.id, {
+                                  verifiedBy: managerName,
+                                  status: 'REJECTED',
+                                  notes: verificationNotes[b.id] || 'Quality requirements not satisfied',
+                                })
+                              }
+                              className="px-3 py-2 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                            >
+                              Reject Job
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                verifyJobByManager(b.id, {
+                                  verifiedBy: managerName,
+                                  status: 'REVISIT_NEEDED',
+                                  notes: verificationNotes[b.id] || 'Manager flagged job for revisit',
+                                })
+                              }
+                              className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Flag for Revisit</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                verifyJobByManager(b.id, {
+                                  verifiedBy: managerName,
+                                  status: 'APPROVED',
+                                  notes: verificationNotes[b.id],
+                                })
+                              }
+                              className="px-4 py-2 bg-[#445D3E] hover:bg-[#33472F] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Approve & Sign-Off</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Section 2: Revisit Requests & Scheduling */}
+          <div className="space-y-3 pt-3 border-t border-[#E8E2D5]">
+            <h3 className="text-xs font-bold text-[#292824] uppercase tracking-wider">
+              2. Resident Revisit Requests ({revisitRequests.length})
+            </h3>
+
+            {revisitRequests.length === 0 ? (
+              <div className="p-6 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center text-xs text-[#77736B]">
+                No pending customer revisit requests in this society.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {revisitRequests.map((b) => (
+                  <div
+                    key={b.id}
+                    className="p-4 bg-amber-50/50 border border-amber-200 rounded-2xl shadow-card space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="urgent" size="sm">Revisit Requested</Badge>
+                          <span className="text-[11px] font-mono text-[#77736B]">#{b.id}</span>
+                        </div>
+                        <h4 className="text-sm font-bold text-[#292824] mt-1">
+                          {b.serviceCategory} — {b.problemType}
+                        </h4>
+                        <p className="text-xs text-[#524E47]">
+                          Resident: <strong>{b.customerName}</strong> ({b.customerAddress}) · Worker: {b.matchedWorker?.name || ' राहुल'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-white rounded-xl border border-amber-200 text-xs text-amber-950">
+                      <strong className="block font-bold mb-0.5">Resident Reason for Revisit:</strong>
+                      <p>"{b.revisitDetails?.reason || 'Service quality issue needs inspection'}"</p>
+                    </div>
+
+                    {/* Schedule Revisit Form */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1">
+                      <label className="text-xs font-semibold text-[#524E47] flex items-center gap-1 shrink-0">
+                        <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                        Schedule Revisit Date:
+                      </label>
+                      <input
+                        type="date"
+                        value={revisitDates[b.id] || ''}
+                        onChange={(e) => setRevisitDates({ ...revisitDates, [b.id]: e.target.value })}
+                        className="p-2 border border-[#E8E2D5] rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-amber-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const date = revisitDates[b.id] || new Date().toISOString().split('T')[0];
+                          scheduleRevisit(b.id, date);
+                        }}
+                        className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                      >
+                        Confirm Revisit Schedule
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

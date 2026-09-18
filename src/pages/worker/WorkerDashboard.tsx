@@ -6,6 +6,7 @@ import { WorkerJobExecutionModal } from './WorkerJobExecutionModal';
 import { WorkerSOSModal } from './WorkerSOSModal';
 import { Modal } from '../../components/common/Modal';
 import { BreakSelector } from '../../components/worker/BreakSelector';
+import { isWorkerSkillMatching } from '../../utils/matchingEngine';
 import {
   MOCK_JOB_REQUESTS,
   MOCK_UPCOMING_JOBS,
@@ -78,44 +79,54 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const [breakLabel, setBreakLabel] = useState('On Break');
   const [showBreakSelector, setShowBreakSelector] = useState(false);
 
-  // Mock new job requests
+  // Mock new job requests filtered strictly by worker trade
   const [mockJobRequests, setMockJobRequests] = useState<WorkerJobRequest[]>(MOCK_JOB_REQUESTS);
   const [processingJobId, setProcessingJobId] = useState<string | null>(null);
 
-  // Real store pending booking
+  // Real store pending booking (assigned or open in their trade)
   const pendingIncomingBooking = bookings.find(
     (b) =>
-      (b.matchedWorkerId === currentWorker.id || b.matchedWorkerId === 'w_rahul') &&
-      b.state === 'PENDING_WORKER_ACCEPTANCE'
+      (((b.matchedWorkerId === currentWorker.id || b.matchedWorkerId === 'w_rahul') &&
+        ['PENDING_WORKER_ACCEPTANCE', 'WORKER_ASSIGNED'].includes(b.state)) ||
+        b.state === 'PENDING_ASSIGNMENT') &&
+      isWorkerSkillMatching(currentWorker, b.category || b.serviceCategory)
   );
 
   // Real store upcoming booking
   const storeUpcomingBooking = bookings.find(
     (b) =>
       (b.matchedWorkerId === currentWorker.id || b.matchedWorkerId === 'w_rahul') &&
-      ['CONFIRMED', 'TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(b.state)
+      ['CONFIRMED', 'TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(b.state) &&
+      isWorkerSkillMatching(currentWorker, b.category || b.serviceCategory)
+  );
+
+  const tradeMatchedMockRequests = mockJobRequests.filter((r) =>
+    isWorkerSkillMatching(currentWorker, r.serviceType)
+  );
+  const tradeMatchedUpcomingMock = MOCK_UPCOMING_JOBS.filter((j) =>
+    isWorkerSkillMatching(currentWorker, j.serviceType)
   );
 
   // Next job to display
   const nextJob = storeUpcomingBooking
     ? {
         id: storeUpcomingBooking.id,
-        service: storeUpcomingBooking.serviceCategory,
+        service: storeUpcomingBooking.category || storeUpcomingBooking.serviceCategory,
         problem: storeUpcomingBooking.problemType,
         location: storeUpcomingBooking.customerAddress || 'Green Residency, Block B',
         dateTime: 'Today · Scheduled',
-        earnings: storeUpcomingBooking.pricing.workerShare,
+        earnings: storeUpcomingBooking.pricing?.workerShare || 400,
         isReal: true,
         booking: storeUpcomingBooking,
       }
-    : MOCK_UPCOMING_JOBS.length > 0
+    : tradeMatchedUpcomingMock.length > 0
     ? {
-        id: MOCK_UPCOMING_JOBS[0].jobId,
-        service: MOCK_UPCOMING_JOBS[0].serviceType,
-        problem: MOCK_UPCOMING_JOBS[0].problemType,
-        location: MOCK_UPCOMING_JOBS[0].customer.address,
-        dateTime: `${MOCK_UPCOMING_JOBS[0].date}, ${MOCK_UPCOMING_JOBS[0].time}`,
-        earnings: MOCK_UPCOMING_JOBS[0].estimatedEarnings,
+        id: tradeMatchedUpcomingMock[0].jobId,
+        service: tradeMatchedUpcomingMock[0].serviceType,
+        problem: tradeMatchedUpcomingMock[0].problemType,
+        location: tradeMatchedUpcomingMock[0].customer.address,
+        dateTime: `${tradeMatchedUpcomingMock[0].date}, ${tradeMatchedUpcomingMock[0].time}`,
+        earnings: tradeMatchedUpcomingMock[0].estimatedEarnings,
         isReal: false,
         booking: null,
       }
@@ -125,27 +136,27 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const incomingRequest = pendingIncomingBooking
     ? {
         id: pendingIncomingBooking.id,
-        service: pendingIncomingBooking.serviceCategory,
+        service: pendingIncomingBooking.category || pendingIncomingBooking.serviceCategory,
         problem: pendingIncomingBooking.problemType,
         customerName: pendingIncomingBooking.customerName,
         location: pendingIncomingBooking.customerAddress || 'Green Residency',
         distance: '0.9 km',
         dateTime: 'Immediate Dispatch',
-        earnings: pendingIncomingBooking.pricing.workerShare,
+        earnings: pendingIncomingBooking.pricing?.workerShare || 400,
         priority: 'urgent' as const,
         isReal: true,
       }
-    : mockJobRequests.length > 0
+    : tradeMatchedMockRequests.length > 0
     ? {
-        id: mockJobRequests[0].jobId,
-        service: mockJobRequests[0].serviceType,
-        problem: mockJobRequests[0].problemType,
-        customerName: mockJobRequests[0].customer.name,
-        location: mockJobRequests[0].location,
-        distance: mockJobRequests[0].distance,
-        dateTime: `${mockJobRequests[0].date}, ${mockJobRequests[0].time}`,
-        earnings: mockJobRequests[0].estimatedEarnings,
-        priority: mockJobRequests[0].priority,
+        id: tradeMatchedMockRequests[0].jobId,
+        service: tradeMatchedMockRequests[0].serviceType,
+        problem: tradeMatchedMockRequests[0].problemType,
+        customerName: tradeMatchedMockRequests[0].customer.name,
+        location: tradeMatchedMockRequests[0].location,
+        distance: tradeMatchedMockRequests[0].distance,
+        dateTime: `${tradeMatchedMockRequests[0].date}, ${tradeMatchedMockRequests[0].time}`,
+        earnings: tradeMatchedMockRequests[0].estimatedEarnings,
+        priority: tradeMatchedMockRequests[0].priority,
         isReal: false,
       }
     : null;

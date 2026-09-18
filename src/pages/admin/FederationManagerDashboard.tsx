@@ -10,6 +10,12 @@ import {
   ChevronRight,
   X,
   ShieldCheck,
+  FileCheck,
+  Camera,
+  ImageIcon,
+  CheckCircle2,
+  RotateCcw,
+  Clock,
 } from 'lucide-react';
 
 interface FederationManagerDashboardProps {
@@ -21,6 +27,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
     federations,
     societies,
     workers,
+    bookings,
     cooperativeFund,
     toolBank,
     config,
@@ -33,10 +40,18 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
   } = useCooperativeStore();
 
   const [matchingWeights, setMatchingWeights] = useState(config.matchingWeights);
-  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'societies' | 'tool_bank' | 'coop_fund' | 'matching'>('overview');
+  const [activeSubTab, setActiveSubTab] = useState<
+    'overview' | 'societies' | 'verification' | 'tool_bank' | 'coop_fund' | 'matching'
+  >('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [selectedSocietyForDrilldown, setSelectedSocietyForDrilldown] = useState<SocietyData | null>(null);
   const [selectedWorkerForProfile, setSelectedWorkerForProfile] = useState<Worker | null>(null);
+
+  const pendingVerificationJobs = bookings.filter(
+    (b) =>
+      ['AWAITING_VERIFICATION', 'REVISIT_REQUESTED', 'REVISIT_SCHEDULED'].includes(b.state) ||
+      Boolean(b.managerVerification)
+  );
 
   const currentFederation = federations[0] || {
     id: 'fed_mumbai_pune',
@@ -164,6 +179,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
         {[
           { key: 'overview', label: 'Overview' },
           { key: 'societies', label: `Member Societies (${societies.length})` },
+          { key: 'verification', label: `Verification Queue (${pendingVerificationJobs.length})` },
           { key: 'matching', label: 'Matching Preferences' },
           { key: 'coop_fund', label: 'Cooperative Fund' },
           { key: 'tool_bank', label: `Shared Assets (${toolBank.length})` },
@@ -354,6 +370,186 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* SUB-TAB: REGIONAL JOB VERIFICATION QUEUE (Cross-Society Oversight) */}
+      {activeSubTab === 'verification' && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#E8E2D5]">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[#504161] flex items-center gap-1.5">
+                <FileCheck className="w-4 h-4 text-[#6E8B67]" />
+                Regional Job Verification & Quality Audit
+              </h2>
+              <p className="text-xs text-[#77736B] mt-0.5">
+                Federation-wide oversight of work completion evidence, before/after photo records, and society manager approvals.
+              </p>
+            </div>
+            <span className="text-xs font-bold bg-[#EFEBF4] text-[#504161] border border-[#DFD8E8] px-3 py-1 rounded-xl">
+              {pendingVerificationJobs.length} Active Records
+            </span>
+          </div>
+
+          {/* Quick status counter summary */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl">
+              <span className="text-[10px] uppercase font-bold text-[#77736B] block">Pending Manager Sign-off</span>
+              <span className="text-xl font-bold font-mono text-blue-900 block mt-0.5">
+                {bookings.filter((b) => b.state === 'AWAITING_VERIFICATION').length}
+              </span>
+              <span className="text-[10px] text-blue-700">Awaiting local manager review</span>
+            </div>
+            <div className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl">
+              <span className="text-[10px] uppercase font-bold text-[#77736B] block">Revisit Queue</span>
+              <span className="text-xl font-bold font-mono text-amber-900 block mt-0.5">
+                {bookings.filter((b) => ['REVISIT_REQUESTED', 'REVISIT_SCHEDULED'].includes(b.state)).length}
+              </span>
+              <span className="text-[10px] text-amber-700">Resident or manager flagged</span>
+            </div>
+            <div className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl">
+              <span className="text-[10px] uppercase font-bold text-[#77736B] block">Manager Approved Total</span>
+              <span className="text-xl font-bold font-mono text-[#445D3E] block mt-0.5">
+                {bookings.filter((b) => b.managerVerification?.status === 'APPROVED').length}
+              </span>
+              <span className="text-[10px] text-[#6E8B67]">Zero-dispute approved jobs</span>
+            </div>
+          </div>
+
+          {/* Verification Items List */}
+          {pendingVerificationJobs.length === 0 ? (
+            <div className="p-8 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center space-y-1">
+              <CheckCircle2 className="w-8 h-8 text-[#6E8B67] mx-auto mb-1" />
+              <strong className="text-xs font-bold text-[#292824] block">All regional jobs cleared.</strong>
+              <p className="text-xs text-[#77736B]">No jobs pending verification or revisit across member societies.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pendingVerificationJobs.map((b) => (
+                <div
+                  key={b.id}
+                  className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl shadow-card space-y-3 transition-all"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-[10px] font-bold text-[#504161] bg-[#EFEBF4] px-2 py-0.5 rounded-md">
+                          {b.societyName}
+                        </span>
+                        <Badge
+                          variant={
+                            b.state === 'AWAITING_VERIFICATION'
+                              ? 'coop'
+                              : b.state === 'CANCELLED'
+                              ? 'danger'
+                              : 'urgent'
+                          }
+                          size="sm"
+                        >
+                          {b.state}
+                        </Badge>
+                        <span className="text-[10px] font-mono text-[#77736B]">#{b.id}</span>
+                      </div>
+                      <h4 className="text-sm font-bold text-[#292824]">
+                        {b.serviceCategory} — {b.problemType}
+                      </h4>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-sm font-bold font-mono text-[#445D3E] block">
+                        ₹{b.pricing.total}
+                      </span>
+                      <span className="text-[10px] text-[#77736B]">
+                        Worker Share: ₹{b.pricing.workerShare}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-[#524E47]">
+                    <div>
+                      <span className="text-[10px] text-[#77736B] block">Resident:</span>
+                      <strong>{b.customerName}</strong> ({b.customerAddress})
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[#77736B] block">Worker:</span>
+                      <strong>{b.matchedWorker?.name || 'Assigned Worker'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[#77736B] block">Resident Confirmation:</span>
+                      <span className={b.customerConfirmation ? 'text-emerald-700 font-bold' : 'text-amber-700'}>
+                        {b.customerConfirmation ? '✓ Confirmed by Resident' : 'Pending Confirmation'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Photo Proof Evidence Comparison */}
+                  {(b.beforeImage || b.afterImage || (b.workPhotos && b.workPhotos.length > 0)) && (
+                    <div className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center gap-3">
+                      <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1 shrink-0">
+                        <Camera className="w-3.5 h-3.5 text-[#6E8B67]" />
+                        Photo Evidence:
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {b.beforeImage ? (
+                          <div className="relative group">
+                            <img
+                              src={b.beforeImage}
+                              alt="Before"
+                              className="w-14 h-14 object-cover rounded-lg border border-slate-200"
+                            />
+                            <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] text-center rounded-b-lg">
+                              Before
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic">No Before Photo</span>
+                        )}
+                        {(b.afterImage || (b.workPhotos && b.workPhotos[0])) ? (
+                          <div className="relative group">
+                            <img
+                              src={b.afterImage || (b.workPhotos && b.workPhotos[0])}
+                              alt="After"
+                              className="w-14 h-14 object-cover rounded-lg border border-[#6E8B67]"
+                            />
+                            <span className="absolute bottom-0 inset-x-0 bg-[#445D3E] text-white text-[8px] text-center rounded-b-lg">
+                              After ✓
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic">No After Photo</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Manager verification record if already reviewed */}
+                  {b.managerVerification && (
+                    <div className="p-2.5 bg-[#F3EEE4] border border-[#E8E2D5] rounded-xl text-xs text-[#524E47] flex items-center justify-between">
+                      <div>
+                        <strong>Manager Verification: </strong>
+                        <span className="font-semibold text-[#80432E]">{b.managerVerification.status}</span>
+                        {b.managerVerification.notes && <span> — "{b.managerVerification.notes}"</span>}
+                      </div>
+                      <span className="text-[10px] text-[#77736B]">By: {b.managerVerification.verifiedBy}</span>
+                    </div>
+                  )}
+
+                  {/* Revisit details */}
+                  {b.revisitDetails && (
+                    <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+                      <strong>Revisit Request: </strong>
+                      <span>"{b.revisitDetails.reason}"</span>
+                      {b.revisitDetails.scheduledDate && (
+                        <span className="ml-2 font-bold text-amber-800">
+                          (Scheduled: {b.revisitDetails.scheduledDate})
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
