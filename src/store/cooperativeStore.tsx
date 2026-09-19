@@ -24,6 +24,7 @@ import {
   CommunityChannel,
   CommunityMessage,
   ActiveJobSOSTicket,
+  WorkerSkillEntry,
 } from '../types';
 import {
   DEMO_USERS,
@@ -43,6 +44,7 @@ import {
   INITIAL_AUDIT_LOGS,
   INITIAL_COMMUNITY_CHANNELS,
   INITIAL_COMMUNITY_MESSAGES,
+  createDefaultWorkerDocuments,
 } from './initialData';
 import { calculateCandidateScores } from '../utils/matchingEngine';
 import { workerAuthService } from '../services/workerAuthService';
@@ -75,14 +77,29 @@ interface CooperativeStoreContextType {
   platformMetrics: PlatformSystemMetrics;
   auditLogs: PlatformAuditLog[];
   allocateFederationGrant: (federationId: string, societyId: string, amount: number, purpose: string) => void;
-  addAuditLog: (action: string, details: string) => void;
+  updateCooperativeVerification: (
+    societyId: string,
+    status: 'VERIFIED' | 'PENDING_AUDIT' | 'SUSPENDED',
+    notes?: string
+  ) => void;
+  addAuditLog: (action: string, details: string, metadata?: Partial<PlatformAuditLog>) => void;
   // Workers & Verification
   workers: Worker[];
   updateWorkerVerification: (workerId: string, status: WorkerVerificationStatus) => void;
+  updateWorkerProfile: (workerId: string, updates: Partial<Worker>) => void;
+  deactivateWorker: (workerId: string, reason?: string) => void;
   reviewWorkerDocument: (workerId: string, documentId: string, status: DocumentStatus, notes?: string) => void;
+  endorseWorkerByManager: (workerId: string, notes?: string) => void;
+  rejectWorkerByManager: (workerId: string, reason: string) => void;
+  approveWorkerByFederation: (workerId: string, notes?: string) => void;
+  rejectWorkerByFederation: (workerId: string, reason: string) => void;
   updateWorkerLocation: (workerId: string, lat: number, lng: number, status?: WorkerLocationStatus) => void;
   toggleWorkerAvailability: (workerId: string) => void;
   addWorker: (workerData: Partial<Worker> & { name: string; email: string; phone: string; skills: string[] }) => Worker;
+  addWorkerSkill: (workerId: string, skillData: Omit<WorkerSkillEntry, 'id' | 'status' | 'verifiedBy' | 'verifiedAt'>) => void;
+  verifyWorkerSkill: (workerId: string, skillId: string, status: 'VERIFIED' | 'REJECTED', reason?: string) => void;
+  verifyWorkerPersonalKyc: (workerId: string, status: 'VERIFIED' | 'REJECTED', notes?: string) => void;
+  removeWorkerSkill: (workerId: string, skillId: string) => void;
   // Bookings
   bookings: Booking[];
   createBooking: (data: {
@@ -118,6 +135,7 @@ interface CooperativeStoreContextType {
   adminReassignQualityIssue: (bookingId: string, newWorkerId: string) => void;
   completeRevisit: (bookingId: string) => void;
   adminManualAssignWorker: (bookingId: string, workerId: string) => void;
+  assignWorkerToBooking: (bookingId: string, workerId: string) => void;
   // Community & Role-Aware Discussions
   communityBookings: CommunityBooking[];
   joinCommunityBooking: (communityBookingId: string, customerName: string, flatNumber: string) => void;
@@ -214,7 +232,29 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
   });
   const [workers, setWorkers] = useState<Worker[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_workers');
-    return saved ? JSON.parse(saved) : INITIAL_WORKERS;
+    if (!saved) return INITIAL_WORKERS;
+    try {
+      const parsed: Worker[] = JSON.parse(saved);
+      return parsed.map((w) => {
+        const isVerified = w.verificationStatus === 'VERIFIED';
+        const isManagerVerified = w.verificationStatus === 'MANAGER_VERIFIED';
+        const docs =
+          w.documents && w.documents.length > 0
+            ? w.documents
+            : createDefaultWorkerDocuments(w.id, w.name, isVerified || isManagerVerified);
+        return {
+          ...w,
+          documents: docs,
+          personalKycStatus: w.personalKycStatus || (isVerified ? 'VERIFIED' : 'PENDING'),
+          skillEntries: w.skillEntries || [],
+          skills: w.skills && w.skills.length > 0 ? w.skills : w.skillEntries && w.skillEntries.length > 0 ? w.skillEntries.map((s) => s.name) : ['General Maintenance'],
+          verificationStatus: w.verificationStatus || 'PENDING',
+          kycDocumentsCount: docs.filter((d) => d.status === 'APPROVED').length,
+        };
+      });
+    } catch {
+      return INITIAL_WORKERS;
+    }
   });
   const [bookings, setBookings] = useState<Booking[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_bookings');
@@ -255,7 +295,16 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
   const [societies, setSocieties] = useState<SocietyData[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_societies');
-    return saved ? JSON.parse(saved) : INITIAL_SOCIETIES;
+    if (!saved) return INITIAL_SOCIETIES;
+    try {
+      const parsed: SocietyData[] = JSON.parse(saved);
+      return parsed.map((s) => ({
+        ...s,
+        cooperativeVerificationStatus: s.cooperativeVerificationStatus || 'VERIFIED',
+      }));
+    } catch {
+      return INITIAL_SOCIETIES;
+    }
   });
   const [societyManagers, setSocietyManagers] = useState<SocietyManagerInfo[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_society_managers');
@@ -351,15 +400,22 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     localStorage.setItem(STORAGE_KEY + '_user', JSON.stringify(user));
   };
 
-  const addAuditLog = (action: string, details: string) => {
+  const addAuditLog = (action: string, details: string, metadata?: Partial<PlatformAuditLog>) => {
     const newLog: PlatformAuditLog = {
-      id: `AUD-${Date.now()}`,
+      id: `AUD-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      actor: `${currentUser.name} (${currentRole})`,
-      role: currentRole,
+      actor: metadata?.managerName
+        ? `${metadata.managerName} (${metadata.role || currentRole})`
+        : `${currentUser.name} (${currentRole})`,
+      role: (metadata?.role as any) || currentRole,
       action,
       details,
-      ipAddress: '127.0.0.1',
+      ipAddress: metadata?.ipAddress || '127.0.0.1',
+      actionType: metadata?.actionType || (action as any) || 'OTHER',
+      societyId: metadata?.societyId || (currentUser as any).societyId,
+      societyName: metadata?.societyName || currentUser.societyName,
+      managerName: metadata?.managerName || currentUser.name,
+      ...metadata,
     };
     setAuditLogs((prev) => [newLog, ...prev]);
   };
@@ -486,20 +542,41 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         const hasRejection = updatedDocs.some((d) => d.status === 'REJECTED');
         const hasCorrection = updatedDocs.some((d) => d.status === 'CORRECTION_REQUIRED');
 
-        const nextStatus: WorkerVerificationStatus = allApproved
-          ? 'VERIFIED'
-          : hasRejection
-          ? 'FAILED'
-          : hasCorrection
-          ? 'CORRECTION_REQUIRED'
-          : 'UNDER_REVIEW';
+        const nextStatus: WorkerVerificationStatus =
+          w.verificationStatus === 'VERIFIED'
+            ? 'VERIFIED'
+            : allApproved
+            ? 'MANAGER_VERIFIED'
+            : hasRejection
+            ? 'MANAGER_REJECTED'
+            : hasCorrection
+            ? 'CORRECTION_REQUIRED'
+            : 'UNDER_REVIEW';
 
         return {
           ...w,
           documents: updatedDocs,
           verificationStatus: nextStatus,
-          localVerificationStatus: allApproved ? 'verified' : 'pending',
+          localVerificationStatus:
+            allApproved || nextStatus === 'MANAGER_VERIFIED' || nextStatus === 'VERIFIED'
+              ? 'verified'
+              : 'pending',
           kycDocumentsCount: approvedCount,
+          managerVerification: allApproved
+            ? {
+                verifiedBy: currentUser.name || 'Society Manager',
+                verifiedAt: new Date().toISOString().split('T')[0],
+                status: 'APPROVED',
+                notes: notes || 'All KYC documents reviewed and approved.',
+              }
+            : hasRejection
+            ? {
+                verifiedBy: currentUser.name || 'Society Manager',
+                verifiedAt: new Date().toISOString().split('T')[0],
+                status: 'REJECTED',
+                notes: notes || 'One or more documents were rejected during manager review.',
+              }
+            : w.managerVerification,
         };
       })
     );
@@ -511,7 +588,277 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       type: status === 'APPROVED' ? 'success' : 'warning',
     });
 
-    addAuditLog('DOC_REVIEW', `Reviewed worker ${workerId} document ${documentId}: ${status}`);
+    const targetWorker = workers.find((w) => w.id === workerId);
+    addAuditLog(
+      'UPDATE_WORKER_DOCS',
+      `Worker Documents Updated: Document ${documentId} marked ${status} for ${targetWorker?.name || workerId}`,
+      {
+        actionType: 'UPDATE_WORKER_DOCS',
+        workerId,
+        workerName: targetWorker?.name,
+        societyId: targetWorker?.societyId,
+        societyName: targetWorker?.societyName,
+        managerName: currentUser.name,
+        notes,
+      }
+    );
+  };
+
+  const endorseWorkerByManager = (workerId: string, notes?: string) => {
+    const targetWorker = workers.find((w) => w.id === workerId);
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id !== workerId) return w;
+        const updatedDocs = (w.documents || []).map((d) => ({
+          ...d,
+          status: 'APPROVED' as DocumentStatus,
+          reviewedBy: d.reviewedBy || currentUser.name || 'Society Manager',
+          reviewedAt: d.reviewedAt || new Date().toISOString().split('T')[0],
+        }));
+        return {
+          ...w,
+          documents: updatedDocs,
+          verificationStatus: 'MANAGER_VERIFIED',
+          localVerificationStatus: 'verified',
+          kycDocumentsCount: updatedDocs.length,
+          rejectionReason: undefined,
+          managerVerification: {
+            verifiedBy: currentUser.name || 'Society Manager',
+            verifiedAt: new Date().toISOString().split('T')[0],
+            status: 'APPROVED',
+            notes: notes || 'Endorsed by Society Manager for Federation Review.',
+          },
+        };
+      })
+    );
+
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Manager Endorsement Complete ✓',
+      message:
+        'Your profile has been endorsed by your Society Manager and escalated to the Federation for final credential review.',
+      type: 'info',
+    });
+
+    addNotification({
+      recipientRole: 'federation_manager',
+      title: 'New Worker Verification Request',
+      message: `A worker has been endorsed by society management and is awaiting Federation review.`,
+      type: 'info',
+    });
+
+    addAuditLog(
+      'MANAGER_ENDORSE',
+      `Worker Verified & Endorsed to Federation: ${targetWorker?.name || workerId}`,
+      {
+        actionType: 'MANAGER_ENDORSE',
+        workerId,
+        workerName: targetWorker?.name,
+        societyId: targetWorker?.societyId,
+        societyName: targetWorker?.societyName,
+        managerName: currentUser.name,
+        previousStatus: targetWorker?.verificationStatus,
+        newStatus: 'MANAGER_VERIFIED',
+        notes: notes || 'Endorsed by Society Manager for Federation Review.',
+      }
+    );
+    showToast({
+      title: 'Worker Endorsed',
+      message: 'Worker endorsed and escalated to Federation Verification queue.',
+      type: 'success',
+    });
+  };
+
+  const rejectWorkerByManager = (workerId: string, reason: string) => {
+    const targetWorker = workers.find((w) => w.id === workerId);
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id !== workerId) return w;
+        return {
+          ...w,
+          verificationStatus: 'MANAGER_REJECTED',
+          rejectionReason: reason,
+          managerVerification: {
+            verifiedBy: currentUser.name || 'Society Manager',
+            verifiedAt: new Date().toISOString().split('T')[0],
+            status: 'REJECTED',
+            notes: reason,
+          },
+        };
+      })
+    );
+
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Verification Action Required',
+      message: `Your verification was rejected by Society Management: ${reason}`,
+      type: 'warning',
+    });
+
+    addAuditLog(
+      'REJECT_WORKER',
+      `Worker Rejected by Manager: ${targetWorker?.name || workerId} — Reason: ${reason}`,
+      {
+        actionType: 'REJECT_WORKER',
+        workerId,
+        workerName: targetWorker?.name,
+        societyId: targetWorker?.societyId,
+        societyName: targetWorker?.societyName,
+        managerName: currentUser.name,
+        previousStatus: targetWorker?.verificationStatus,
+        newStatus: 'MANAGER_REJECTED',
+        reason,
+      }
+    );
+    showToast({
+      title: 'Worker Rejected',
+      message: 'Worker verification has been marked rejected.',
+      type: 'warning',
+    });
+  };
+
+  const approveWorkerByFederation = (workerId: string, notes?: string) => {
+    const targetWorker = workers.find((w) => w.id === workerId);
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id !== workerId) return w;
+        return {
+          ...w,
+          verificationStatus: 'VERIFIED',
+          localVerificationStatus: 'verified',
+          rejectionReason: undefined,
+          federationVerification: {
+            approvedBy: currentUser.name || 'Federation Council',
+            approvedAt: new Date().toISOString().split('T')[0],
+            status: 'APPROVED',
+            notes: notes || 'Credentials and compliance confirmed by Federation Council.',
+          },
+        };
+      })
+    );
+
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Federation Verification Complete! 🎉',
+      message:
+        'Congratulations! You are now a fully verified cooperative tradesperson eligible for automated job matching and customer bookings.',
+      type: 'success',
+    });
+
+    addNotification({
+      recipientRole: 'society_manager',
+      title: 'Worker Approved by Federation',
+      message: `Worker ${workerId} has received Federation approval.`,
+      type: 'success',
+    });
+
+    addAuditLog(
+      'FEDERATION_APPROVE',
+      `Federation approved worker ${targetWorker?.name || workerId}. Worker is now fully VERIFIED.`,
+      {
+        actionType: 'FEDERATION_APPROVE',
+        workerId,
+        workerName: targetWorker?.name,
+        societyId: targetWorker?.societyId,
+        societyName: targetWorker?.societyName,
+        managerName: currentUser.name,
+        previousStatus: 'MANAGER_VERIFIED',
+        newStatus: 'VERIFIED',
+        notes,
+      }
+    );
+    showToast({
+      title: 'Worker Fully Verified',
+      message: 'Federation credential approval granted. Worker is active for dispatch.',
+      type: 'success',
+    });
+  };
+
+  const rejectWorkerByFederation = (workerId: string, reason: string) => {
+    const targetWorker = workers.find((w) => w.id === workerId);
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id !== workerId) return w;
+        return {
+          ...w,
+          verificationStatus: 'FEDERATION_REJECTED',
+          rejectionReason: reason,
+          federationVerification: {
+            approvedBy: currentUser.name || 'Federation Council',
+            approvedAt: new Date().toISOString().split('T')[0],
+            status: 'REJECTED',
+            notes: reason,
+          },
+        };
+      })
+    );
+
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Federation Review Feedback',
+      message: `Federation Council returned your application: ${reason}`,
+      type: 'warning',
+    });
+
+    addNotification({
+      recipientRole: 'society_manager',
+      title: 'Worker Rejected by Federation',
+      message: `Federation Council rejected worker ${workerId}: ${reason}`,
+      type: 'warning',
+    });
+
+    addAuditLog(
+      'FEDERATION_REJECT',
+      `Federation rejected worker ${targetWorker?.name || workerId}: ${reason}`,
+      {
+        actionType: 'FEDERATION_REJECT',
+        workerId,
+        workerName: targetWorker?.name,
+        societyId: targetWorker?.societyId,
+        societyName: targetWorker?.societyName,
+        managerName: currentUser.name,
+        previousStatus: 'MANAGER_VERIFIED',
+        newStatus: 'FEDERATION_REJECTED',
+        reason,
+      }
+    );
+    showToast({
+      title: 'Federation Rejection Recorded',
+      message: 'Application returned to society manager for rectification.',
+      type: 'warning',
+    });
+  };
+
+  const updateCooperativeVerification = (
+    societyId: string,
+    status: 'VERIFIED' | 'PENDING_AUDIT' | 'SUSPENDED',
+    notes?: string
+  ) => {
+    setSocieties((prev) =>
+      prev.map((s) =>
+        s.id === societyId
+          ? {
+              ...s,
+              cooperativeVerificationStatus: status,
+              verifiedAt: new Date().toISOString().split('T')[0],
+              verifiedBy: currentUser.name || 'Federation Council',
+            }
+          : s
+      )
+    );
+    addAuditLog(
+      'SOCIETY_AUDIT',
+      `Federation updated society ${societyId} verification status to ${status}${notes ? `: ${notes}` : ''}`
+    );
+    showToast({
+      title: 'Cooperative Status Updated',
+      message: `Society status updated to ${status}.`,
+      type: 'info',
+    });
+  };
+
+  const assignWorkerToBooking = (bookingId: string, workerId: string) => {
+    adminManualAssignWorker(bookingId, workerId);
   };
 
   const updateWorkerLocation = (
@@ -535,35 +882,155 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     );
   };
 
-  const toggleWorkerAvailability = (workerId: string) => {
+  const updateWorkerProfile = (workerId: string, updates: Partial<Worker>) => {
+    let updatedWorker: Worker | undefined;
     setWorkers((prev) =>
       prev.map((w) => {
         if (w.id === workerId) {
-          const next = w.availability === 'online' ? 'offline' : 'online';
-          return {
-            ...w,
-            availability: next,
-            locationStatus: next === 'online' ? 'AVAILABLE' : 'OFFLINE',
-          };
+          updatedWorker = { ...w, ...updates };
+          return updatedWorker;
         }
         return w;
       })
     );
+    if (updatedWorker) {
+      addAuditLog(
+        'UPDATE_WORKER_PROFILE',
+        `Worker Profile Updated: ${updatedWorker.name} (${workerId})`,
+        {
+          actionType: 'UPDATE_WORKER_PROFILE',
+          workerId: updatedWorker.id,
+          workerName: updatedWorker.name,
+          societyId: updatedWorker.societyId,
+          societyName: updatedWorker.societyName,
+          managerName: currentUser.name,
+        }
+      );
+      showToast({
+        title: 'Worker Profile Updated',
+        message: `${updatedWorker.name}'s profile details updated.`,
+        type: 'info',
+      });
+    }
   };
 
-  const addWorker = (workerData: Partial<Worker> & { name: string; email: string; phone: string; skills: string[] }): Worker => {
+  const deactivateWorker = (workerId: string, reason?: string) => {
+    let deactivatedWorker: Worker | undefined;
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id === workerId) {
+          deactivatedWorker = { ...w, availability: 'offline', locationStatus: 'OFFLINE' };
+          return deactivatedWorker;
+        }
+        return w;
+      })
+    );
+    if (deactivatedWorker) {
+      addAuditLog(
+        'DEACTIVATE_WORKER',
+        `Worker Deactivated: ${deactivatedWorker.name} (${workerId})${reason ? ` — Reason: ${reason}` : ''}`,
+        {
+          actionType: 'DEACTIVATE_WORKER',
+          workerId: deactivatedWorker.id,
+          workerName: deactivatedWorker.name,
+          societyId: deactivatedWorker.societyId,
+          societyName: deactivatedWorker.societyName,
+          managerName: currentUser.name,
+          reason,
+          previousStatus: 'online',
+          newStatus: 'offline',
+        }
+      );
+      showToast({
+        title: 'Worker Deactivated',
+        message: `${deactivatedWorker.name} is now offline/deactivated.`,
+        type: 'warning',
+      });
+    }
+  };
+
+  const toggleWorkerAvailability = (workerId: string) => {
+    let changedWorker: Worker | undefined;
+    let nextStatus: string = 'online';
+    let prevStatus: string = 'offline';
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id === workerId) {
+          prevStatus = w.availability;
+          const next = w.availability === 'online' ? 'offline' : 'online';
+          nextStatus = next;
+          changedWorker = {
+            ...w,
+            availability: next,
+            locationStatus: next === 'online' ? 'AVAILABLE' : 'OFFLINE',
+          };
+          return changedWorker;
+        }
+        return w;
+      })
+    );
+    if (changedWorker) {
+      addAuditLog(
+        'CHANGE_WORKER_STATUS',
+        `Worker Status Changed: ${changedWorker.name} switched to ${nextStatus}`,
+        {
+          actionType: 'CHANGE_WORKER_STATUS',
+          workerId: changedWorker.id,
+          workerName: changedWorker.name,
+          societyId: changedWorker.societyId,
+          societyName: changedWorker.societyName,
+          managerName: currentUser.name,
+          previousStatus: prevStatus,
+          newStatus: nextStatus,
+        }
+      );
+    }
+  };
+
+  const addWorker = (
+    workerData: Partial<Worker> & { name: string; email: string; phone: string; skills?: string[] }
+  ): Worker => {
+    const generatedId = workerData.id || `WRK${String(workers.length + 1).padStart(3, '0')}`;
+    const targetSoc =
+      societies.find(
+        (s) =>
+          s.id === workerData.societyId ||
+          (workerData.societyName && s.name.toLowerCase() === workerData.societyName.toLowerCase())
+      ) || societies[0];
+
+    const initialDocs =
+      workerData.documents && workerData.documents.length > 0
+        ? workerData.documents
+        : createDefaultWorkerDocuments(generatedId, workerData.name, false).map((doc) => ({
+            ...doc,
+            status: 'PENDING' as DocumentStatus,
+            reviewedBy: undefined,
+            reviewedAt: undefined,
+            reviewNotes: undefined,
+          }));
+    const approvedDocsCount = initialDocs.filter((d) => d.status === 'APPROVED').length;
+
+    const workerSkills =
+      workerData.skills && workerData.skills.length > 0
+        ? workerData.skills
+        : workerData.skillEntries && workerData.skillEntries.length > 0
+        ? workerData.skillEntries.map((s) => s.name)
+        : ['General Maintenance'];
+
     const newWorker: Worker = {
       ...workerData,
-      id: workerData.id || `w_${Date.now()}`,
+      id: generatedId,
       name: workerData.name,
       email: workerData.email,
       phone: workerData.phone,
-      avatar: workerData.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-      profession: workerData.profession || workerData.skills[0] || 'General Maintenance',
-      societyId: workerData.societyId || 'soc_gr',
-      societyName: workerData.societyName || 'Green Residency',
-      managerId: workerData.managerId || 'mgr_priya',
-      managerName: workerData.managerName || 'Priya Sharma',
+      avatar:
+        workerData.avatar ||
+        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+      profession: workerData.profession || workerSkills[0] || 'General Maintenance',
+      societyId: targetSoc.id,
+      societyName: targetSoc.name,
+      managerId: workerData.managerId || targetSoc.managerId || 'user_soc_mgr_01',
+      managerName: workerData.managerName || targetSoc.managerName || 'Priya Sharma',
       rating: 5.0,
       totalReviews: 0,
       completedJobs: 0,
@@ -572,15 +1039,20 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       availability: 'online',
       currentWorkload: 0,
       proficiencyScore: 88,
-      skills: workerData.skills.length > 0 ? workerData.skills : ['General Maintenance'],
+      skills: workerSkills,
+      skillEntries: workerData.skillEntries || [],
       certificates: workerData.certificates || ['Cooperative Verified Tradesperson'],
+      personalKycStatus: workerData.personalKycStatus || 'VERIFIED',
       verificationStatus: workerData.verificationStatus || 'PENDING',
-      kycDocumentsCount: 4,
+      kycDocumentsCount: approvedDocsCount,
       localVerificationStatus: workerData.verificationStatus === 'VERIFIED' ? 'verified' : 'pending',
-      cooperativeMemberId: `COP-PUN-${Math.floor(1000 + Math.random() * 9000)}`,
+      cooperativeMemberId: `COP-${targetSoc.code || 'PUN'}-${Math.floor(1000 + Math.random() * 9000)}`,
       joinedDate: new Date().toISOString().split('T')[0],
-      bio: workerData.bio || `${workerData.skills[0] || 'Tradesperson'} registered under cooperative governance.`,
+      bio:
+        workerData.bio ||
+        `Cooperative worker profile for ${workerData.name} registered under ${targetSoc.name}.`,
       locationStatus: 'AVAILABLE',
+      documents: initialDocs,
     };
 
     setWorkers((prev) => [newWorker, ...prev]);
@@ -589,8 +1061,217 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       message: `${newWorker.name} added to ${newWorker.societyName} roster.`,
       type: 'success',
     });
-    addAuditLog('ADD_WORKER', `Added worker ${newWorker.name} (${newWorker.id}) to ${newWorker.societyName}`);
+    addAuditLog(
+      'ADD_WORKER',
+      `New Worker Registered: ${newWorker.name} (${newWorker.id}) under ${newWorker.societyName}`,
+      {
+        actionType: 'ADD_WORKER',
+        workerId: newWorker.id,
+        workerName: newWorker.name,
+        societyId: newWorker.societyId,
+        societyName: newWorker.societyName,
+        managerName: newWorker.managerName || currentUser.name,
+        newStatus: newWorker.verificationStatus,
+      }
+    );
     return newWorker;
+  };
+
+  const addWorkerSkill = (
+    workerId: string,
+    skillData: Omit<WorkerSkillEntry, 'id' | 'status' | 'verifiedBy' | 'verifiedAt'>
+  ) => {
+    const newSkillEntry: WorkerSkillEntry = {
+      ...skillData,
+      id: `skill_${Date.now()}_${Math.floor(100 + Math.random() * 900)}`,
+      workerId,
+      status: 'PENDING',
+    };
+
+    let targetWorker: Worker | undefined;
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id !== workerId) return w;
+        targetWorker = w;
+        const existingEntries = w.skillEntries || [];
+        const updatedSkills = Array.from(new Set([...w.skills, skillData.name]));
+        return {
+          ...w,
+          skills: updatedSkills,
+          profession: w.profession || skillData.name,
+          skillEntries: [...existingEntries, newSkillEntry],
+        };
+      })
+    );
+
+    showToast({
+      title: 'Skill Added',
+      message: `${skillData.name} (${skillData.experienceYears} yrs) submitted for Manager review.`,
+      type: 'info',
+    });
+    addAuditLog(
+      'ADD_WORKER_SKILL',
+      `New Skill Added: ${skillData.name} (${skillData.experienceYears} yrs) for ${targetWorker?.name || workerId}`,
+      {
+        actionType: 'ADD_WORKER_SKILL',
+        workerId,
+        workerName: targetWorker?.name,
+        societyId: targetWorker?.societyId,
+        societyName: targetWorker?.societyName,
+        managerName: currentUser.name,
+        skillName: skillData.name,
+      }
+    );
+  };
+
+  const verifyWorkerSkill = (
+    workerId: string,
+    skillId: string,
+    status: 'VERIFIED' | 'REJECTED',
+    reason?: string
+  ) => {
+    let targetWorker: Worker | undefined;
+    let skillName: string | undefined;
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id !== workerId) return w;
+        targetWorker = w;
+        const updatedEntries = (w.skillEntries || []).map((s) => {
+          if (s.id === skillId) {
+            skillName = s.name;
+            return {
+              ...s,
+              status,
+              verifiedBy: currentUser.name || 'Society Manager',
+              verifiedAt: new Date().toISOString().split('T')[0],
+              rejectionReason: status === 'REJECTED' ? reason : undefined,
+            };
+          }
+          return s;
+        });
+
+        // Check if worker has at least 1 VERIFIED skill AND personal KYC is VERIFIED
+        const hasVerifiedSkill = updatedEntries.some((s) => s.status === 'VERIFIED');
+        const isKycVerified = w.personalKycStatus === 'VERIFIED' || w.verificationStatus === 'VERIFIED';
+        const isCustomerEligible = hasVerifiedSkill && isKycVerified;
+
+        return {
+          ...w,
+          skillEntries: updatedEntries,
+          verificationStatus: isCustomerEligible ? 'VERIFIED' : 'PENDING',
+          localVerificationStatus: isCustomerEligible ? 'verified' : 'pending',
+        };
+      })
+    );
+
+    showToast({
+      title: `Skill ${status === 'VERIFIED' ? 'Verified ✓' : 'Rejected'}`,
+      message: `Skill information check updated by Society Manager.`,
+      type: status === 'VERIFIED' ? 'success' : 'warning',
+    });
+    addAuditLog(
+      'VERIFY_WORKER_SKILL',
+      `Worker Skill ${status === 'VERIFIED' ? 'Verified ✓' : 'Rejected'}: ${skillName || skillId} on ${targetWorker?.name || workerId}${reason ? ` — Reason: ${reason}` : ''}`,
+      {
+        actionType: 'VERIFY_WORKER_SKILL',
+        workerId,
+        workerName: targetWorker?.name,
+        societyId: targetWorker?.societyId,
+        societyName: targetWorker?.societyName,
+        managerName: currentUser.name,
+        skillName,
+        newStatus: status,
+        reason,
+      }
+    );
+  };
+
+  const verifyWorkerPersonalKyc = (
+    workerId: string,
+    status: 'VERIFIED' | 'REJECTED',
+    notes?: string
+  ) => {
+    let targetWorker: Worker | undefined;
+    let prevKycStatus: string | undefined;
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id !== workerId) return w;
+        targetWorker = w;
+        prevKycStatus = w.personalKycStatus;
+        const isKycVerified = status === 'VERIFIED';
+        const hasVerifiedSkill = (w.skillEntries || []).some((s) => s.status === 'VERIFIED');
+        const isCustomerEligible = isKycVerified && hasVerifiedSkill;
+
+        return {
+          ...w,
+          personalKycStatus: status,
+          personalKycNotes: notes,
+          personalKycVerifiedBy: currentUser.name || 'Society Manager',
+          personalKycVerifiedAt: new Date().toISOString().split('T')[0],
+          verificationStatus: isCustomerEligible ? 'VERIFIED' : 'PENDING',
+          localVerificationStatus: isCustomerEligible ? 'verified' : 'pending',
+        };
+      })
+    );
+
+    showToast({
+      title: `Personal KYC ${status === 'VERIFIED' ? 'Verified ✓' : 'Rejected'}`,
+      message: `Worker Personal KYC profile status set to ${status}.`,
+      type: status === 'VERIFIED' ? 'success' : 'warning',
+    });
+    addAuditLog(
+      'VERIFY_PERSONAL_KYC',
+      `Personal KYC ${status === 'VERIFIED' ? 'Verified ✓' : 'Rejected'} by Society Manager for ${targetWorker?.name || workerId}`,
+      {
+        actionType: 'VERIFY_PERSONAL_KYC',
+        workerId,
+        workerName: targetWorker?.name,
+        societyId: targetWorker?.societyId,
+        societyName: targetWorker?.societyName,
+        managerName: currentUser.name,
+        previousStatus: prevKycStatus,
+        newStatus: status,
+        notes,
+      }
+    );
+  };
+
+  const removeWorkerSkill = (workerId: string, skillId: string) => {
+    let targetWorker: Worker | undefined;
+    let removedSkillName: string | undefined;
+    setWorkers((prev) =>
+      prev.map((w) => {
+        if (w.id !== workerId) return w;
+        targetWorker = w;
+        const skillToRemove = (w.skillEntries || []).find((s) => s.id === skillId);
+        removedSkillName = skillToRemove?.name;
+        const updatedEntries = (w.skillEntries || []).filter((s) => s.id !== skillId);
+        const hasVerifiedSkill = updatedEntries.some((s) => s.status === 'VERIFIED');
+        const isCustomerEligible = hasVerifiedSkill && w.personalKycStatus === 'VERIFIED';
+        return {
+          ...w,
+          skillEntries: updatedEntries,
+          skills: updatedEntries.map((s) => s.name),
+          verificationStatus: isCustomerEligible ? 'VERIFIED' : 'PENDING',
+          localVerificationStatus: isCustomerEligible ? 'verified' : 'pending',
+        };
+      })
+    );
+    if (targetWorker) {
+      addAuditLog(
+        'CHANGE_WORKER_STATUS',
+        `Worker Skill Removed: ${removedSkillName || skillId} from ${targetWorker.name}`,
+        {
+          actionType: 'CHANGE_WORKER_STATUS',
+          workerId: targetWorker.id,
+          workerName: targetWorker.name,
+          societyId: targetWorker.societyId,
+          societyName: targetWorker.societyName,
+          managerName: currentUser.name,
+          skillName: removedSkillName,
+        }
+      );
+    }
   };
 
   // CREATE BOOKING
@@ -1349,6 +2030,20 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       type: 'info',
       relatedBookingId: bookingId,
     });
+
+    addAuditLog(
+      'ASSIGN_WORKER_JOB',
+      `Worker Assigned to Job: ${worker.name} (${worker.id}) assigned to Booking ${bookingId}`,
+      {
+        actionType: 'ASSIGN_WORKER_JOB',
+        workerId: worker.id,
+        workerName: worker.name,
+        societyId: worker.societyId,
+        societyName: worker.societyName,
+        managerName: currentUser.name,
+        bookingId,
+      }
+    );
   };
 
   // COMMUNITY BOOKINGS
@@ -1666,16 +2361,45 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
   // Dynamic Hierarchy Getters
   const getWorkersBySociety = (societyIdOrName: string): Worker[] => {
-    return workers.filter((w) => w.societyId === societyIdOrName || w.societyName === societyIdOrName);
+    if (!societyIdOrName) return [];
+    const targetSoc = societies.find(
+      (s) =>
+        s.id === societyIdOrName ||
+        (s.name && s.name.toLowerCase() === societyIdOrName.toLowerCase())
+    );
+    const targetId = targetSoc?.id || societyIdOrName;
+    const targetName = targetSoc?.name || societyIdOrName;
+
+    return workers.filter(
+      (w) =>
+        w.societyId === targetId ||
+        w.societyId === societyIdOrName ||
+        (w.societyName && targetName && w.societyName.toLowerCase() === targetName.toLowerCase()) ||
+        (w.societyName && w.societyName.toLowerCase() === societyIdOrName.toLowerCase())
+    );
   };
 
   const getSocietyWorkersCount = (societyIdOrName: string): number => {
-    return workers.filter((w) => w.societyId === societyIdOrName || w.societyName === societyIdOrName).length;
+    return getWorkersBySociety(societyIdOrName).length;
   };
 
   const getSocietyActiveBookingsCount = (societyIdOrName: string): number => {
+    if (!societyIdOrName) return 0;
+    const targetSoc = societies.find(
+      (s) =>
+        s.id === societyIdOrName ||
+        (s.name && s.name.toLowerCase() === societyIdOrName.toLowerCase())
+    );
+    const targetId = targetSoc?.id || societyIdOrName;
+    const targetName = targetSoc?.name || societyIdOrName;
+
     return bookings.filter(
-      (b) => (b.societyId === societyIdOrName || b.societyName === societyIdOrName) && !['COMPLETED', 'PAID', 'RATED'].includes(b.state)
+      (b) =>
+        (b.societyId === targetId ||
+          b.societyId === societyIdOrName ||
+          (b.societyName && targetName && b.societyName.toLowerCase() === targetName.toLowerCase()) ||
+          (b.societyName && b.societyName.toLowerCase() === societyIdOrName.toLowerCase())) &&
+        !['COMPLETED', 'PAID', 'RATED'].includes(b.state)
     ).length;
   };
 
@@ -1738,13 +2462,24 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         platformMetrics,
         auditLogs,
         allocateFederationGrant,
+        updateCooperativeVerification,
         addAuditLog,
         workers,
         updateWorkerVerification,
+        updateWorkerProfile,
+        deactivateWorker,
         reviewWorkerDocument,
+        endorseWorkerByManager,
+        rejectWorkerByManager,
+        approveWorkerByFederation,
+        rejectWorkerByFederation,
         updateWorkerLocation,
         toggleWorkerAvailability,
         addWorker,
+        addWorkerSkill,
+        verifyWorkerSkill,
+        verifyWorkerPersonalKyc,
+        removeWorkerSkill,
         bookings,
         createBooking,
         acceptBookingByWorker,
@@ -1767,6 +2502,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         adminReassignQualityIssue,
         completeRevisit,
         adminManualAssignWorker,
+        assignWorkerToBooking,
         communityBookings,
         joinCommunityBooking,
         createCommunityBooking,

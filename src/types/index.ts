@@ -77,9 +77,13 @@ export interface ToastMessage {
 export type WorkerVerificationStatus =
   | 'PENDING'
   | 'UNDER_REVIEW'
+  | 'MANAGER_VERIFIED'
   | 'VERIFIED'
   | 'FAILED'
-  | 'CORRECTION_REQUIRED';
+  | 'CORRECTION_REQUIRED'
+  | 'REJECTED'
+  | 'MANAGER_REJECTED'
+  | 'FEDERATION_REJECTED';
 
 export type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CORRECTION_REQUIRED';
 
@@ -104,6 +108,21 @@ export interface WorkerDocument {
 }
 
 export type WorkerLocationStatus = 'AVAILABLE' | 'ON_JOB' | 'TRAVELLING' | 'OFFLINE';
+
+export interface WorkerSkillEntry {
+  id: string;
+  workerId?: string;
+  name: string; // Primary Skill / Trade (e.g. Electrician, Plumber, Carpenter, Painter, Cleaner, etc.)
+  experienceYears: number; // 0-50 years
+  description: string; // 20-500 characters
+  certificateUrl?: string; // Uploaded certificate file
+  certificateName?: string;
+  serviceArea: string; // Area / City / PIN
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  verifiedBy?: string;
+  verifiedAt?: string;
+  rejectionReason?: string;
+}
 
 export interface Worker {
   id: string;
@@ -132,6 +151,24 @@ export interface Worker {
   cooperativeMemberId: string;
   joinedDate: string;
   bio?: string;
+
+  // Level 1: Personal KYC details
+  gender?: 'Male' | 'Female' | 'Other';
+  dob?: string;
+  aadhaarNumber?: string;
+  aadhaarCardUrl?: string;
+  address?: string;
+  pinCode?: string;
+  emergencyContactName?: string;
+  emergencyContactNumber?: string;
+  personalKycStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  personalKycNotes?: string;
+  personalKycVerifiedBy?: string;
+  personalKycVerifiedAt?: string;
+
+  // Level 2: Skill Information Entries
+  skillEntries?: WorkerSkillEntry[];
+
   // Geolocation & Operational Tracking
   latitude?: number;
   longitude?: number;
@@ -139,8 +176,21 @@ export interface Worker {
   locationStatus?: WorkerLocationStatus;
   currentBookingId?: string;
   lastKnownArea?: string;
-  // Verification Documents
+  // Verification Documents & Audit Trail
   documents?: WorkerDocument[];
+  managerVerification?: {
+    verifiedBy: string;
+    verifiedAt: string;
+    status: 'APPROVED' | 'REJECTED';
+    notes?: string;
+  };
+  federationVerification?: {
+    approvedBy: string;
+    approvedAt: string;
+    status: 'APPROVED' | 'REJECTED';
+    notes?: string;
+  };
+  rejectionReason?: string;
 }
 
 export interface ServiceCategory {
@@ -395,6 +445,10 @@ export interface SocietyData {
   managerAvatar?: string;
   federationId?: string;
   federationName?: string;
+  cooperativeVerificationStatus?: 'VERIFIED' | 'PENDING_AUDIT' | 'SUSPENDED';
+  verifiedAt?: string;
+  verifiedBy?: string;
+  registrationDocUrl?: string;
 }
 
 export interface FederationData {
@@ -424,6 +478,28 @@ export interface PlatformSystemMetrics {
   activeSessions: number;
 }
 
+export type ManagerActionType =
+  | 'ADD_WORKER'
+  | 'UPDATE_WORKER_PROFILE'
+  | 'SUBMIT_WORKER_KYC'
+  | 'VERIFY_WORKER_KYC'
+  | 'VERIFY_PERSONAL_KYC'
+  | 'REJECT_WORKER'
+  | 'ADD_WORKER_SKILL'
+  | 'VERIFY_WORKER_SKILL'
+  | 'UPDATE_WORKER_DOCS'
+  | 'ASSIGN_WORKER_JOB'
+  | 'CHANGE_WORKER_STATUS'
+  | 'DEACTIVATE_WORKER'
+  | 'MANAGER_ENDORSE'
+  | 'FEDERATION_APPROVE'
+  | 'FEDERATION_REJECT'
+  | 'SOCIETY_AUDIT'
+  | 'WEIGHTS_CONFIG'
+  | 'REVENUE_SPLIT_CONFIG'
+  | 'FUND_ALLOCATION'
+  | 'OTHER';
+
 export interface PlatformAuditLog {
   id: string;
   timestamp: string;
@@ -432,4 +508,18 @@ export interface PlatformAuditLog {
   action: string;
   details: string;
   ipAddress: string;
+  actionType?: ManagerActionType;
+  workerId?: string;
+  workerName?: string;
+  societyId?: string;
+  societyName?: string;
+  managerId?: string;
+  managerName?: string;
+  previousStatus?: string;
+  newStatus?: string;
+  reason?: string;
+  notes?: string;
+  skillName?: string;
+  bookingId?: string;
 }
+

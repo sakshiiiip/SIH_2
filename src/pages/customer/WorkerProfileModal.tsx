@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Worker, WorkerDocument, DocumentStatus } from '../../types';
+import { Worker, WorkerDocument, DocumentStatus, WorkerSkillEntry } from '../../types';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
+import { Button } from '../../components/common/Button';
 import { DocumentReviewModal } from '../../components/admin/DocumentReviewModal';
+import { AddSkillModal } from '../../components/admin/AddSkillModal';
 import {
   Star,
   CheckCircle2,
@@ -18,6 +20,14 @@ import {
   ChevronRight,
   AlertCircle,
   Eye,
+  Plus,
+  Check,
+  X,
+  MapPin,
+  Calendar,
+  User,
+  ShieldAlert,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface WorkerProfileModalProps {
@@ -33,16 +43,32 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
   worker,
   onRequestWithWorker,
 }) => {
-  const { currentRole, reviewWorkerDocument, showToast } = useCooperativeStore();
+  const {
+    currentRole,
+    reviewWorkerDocument,
+    verifyWorkerPersonalKyc,
+    verifyWorkerSkill,
+    showToast,
+  } = useCooperativeStore();
+
   const [selectedDocForReview, setSelectedDocForReview] = useState<WorkerDocument | null>(null);
+  const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
+  const [personalKycNotes, setPersonalKycNotes] = useState('');
+  const [skillRejectNotes, setSkillRejectNotes] = useState<Record<string, string>>({});
 
   if (!isOpen || !worker) return null;
 
-  const isManager = currentRole === 'society_manager' || currentRole === 'federation_admin' || currentRole === 'federation_manager';
+  const isManager =
+    currentRole === 'society_manager' ||
+    currentRole === 'federation_admin' ||
+    currentRole === 'federation_manager';
 
   const docs = worker.documents || [];
   const approvedDocsCount = docs.filter((d) => d.status === 'APPROVED').length;
-  const isFullyVerified = worker.verificationStatus === 'VERIFIED' || (docs.length > 0 && approvedDocsCount === docs.length);
+  const isPersonalKycVerified = worker.personalKycStatus === 'VERIFIED';
+  const skillEntries: WorkerSkillEntry[] = worker.skillEntries || [];
+  const verifiedSkillsCount = skillEntries.filter((s) => s.status === 'VERIFIED').length;
+  const isFullyEligible = worker.verificationStatus === 'VERIFIED';
 
   const handleDocumentReview = (docId: string, status: DocumentStatus, notes?: string) => {
     reviewWorkerDocument(worker.id, docId, status, notes);
@@ -51,6 +77,15 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
       message: `Updated verification for ${worker.name}.`,
       type: status === 'APPROVED' ? 'success' : 'info',
     });
+  };
+
+  const handleVerifyPersonalKyc = (status: 'VERIFIED' | 'REJECTED') => {
+    verifyWorkerPersonalKyc(worker.id, status, personalKycNotes);
+  };
+
+  const handleVerifySkill = (skillId: string, status: 'VERIFIED' | 'REJECTED') => {
+    const notes = skillRejectNotes[skillId] || '';
+    verifyWorkerSkill(worker.id, skillId, status, notes);
   };
 
   const getDocStatusBadge = (status: DocumentStatus) => {
@@ -66,9 +101,35 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
     }
   };
 
+  const getSkillStatusBadge = (status: 'PENDING' | 'VERIFIED' | 'REJECTED') => {
+    switch (status) {
+      case 'VERIFIED':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#364A32] bg-[#E6ECE4] px-2 py-0.5 rounded-md border border-[#CFDDD0]">
+            <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
+            <span>Verified</span>
+          </span>
+        );
+      case 'REJECTED':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+            <X className="w-3 h-3 text-rose-600" />
+            <span>Rejected</span>
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+            <Clock className="w-3 h-3 text-amber-600" />
+            <span>Pending Check</span>
+          </span>
+        );
+    }
+  };
+
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} maxWidth="lg">
+      <Modal isOpen={isOpen} onClose={onClose} maxWidth="xl">
         <div className="space-y-5">
           {/* Header with Avatar & Identity */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#E8E2D5]">
@@ -79,14 +140,18 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                 className="w-16 h-16 rounded-2xl object-cover border-2 border-[#E8E2D5] shadow-xs shrink-0"
               />
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-lg font-extrabold text-[#292824] tracking-tight">
                     {worker.name}
                   </h3>
-                  {isFullyVerified && (
+                  {isFullyEligible ? (
                     <Badge variant="verified" size="sm">
                       <CheckCircle2 className="w-3 h-3 text-[#445D3E] mr-1" />
-                      Verified
+                      Verified & Active
+                    </Badge>
+                  ) : (
+                    <Badge variant="pending" size="sm">
+                      Pending Manager Verification
                     </Badge>
                   )}
                 </div>
@@ -120,80 +185,251 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
             </div>
           </div>
 
-          {/* SOCIETY MANAGER VERIFICATION REVIEW PANEL (Sections 13 - 17) */}
+          {/* SOCIETY MANAGER 2-LEVEL VERIFICATION SYSTEM */}
           {isManager ? (
-            <div className="p-4 bg-[#FCF9F3] border-2 border-[#E8E2D5] rounded-2xl space-y-4 shadow-subtle">
-              {/* Summary Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-[#E8E2D5]">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#80432E] block">
-                    Verification Review
+            <div className="space-y-4">
+              {/* Overall Eligibility Status Banner */}
+              <div
+                className={`p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-3 ${
+                  isFullyEligible
+                    ? 'bg-[#E6ECE4]/70 border-[#CFDDD0] text-[#2A3927]'
+                    : 'bg-amber-50 border-amber-200 text-amber-950'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  {isFullyEligible ? (
+                    <CheckCircle2 className="w-5 h-5 text-[#6E8B67] shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                  )}
+                  <div>
+                    <strong className="font-bold block">
+                      {isFullyEligible
+                        ? 'Eligible for Customer Job Matching'
+                        : 'Not Yet Visible to Customers'}
+                    </strong>
+                    <span className="text-[11px] opacity-90 block">
+                      {isFullyEligible
+                        ? 'Personal KYC is verified and at least 1 trade skill is verified.'
+                        : 'Requires Personal KYC verified + at least 1 trade skill verified by Society Manager.'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[11px] font-bold px-2.5 py-1 bg-white rounded-lg border border-[#E8E2D5]">
+                    Personal KYC: {isPersonalKycVerified ? '✓ Verified' : 'Pending'}
                   </span>
-                  <span className="text-sm font-extrabold text-[#292824]">
-                    <span className="font-mono">{approvedDocsCount}</span> / <span className="font-mono">{docs.length}</span> Documents Approved
+                  <span className="text-[11px] font-bold px-2.5 py-1 bg-white rounded-lg border border-[#E8E2D5]">
+                    Verified Skills: {verifiedSkillsCount}/{skillEntries.length || worker.skills.length}
                   </span>
                 </div>
-                {isFullyVerified ? (
-                  <span className="px-3 py-1 rounded-xl bg-[#E6ECE4] text-[#364A32] border border-[#CFDDD0] text-xs font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67]" />
-                    <span>✓ VERIFIED WORKER</span>
+              </div>
+
+              {/* LEVEL 1: PERSONAL KYC / IDENTITY */}
+              <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#E8E2D5]">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-[#80432E]" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#80432E]">
+                      Level 1: Personal KYC Details
+                    </h4>
+                  </div>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                      isPersonalKycVerified
+                        ? 'bg-[#E6ECE4] text-[#364A32] border border-[#CFDDD0]'
+                        : 'bg-amber-50 text-amber-900 border border-amber-200'
+                    }`}
+                  >
+                    {isPersonalKycVerified ? '✓ Personal KYC Verified' : 'Pending Manager Review'}
                   </span>
-                ) : (
-                  <Badge variant="pending" size="sm">Under Review</Badge>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5]">
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Phone & Email</span>
+                    <strong className="text-[#292824] block">{worker.phone}</strong>
+                    <span className="text-[11px] text-[#77736B] block truncate">{worker.email || 'N/A'}</span>
+                  </div>
+
+                  <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5]">
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Aadhaar Number</span>
+                    <strong className="text-[#292824] font-mono block">
+                      {worker.aadhaarNumber ? `XXXX-XXXX-${worker.aadhaarNumber.slice(-4)}` : 'Verified on File'}
+                    </strong>
+                    {worker.aadhaarCardUrl && (
+                      <a
+                        href={worker.aadhaarCardUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-[#80432E] underline flex items-center gap-0.5 mt-0.5"
+                      >
+                        <FileText className="w-3 h-3" />
+                        <span>View Aadhaar Document</span>
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5]">
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Gender & DOB</span>
+                    <strong className="text-[#292824] block capitalize">{worker.gender || 'Not specified'}</strong>
+                    <span className="text-[11px] text-[#77736B]">{worker.dob || 'DOB on record'}</span>
+                  </div>
+
+                  <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5] sm:col-span-2">
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Residential Address & PIN</span>
+                    <p className="text-[#292824]">{worker.address || 'Address provided during onboarding'}</p>
+                    <span className="text-[10px] text-[#77736B]">PIN Code: {worker.pinCode || '411045'}</span>
+                  </div>
+
+                  <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5]">
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Emergency Contact</span>
+                    <strong className="text-[#292824] block">{worker.emergencyContactName || 'Family Member'}</strong>
+                    <span className="text-[11px] text-[#77736B]">{worker.emergencyContactNumber || worker.phone}</span>
+                  </div>
+                </div>
+
+                {/* Manager Personal KYC Verification Action */}
+                {!isPersonalKycVerified && (
+                  <div className="pt-2 border-t border-[#E8E2D5] flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-[#77736B]">
+                      Check identity and Aadhaar details to verify worker's personal record.
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => handleVerifyPersonalKyc('VERIFIED')}
+                        className="text-xs"
+                      >
+                        <Check className="w-3 h-3 mr-1" />
+                        Verify Personal KYC
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleVerifyPersonalKyc('REJECTED')}
+                        className="text-xs text-rose-700 border-rose-300 hover:bg-rose-50"
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* At-a-glance 5-item Checklist */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-                {docs.map((doc) => {
-                  const isApproved = doc.status === 'APPROVED';
-                  return (
-                    <div
-                      key={doc.id}
-                      className={`p-2 rounded-xl border text-center transition-colors ${
-                        isApproved
-                          ? 'bg-[#E6ECE4]/70 border-[#CFDDD0] text-[#364A32]'
-                          : 'bg-[#FAF7F2] border-[#E8E2D5] text-[#77736B]'
-                      }`}
-                    >
-                      <span className="font-bold block capitalize text-[11px]">
-                        {isApproved ? '✓' : '●'} {doc.documentType}
-                      </span>
+              {/* LEVEL 2: SKILL INFORMATION & RECORDS */}
+              <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#E8E2D5]">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-[#80432E]" />
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#80432E]">
+                        Level 2: Skill Information Records
+                      </h4>
+                      <p className="text-[11px] text-[#77736B]">
+                        Workers can have multiple trade skills. Each skill is verified individually.
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
 
-              {/* Documents List with View & Action Buttons */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-[#524E47] block">Uploaded Documents</span>
-                <div className="space-y-1.5">
-                  {docs.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="p-3 bg-white rounded-xl border border-[#E8E2D5] hover:border-[#CFDDD0] flex items-center justify-between gap-3 text-xs shadow-2xs"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <FileText className="w-4 h-4 text-[#80432E] shrink-0" />
-                        <div className="min-w-0">
-                          <strong className="text-[#292824] truncate block">{doc.title}</strong>
-                          <span className="text-[10px] text-[#77736B]">Uploaded: {doc.uploadedAt}</span>
+                  {/* REAL CLICKABLE BUTTON: + Add Skill */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsAddSkillOpen(true)}
+                    className="text-xs font-bold text-[#80432E] border-[#80432E] hover:bg-[#FAF7F2] shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    + Add Skill
+                  </Button>
+                </div>
+
+                {/* Skills List */}
+                <div className="space-y-2.5">
+                  {skillEntries.length > 0 ? (
+                    skillEntries.map((skill) => (
+                      <div
+                        key={skill.id}
+                        className="p-3.5 bg-white rounded-xl border border-[#E8E2D5] space-y-2 shadow-2xs"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <strong className="text-xs font-extrabold text-[#292824]">
+                                {skill.name}
+                              </strong>
+                              {getSkillStatusBadge(skill.status)}
+                            </div>
+                            <span className="text-[11px] text-[#77736B]">
+                              Experience: <strong>{skill.experienceYears} Years</strong> · Area: {skill.serviceArea}
+                            </span>
+                          </div>
+
+                          {/* Skill Action Buttons for Manager */}
+                          {skill.status !== 'VERIFIED' && (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                onClick={() => handleVerifySkill(skill.id, 'VERIFIED')}
+                                className="text-xs py-1 px-2.5"
+                              >
+                                <Check className="w-3 h-3 mr-1" />
+                                Verify Skill
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleVerifySkill(skill.id, 'REJECTED')}
+                                className="text-xs py-1 px-2 text-rose-700 border-rose-300 hover:bg-rose-50"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        {getDocStatusBadge(doc.status)}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedDocForReview(doc)}
-                          className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#E8E2D5] text-[#292824] font-bold rounded-lg border border-[#E8E2D5] text-xs transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-[#80432E]" />
-                          <span>View</span>
-                        </button>
+                        {skill.description && (
+                          <p className="text-xs text-[#524E47] bg-[#FCF9F3] p-2 rounded-lg border border-[#E8E2D5]">
+                            {skill.description}
+                          </p>
+                        )}
+
+                        {skill.certificateUrl && (
+                          <div className="flex items-center gap-2 pt-1 text-[11px] text-[#80432E]">
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Certificate: <strong>{skill.certificateName || 'Skill_Certificate.pdf'}</strong></span>
+                            <a
+                              href={skill.certificateUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="underline ml-1 font-semibold"
+                            >
+                              View File
+                            </a>
+                          </div>
+                        )}
                       </div>
+                    ))
+                  ) : (
+                    <div className="p-4 bg-white rounded-xl border border-dashed border-[#E8E2D5] text-center space-y-2">
+                      <p className="text-xs text-[#77736B]">
+                        No structured skill entries added yet for {worker.name}.
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => setIsAddSkillOpen(true)}
+                        className="text-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        + Add Skill Now
+                      </Button>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -214,12 +450,12 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                 </div>
               </div>
               <Badge variant="verified" size="sm">
-                5/5 Docs ✓
+                KYC & Skill Verified ✓
               </Badge>
             </div>
           )}
 
-          {/* Bio & Skills */}
+          {/* Bio */}
           {worker.bio && (
             <div className="p-3.5 bg-[#FCF9F3] rounded-2xl border border-[#E8E2D5] text-xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#77736B] block mb-1">
@@ -229,62 +465,39 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
             </div>
           )}
 
-          {/* Skills & Certifications */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div className="p-3.5 rounded-2xl border border-[#E8E2D5] bg-[#FCF9F3] space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#292824]">
-                <Briefcase className="w-4 h-4 text-[#537895]" />
-                <span>Trade Specializations</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {worker.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-[#E4EDF4] text-[#324F66] border border-[#CDE0EC]"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl border border-[#E8E2D5] bg-[#FCF9F3] space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#292824]">
-                <Award className="w-4 h-4 text-[#80432E]" />
-                <span>Accredited Certifications</span>
-              </div>
-              <div className="space-y-1">
-                {worker.certificates.map((cert) => (
-                  <div key={cert} className="flex items-center gap-1.5 text-xs text-[#524E47]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67] shrink-0" />
-                    <span className="font-medium">{cert}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#E8E2D5]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-[#77736B] hover:text-[#292824] cursor-pointer"
+          <div className="flex items-center justify-between gap-2.5 pt-2 border-t border-[#E8E2D5]">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsAddSkillOpen(true)}
+              className="text-xs text-[#80432E] border-[#80432E]"
             >
-              Close
-            </button>
-            {onRequestWithWorker && (
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              + Add Another Skill
+            </Button>
+
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  onRequestWithWorker(worker);
-                  onClose();
-                }}
-                className="px-5 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                onClick={onClose}
+                className="px-4 py-2 text-xs font-bold text-[#77736B] hover:text-[#292824] cursor-pointer"
               >
-                Request Service with {worker.name.split(' ')[0]}
+                Close
               </button>
-            )}
+              {onRequestWithWorker && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onRequestWithWorker(worker);
+                    onClose();
+                  }}
+                  className="px-5 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  Request Service with {worker.name.split(' ')[0]}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </Modal>
@@ -297,6 +510,23 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
           worker={worker}
           document={selectedDocForReview}
           onReview={handleDocumentReview}
+        />
+      )}
+
+      {/* ADD SKILL MODAL */}
+      {isAddSkillOpen && (
+        <AddSkillModal
+          isOpen={isAddSkillOpen}
+          onClose={() => setIsAddSkillOpen(false)}
+          workerId={worker.id}
+          workerName={worker.name}
+          onSkillAdded={(skillName) => {
+            showToast({
+              title: 'Skill Added',
+              message: `${skillName} added for ${worker.name}.`,
+              type: 'success',
+            });
+          }}
         />
       )}
     </>
