@@ -41,6 +41,7 @@ interface WorkerDashboardProps {
   onOpenEarnings?: () => void;
   onOpenSupport?: () => void;
   onOpenJobs?: () => void;
+  onOpenPayments?: () => void;
 }
 
 type AvailabilityStatus = 'online' | 'break' | 'offline';
@@ -51,6 +52,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   onOpenVerification,
   onOpenCommunity,
   onOpenMyWork,
+  onOpenPayments,
   onOpenNotifications,
   onOpenProfile,
   onOpenEarnings,
@@ -415,6 +417,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               {storeUpcomingBooking ? 'active' : 'completed'}
             </span>
           </div>
+
+          {onOpenPayments && (
+            <button
+              type="button"
+              onClick={onOpenPayments}
+              className="w-full mt-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#E6ECE4] hover:bg-[#CFDDD0] text-[#364A32] text-xs font-bold transition-colors cursor-pointer"
+            >
+              <DollarSign className="w-3.5 h-3.5" />
+              View Earnings & Payments
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* This Week's Earnings */}

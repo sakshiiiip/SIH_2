@@ -29,10 +29,12 @@ import { ActiveJobSOSModal } from './pages/customer/ActiveJobSOSModal';
 import { HumanSupportPage } from './pages/support/HumanSupportPage';
 
 import { CommunityBookingsPage } from './pages/community/CommunityBookingsPage';
+import { CustomerPaymentContainer } from './features/payment/ui/customer';
 import { WorkerDashboard } from './pages/worker/WorkerDashboard';
 import { WorkerWorkPage } from './pages/worker/WorkerWorkPage';
 import { WorkerCommunityPage } from './pages/worker/WorkerCommunityPage';
 import { WorkerOnboarding } from './pages/worker/WorkerOnboarding';
+import { WorkerPaymentContainer } from './features/payment/ui/worker/WorkerPaymentContainer';
 import { WorkerToolBank } from './pages/worker/WorkerToolBank';
 import { WorkerEmergencyAid } from './pages/worker/WorkerEmergencyAid';
 import { WorkerJobsPage } from './pages/worker/WorkerJobsPage';
@@ -51,7 +53,7 @@ import { AdminCooperativeFund } from './pages/admin/AdminCooperativeFund';
 import { AdminAnalytics } from './pages/admin/AdminAnalytics';
 
 function AppContent() {
-  const { isAuthenticated, currentRole, setRole, bookings } = useCooperativeStore();
+  const { isAuthenticated, currentRole, setRole, bookings, currentUser } = useCooperativeStore();
 
   const [authStep, setAuthStep] = useState<'select_role' | 'login'>('select_role');
   const [selectedRoleForAuth, setSelectedRoleForAuth] = useState<UserRole>('customer');
@@ -172,6 +174,7 @@ function AppContent() {
                 onRequestService={(cat, problem) => handleOpenRequest(cat, problem)}
                 onOpenEmergency={() => setIsEmergencyModalOpen(true)}
                 onOpenCommunity={() => setCurrentTab('community')}
+                onOpenGroupBookings={() => setCurrentTab('customer_group_bookings')}
                 onTrackBooking={(b) => setTrackingBooking(b)}
                 onPayBooking={(b) => setPayingBooking(b)}
                 onRateBooking={(b) => setRatingBooking(b)}
@@ -211,6 +214,18 @@ function AppContent() {
 
             {currentTab === 'community' && <CommunityBookingsPage />}
 
+            {currentTab === 'customer_group_bookings' && (
+              <CustomerPaymentContainer
+                currentUserId={currentUser.id}
+                currentUserName={currentUser.name}
+                currentUserPhone={currentUser.phone}
+                currentUserFlat={currentUser.address?.split(',')[0]?.trim() ?? 'Flat 101'}
+                societyId={currentUser.societyName?.toLowerCase().replace(/\s+/g, '_') ?? 'soc_default'}
+                societyName={currentUser.societyName ?? 'Green Residency'}
+                onClose={() => setCurrentTab('home')}
+              />
+            )}
+
             {currentTab === 'fund' && <AdminCooperativeFund />}
 
             {currentTab === 'support' && (
@@ -229,6 +244,7 @@ function AppContent() {
                 onOpenVerification={() => setCurrentTab('worker_verification')}
                 onOpenCommunity={() => setCurrentTab('worker_community')}
                 onOpenMyWork={() => setCurrentTab('worker_work')}
+                onOpenPayments={() => setCurrentTab('worker_payments')}
                 onOpenNotifications={() => setCurrentTab('worker_notifications')}
                 onOpenProfile={() => setCurrentTab('worker_profile')}
                 onOpenEarnings={() => setCurrentTab('worker_earnings')}
@@ -284,6 +300,13 @@ function AppContent() {
             {currentTab === 'worker_emergency' && <WorkerEmergencyAid />}
 
             {currentTab === 'worker_verification' && <WorkerOnboarding />}
+
+            {currentTab === 'worker_payments' && (
+              <WorkerPaymentContainer
+                workerId="w_rahul"
+                onClose={() => setCurrentTab('worker_dashboard')}
+              />
+            )}
           </>
         )}
 
