@@ -43,6 +43,8 @@ interface WorkerDashboardProps {
   onOpenSupport?: () => void;
   onOpenJobs?: () => void;
   onOpenPayments?: () => void;
+  onOpenMyWork?: () => void;
+  onOpenPayments?: () => void;
 }
 
 type AvailabilityStatus = 'online' | 'break' | 'offline';
@@ -59,6 +61,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   onOpenEarnings,
   onOpenSupport,
   onOpenJobs,
+  onOpenPayments,
 }) => {
   const {
     currentUser,
@@ -571,6 +574,79 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         )}
       </div>
 
+      {/* ========================================================================= */}
+      {/* 3. EARNINGS & 4. VERIFICATION CARDS (SIDE-BY-SIDE SUMMARY) */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {/* Earnings Card */}
+        <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl shadow-card space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#364A32] flex items-center gap-1.5">
+              <DollarSign className="w-4 h-4 text-[#6E8B67]" />
+              <span>Earnings</span>
+            </span>
+            <Badge variant="coop" size="sm"><span className="font-mono">70%</span> Net Share</Badge>
+          </div>
+
+          <div>
+            <span className="text-2xl font-bold font-mono text-[#292824]">₹2,450</span>
+            <span className="text-xs text-[#77736B] ml-2">this week</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E8E2D5] text-xs">
+            <div>
+              <span className="text-[10px] text-[#77736B] block">Today's Jobs</span>
+              <strong className="text-[#292824]">2 Completed</strong>
+            </div>
+            <div>
+              <span className="text-[10px] text-[#77736B] block">Lifetime Payout</span>
+              <strong className="text-[#292824]">₹{currentWorker.completedJobs * 420}</strong>
+            </div>
+          </div>
+
+          {onOpenPayments && (
+            <button
+              type="button"
+              onClick={onOpenPayments}
+              className="w-full mt-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#E6ECE4] hover:bg-[#CFDDD0] text-[#364A32] text-xs font-bold transition-colors cursor-pointer"
+            >
+              <DollarSign className="w-3.5 h-3.5" />
+              View Earnings & Payments
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Verification Card (Simplified with progressive disclosure) */}
+        <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl shadow-card space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#324F66] flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#537895]" />
+              <span>Verification Status</span>
+            </span>
+            <Badge variant="verified" size="sm">VERIFIED WORKER ✓</Badge>
+          </div>
+
+          {/* Quick checklist of the 6 items */}
+          <div className="grid grid-cols-3 gap-1.5 text-[11px] text-[#292824]">
+            <span className="flex items-center gap-1 text-[#364A32] font-semibold">
+              <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" /> Identity
+            </span>
+            <span className="flex items-center gap-1 text-[#364A32] font-semibold">
+              <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" /> Membership
+            </span>
+            <span className="flex items-center gap-1 text-[#364A32] font-semibold">
+              <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" /> Skills
+            </span>
+            <span className="flex items-center gap-1 text-[#364A32] font-semibold">
+              <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" /> Certificates
+            </span>
+            <span className="flex items-center gap-1 text-[#364A32] font-semibold">
+              <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" /> Assessment
+            </span>
+            <span className="flex items-center gap-1 text-[#364A32] font-semibold">
+              <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" /> Society
+            </span>
       {/* ============================================================ */}
       {/* 4. NEXT JOB                                                  */}
       {/*    Display upcoming job with Service, Location, Date/time,    */}
