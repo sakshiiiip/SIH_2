@@ -1,0 +1,35 @@
+{
+  "name": "Cooperative — Gig Services Platform",
+  "short_name": "Cooperative",
+  "description": "Trusted help. Powered by your community. Fair gig services platform connecting ordinary households with verified cooperative workers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F4EC",
+  "theme_color": "#6E8B67",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "lifestyle", "business"],
+  "shortcuts": [
+    {
+      "name": "Request Service",
+      "short_name": "Request",
+      "description": "Book a verified worker in seconds",
+      "url": "/?action=request",
+      "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Emergency Assistance",
+      "short_name": "Emergency",
+      "description": "Immediate priority community help",
+      "url": "/?action=emergency",
+      "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
+    }
+  ]
+}

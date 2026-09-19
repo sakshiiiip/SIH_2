@@ -1,0 +1,217 @@
+import React from 'react';
+import { Booking } from '../../types';
+import { Modal } from '../../components/common/Modal';
+import { Badge } from '../../components/common/Badge';
+import { Button } from '../../components/common/Button';
+import { Card } from '../../components/common/Card';
+import { mapBookingStatus } from '../../utils/statusMapper';
+import {
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  Star,
+  KeyRound,
+  RotateCw,
+  AlertTriangle,
+  HardHat,
+  ShieldAlert,
+  CreditCard,
+  ChevronRight,
+} from 'lucide-react';
+
+interface LiveTrackingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  booking: Booking | null;
+  onProceedToPayment?: (booking: Booking) => void;
+  onOpenSOS?: (booking: Booking) => void;
+}
+
+export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
+  isOpen,
+  onClose,
+  booking,
+  onProceedToPayment,
+  onOpenSOS,
+}) => {
+  if (!isOpen || !booking) return null;
+
+  const statusInfo = mapBookingStatus(booking.state);
+
+  // 5 customer-facing stages
+  const customerSteps = [
+    { key: 'REQUESTED', label: 'Requested', desc: 'Finding verified specialist' },
+    { key: 'WORKER FOUND', label: 'Worker Found', desc: 'Specialist matched & assigned' },
+    { key: 'ON THE WAY', label: 'On The Way', desc: 'Travelling to your residence' },
+    { key: 'WORKING', label: 'Working', desc: 'Service underway at residence' },
+    { key: 'COMPLETED', label: 'Completed', desc: 'Job finished & verified' },
+  ];
+
+  const currentStepIndex = statusInfo.stepIndex;
+
+  const isSOSApplicable = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(booking.state);
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Live Service Tracking"
+      subtitle={<span>Booking <span className="font-mono font-bold">#{booking.id}</span> · {booking.serviceCategory}</span>}
+      maxWidth="lg"
+    >
+      <div className="space-y-6">
+        {/* RE-MATCHING ALERT IF APPLICABLE */}
+        {booking.state === 'RE_MATCHING' && (
+          <div className="p-3.5 bg-[#FAEDE8] border border-[#F3C5B8] rounded-2xl flex items-start gap-3 animate-fade-in">
+            <RotateCw className="w-4 h-4 text-[#80432E] animate-spin shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-[#292824] text-xs">
+                Re-matching specialist
+              </h4>
+              <p className="text-[11px] text-[#77736B] mt-0.5">
+                Our cooperative engine is assigning another verified specialist in your sector.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 5-STAGE PROGRESS TIMELINE */}
+        <div className="p-4 bg-[#FCF9F3] rounded-2xl border border-[#E8E2D5] space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#77736B]">
+              Current Status
+            </span>
+            <Badge variant={statusInfo.badgeVariant} dot size="sm">
+              {statusInfo.headline}
+            </Badge>
+          </div>
+
+          {/* Stepper Grid */}
+          <div className="relative pl-6 sm:pl-8 space-y-4 before:content-[''] before:absolute before:left-2.5 sm:before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#E8E2D5]">
+            {customerSteps.map((step, idx) => {
+              const isPast = idx < currentStepIndex;
+              const isCurrent = idx === currentStepIndex;
+
+              return (
+                <div key={step.key} className="relative flex items-start gap-3">
+                  {/* Dot */}
+                  <div
+                    className={`absolute -left-6 sm:-left-8 top-0.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-2 transition-all ${
+                      isPast
+                        ? 'bg-[#6E8B67] border-[#6E8B67] text-white'
+                        : isCurrent
+                        ? 'bg-white border-[#6E8B67] text-[#6E8B67] ring-2 ring-[#CFDDD0]'
+                        : 'bg-white border-[#E8E2D5] text-[#9A958B]'
+                    }`}
+                  >
+                    {isPast ? (
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    ) : (
+                      <div className={`w-1.5 h-1.5 rounded-full ${isCurrent ? 'bg-[#6E8B67]' : 'bg-[#E8E2D5]'}`} />
+                    )}
+                  </div>
+
+                  <div>
+                    <h4
+                      className={`text-xs font-bold tracking-tight ${
+                        isCurrent ? 'text-[#292824]' : isPast ? 'text-[#524E47]' : 'text-[#9A958B]'
+                      }`}
+                    >
+                      {step.label}
+                    </h4>
+                    <p className="text-[11px] text-[#77736B]">{step.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ARRIVAL OTP DISPLAY (CRITICAL FOR ARRIVAL / STARTING JOB) */}
+        {['CONFIRMED', 'TRAVELLING', 'ARRIVED'].includes(booking.state) && (
+          <div className="p-4 bg-[#E6ECE4]/80 rounded-2xl border border-[#CFDDD0] flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#FCF9F3] border border-[#CFDDD0] flex items-center justify-center text-[#445D3E]">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] text-[#445D3E] font-bold uppercase tracking-wider block">Arrival Verification OTP</span>
+                <span className="text-xs text-[#524E47]">Share this code with your worker upon arrival:</span>
+              </div>
+            </div>
+            <div className="px-3.5 py-1.5 bg-white border border-[#CFDDD0] rounded-xl font-mono text-lg font-black text-[#2A3927] tracking-widest shadow-2xs">
+              {booking.otp}
+            </div>
+          </div>
+        )}
+
+        {/* WORKER SUMMARY CARD */}
+        {booking.matchedWorker && (
+          <div className="p-4 bg-[#FCF9F3] rounded-2xl border border-[#E8E2D5] flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img
+                src={booking.matchedWorker.avatar}
+                alt={booking.matchedWorker.name}
+                className="w-12 h-12 rounded-full object-cover border border-[#E8E2D5]"
+              />
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <strong className="text-xs font-bold text-[#292824]">{booking.matchedWorker.name}</strong>
+                  <span className="text-[10px] text-[#445D3E] bg-[#E6ECE4] px-1.5 py-0.2 rounded font-bold">
+                    ✓ Verified
+                  </span>
+                </div>
+                <span className="text-[11px] text-[#77736B] block">
+                  {booking.matchedWorker.skills[0]} · {booking.matchedWorker.societyName || 'Green Residency'}
+                </span>
+                <div className="flex items-center gap-1 text-[10px] text-[#80432E] mt-0.5">
+                  <Star className="w-3 h-3 fill-[#B37055] text-[#B37055]" />
+                  <span className="font-bold font-mono">{booking.matchedWorker.rating}</span>
+                  <span className="text-[#77736B]">(<span className="font-mono">{booking.matchedWorker.completedJobs}</span> jobs)</span>
+                </div>
+              </div>
+            </div>
+
+            <a
+              href={`tel:${booking.matchedWorker.phone}`}
+              className="p-2.5 rounded-xl bg-[#F3EEE4] hover:bg-[#E8E2D5] text-[#524E47] transition-colors flex items-center gap-1.5 text-xs font-bold"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>Call</span>
+            </a>
+          </div>
+        )}
+
+        {/* ACTION BUTTONS: PAYMENT & SOS */}
+        <div className="flex items-center justify-between gap-3 pt-2">
+          {/* CONTEXTUAL SOS BUTTON (Only during in-progress / active job) */}
+          {isSOSApplicable && onOpenSOS ? (
+            <button
+              type="button"
+              onClick={() => onOpenSOS(booking)}
+              className="px-3 py-2.5 rounded-xl bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-[#C93B2B]" />
+              <span>Emergency SOS</span>
+            </button>
+          ) : <div />}
+
+          {/* PAYMENT BUTTON IF COMPLETED */}
+          {booking.state === 'COMPLETED' && onProceedToPayment && (
+            <button
+              type="button"
+              onClick={() => onProceedToPayment(booking)}
+              className="px-5 py-2.5 rounded-xl bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold flex items-center gap-2 shadow-sm cursor-pointer transition-colors"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Pay & Settle <span className="font-mono">₹{booking.pricing.total}</span></span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+};
