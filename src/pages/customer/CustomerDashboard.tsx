@@ -32,6 +32,7 @@ interface CustomerDashboardProps {
   onRequestService: (serviceCategory?: string, problemType?: string) => void;
   onOpenEmergency?: () => void;
   onOpenCommunity: () => void;
+  onOpenGroupBookings?: () => void;
   onTrackBooking: (booking: Booking) => void;
   onPayBooking: (booking: Booking) => void;
   onRateBooking: (booking: Booking) => void;
@@ -53,6 +54,7 @@ const CATEGORY_ITEMS = [
 export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onRequestService,
   onOpenCommunity,
+  onOpenGroupBookings,
   onTrackBooking,
   onPayBooking,
   onRateBooking,
@@ -422,7 +424,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           </div>
           <button
             type="button"
-            onClick={onOpenCommunity}
+            onClick={onOpenGroupBookings ?? onOpenCommunity}
             className="text-xs font-bold text-[#6E8B67] hover:underline cursor-pointer"
           >
             View all ({currentSocietyGroupBookings.length}) →
@@ -487,6 +489,25 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             );
           })}
         </div>
+
+        {/* ── Group Bookings full-flow CTA ──────────────────────────── */}
+        {onOpenGroupBookings && (
+          <button
+            type="button"
+            id="open-group-bookings-btn"
+            onClick={onOpenGroupBookings}
+            className="w-full mt-1 p-4 bg-gradient-to-r from-[#E6ECE4] to-[#EEF3F4] border border-[#CFDDD0] rounded-2xl flex items-center gap-3.5 hover:shadow-card hover:border-[#B8CBDD] transition-all cursor-pointer group active:scale-[0.99] text-left"
+          >
+            <span className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-xs group-hover:shadow-card transition-shadow">
+              <Users className="w-5 h-5 text-[#537895]" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-[#292824] leading-tight">Start or Manage Group Bookings</p>
+              <p className="text-[11px] text-[#77736B] mt-0.5">Create, join, track, and pay your share — full group booking flow</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#77736B] group-hover:text-[#537895] group-hover:translate-x-0.5 transition-all shrink-0" />
+          </button>
+        )}
       </div>
 
       {/* ========================================================================= */}

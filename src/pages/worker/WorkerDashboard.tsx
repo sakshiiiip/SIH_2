@@ -27,6 +27,7 @@ interface WorkerDashboardProps {
   onOpenVerification?: () => void;
   onOpenCommunity?: () => void;
   onOpenMyWork?: () => void;
+  onOpenPayments?: () => void;
 }
 
 export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
@@ -35,6 +36,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   onOpenVerification,
   onOpenCommunity,
   onOpenMyWork,
+  onOpenPayments,
 }) => {
   const {
     currentUser,
@@ -313,6 +315,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               <strong className="text-[#292824]">₹{currentWorker.completedJobs * 420}</strong>
             </div>
           </div>
+
+          {onOpenPayments && (
+            <button
+              type="button"
+              onClick={onOpenPayments}
+              className="w-full mt-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#E6ECE4] hover:bg-[#CFDDD0] text-[#364A32] text-xs font-bold transition-colors cursor-pointer"
+            >
+              <DollarSign className="w-3.5 h-3.5" />
+              View Earnings & Payments
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Verification Card (Simplified with progressive disclosure) */}
