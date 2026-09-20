@@ -14,6 +14,7 @@ import {
   Sliders,
   ShieldAlert,
   User,
+  HeadphonesIcon,
 } from 'lucide-react';
 
 interface BottomNavProps {
@@ -69,6 +70,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           >
             <Users className="w-5 h-5 mb-0.5" />
             <span className="text-[10px]">Community</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('support')}
+            className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
+              currentTab === 'support' ? 'text-[#445D3E] font-bold' : 'text-[#77736B] hover:text-[#292824]'
+            }`}
+          >
+            <HeadphonesIcon className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px]">Support</span>
           </button>
         </div>
       </nav>

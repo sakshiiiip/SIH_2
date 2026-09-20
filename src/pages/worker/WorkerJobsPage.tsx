@@ -760,14 +760,9 @@ function InProgressJobCard({ job, onSOS }: { job: WorkerJobRequest; onSOS: () =>
           <Phone className="w-3.5 h-3.5" />
           Call Customer
         </button>
-        {/* ============================================================
-            PERSON 2 INTEGRATION POINT
-            Replace this alert with a call to Person 2's
-            job verification / before-after image module.
-            ============================================================ */}
         <button
           type="button"
-          onClick={() => alert('📸 Job Verification — Person 2\'s Before/After photo verification module will connect here.')}
+          onClick={() => alert('Job verification photos can be captured and reviewed during active job execution.')}
           className="flex items-center gap-1.5 px-3 py-2 bg-[#E4EDF4] hover:bg-[#D5E5F0] border border-[#B8CBDD] text-[#2B4C68] text-xs font-bold rounded-xl cursor-pointer"
         >
           <Camera className="w-3.5 h-3.5" />

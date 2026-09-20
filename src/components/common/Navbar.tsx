@@ -20,6 +20,7 @@ import {
   Users,
   Sliders,
   RotateCcw,
+  HeadphonesIcon,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -162,6 +163,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                 >
                   Community
+                </button>
+                <button
+                  onClick={() => onSelectTab('support')}
+                  className={`px-3 py-1.5 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    currentTab === 'support'
+                      ? 'text-[#2A3927] bg-[#E6ECE4] font-bold'
+                      : 'hover:text-[#292824] hover:bg-[#F3EEE4]'
+                  }`}
+                >
+                  <HeadphonesIcon className="w-3.5 h-3.5 text-[#537895]" />
+                  <span>Support</span>
                 </button>
               </>
             )}
@@ -441,6 +453,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
 
                 <div className="py-1 text-xs text-[#524E47]">
+                  <button
+                    onClick={() => {
+                      onSelectTab('support');
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-[#F3EEE4] flex items-center gap-2 cursor-pointer font-semibold text-[#292824]"
+                  >
+                    <HeadphonesIcon className="w-4 h-4 text-[#537895]" />
+                    <span>Direct Human Support</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       resetToDemoData();
