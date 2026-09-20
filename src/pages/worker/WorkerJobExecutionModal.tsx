@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Booking } from '../../types';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Modal } from '../../components/common/Modal';
@@ -13,6 +13,7 @@ import {
   Play,
   Pause,
   Camera,
+  RefreshCw,
   AlertTriangle,
   Clock,
   Upload,
@@ -57,22 +58,26 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
 
   // 4-step wizard state
   const [wizardStep, setWizardStep] = useState<WizardStep>(1);
-  const [beforePreview, setBeforePreview] = useState<string | null>(booking?.beforeImage || null);
-  const [afterPreview, setAfterPreview] = useState<string | null>(booking?.afterImage || null);
-  
-  // Separate camera and gallery input refs
-  const beforeCameraInputRef = useRef<HTMLInputElement>(null);
-  const beforeGalleryInputRef = useRef<HTMLInputElement>(null);
-  const afterCameraInputRef = useRef<HTMLInputElement>(null);
-  const afterGalleryInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync previews if booking changes
-  React.useEffect(() => {
+  // ── Photo state (stored as base64 data-URLs via FileReader) ───────────────
+  const [beforePhoto, setBeforePhoto] = useState<string | null>(
+    booking?.beforeImage ?? null
+  );
+  const [afterPhoto, setAfterPhoto] = useState<string | null>(
+    booking?.afterImage ?? null
+  );
+
+  // ── Single hidden file-input ref per photo slot ───────────────────────────
+  const beforeInputRef = useRef<HTMLInputElement>(null);
+  const afterInputRef  = useRef<HTMLInputElement>(null);
+
+  // Sync photo state when a new booking is loaded
+  useEffect(() => {
     if (booking) {
-      if (booking.beforeImage && !beforePreview) setBeforePreview(booking.beforeImage);
-      if (booking.afterImage && !afterPreview) setAfterPreview(booking.afterImage);
+      setBeforePhoto(booking.beforeImage ?? null);
+      setAfterPhoto(booking.afterImage ?? null);
     }
-  }, [booking]);
+  }, [booking?.id]);
 
   if (!isOpen || !booking) return null;
 
@@ -96,20 +101,32 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
     }
   };
 
-  const handleBeforePhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ─── File → base64 helper ─────────────────────────────────────────────────
+  const readFileAsDataURL = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
+  const handleBeforePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setBeforePreview(url);
-    uploadJobPhotos(booking.id, { beforeImage: url });
+    // Reset so the same file can be re-selected after "Retake"
+    e.target.value = '';
+    const dataUrl = await readFileAsDataURL(file);
+    setBeforePhoto(dataUrl);
+    uploadJobPhotos(booking.id, { beforeImage: dataUrl });
   };
 
-  const handleAfterPhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAfterPhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAfterPreview(url);
-    uploadJobPhotos(booking.id, { afterImage: url });
+    e.target.value = '';
+    const dataUrl = await readFileAsDataURL(file);
+    setAfterPhoto(dataUrl);
+    uploadJobPhotos(booking.id, { afterImage: dataUrl });
   };
 
   const handleCompleteJob = () => {
@@ -118,7 +135,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
       completeBooking(
         booking.id,
         workNotes || 'Job completed. Before and after photos attached.',
-        [beforePreview, afterPreview].filter(Boolean) as string[]
+        [beforePhoto, afterPhoto].filter(Boolean) as string[]
       );
       setIsSubmitting(false);
       onClose();
@@ -162,106 +179,103 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
     </div>
   );
 
-  // ─── Dual Photo Upload Tile (Camera + Device Gallery) ─────────────────────
+  // ─── Photo Upload Tile ─────────────────────────────────────────────────────
+  /**
+   * Single hidden <input type="file" capture="environment"> lets the browser
+   * present both "Camera" and "Gallery" options natively on Android / iOS.
+   * The "Retake / Change" button is always visible (not just on hover) so it
+   * works reliably on touch devices.
+   */
   const PhotoUploadTile = ({
     label,
-    preview,
-    cameraInputRef,
-    galleryInputRef,
-    onCapture,
+    photo,
+    inputRef,
+    onPhotoSelected,
   }: {
     label: string;
-    preview: string | null;
-    cameraInputRef: React.RefObject<HTMLInputElement | null>;
-    galleryInputRef: React.RefObject<HTMLInputElement | null>;
-    onCapture: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    photo: string | null;
+    inputRef: React.RefObject<HTMLInputElement | null>;
+    onPhotoSelected: (e: React.ChangeEvent<HTMLInputElement>) => void;
   }) => (
     <div className="space-y-3">
-      {/* Hidden file inputs: direct camera vs device gallery */}
+      {/* ── Hidden file input ── */}
       <input
-        ref={cameraInputRef}
+        ref={inputRef}
         type="file"
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={onCapture}
-      />
-      <input
-        ref={galleryInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={onCapture}
+        onChange={onPhotoSelected}
       />
 
-      {/* Visual Image Preview Box */}
+      {/* ── Preview / placeholder box ── */}
       <div
         className={`relative rounded-2xl border-2 overflow-hidden transition-all ${
-          preview
+          photo
             ? 'border-[#6E8B67] bg-[#F0F4EF]'
             : 'border-dashed border-[#D8D3C8] bg-[#F3EEE4]'
         }`}
       >
-        {preview ? (
-          <div className="relative group">
-            <img src={preview} alt={label} className="w-full h-48 object-cover" />
+        {photo ? (
+          /* Live <img> preview with always-visible Retake / Change overlay */
+          <div className="relative">
+            <img
+              src={photo}
+              alt={`${label} preview`}
+              className="w-full h-48 object-cover"
+            />
+            {/* ✓ badge — top-left */}
             <div className="absolute top-2 left-2 bg-[#445D3E] text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-md">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>{label} Recorded</span>
             </div>
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="px-3 py-1.5 bg-white text-[#292824] rounded-xl text-xs font-bold shadow-md hover:bg-slate-50 flex items-center gap-1 cursor-pointer"
-              >
-                <Camera className="w-3.5 h-3.5 text-[#445D3E]" />
-                Retake
-              </button>
-              <button
-                type="button"
-                onClick={() => galleryInputRef.current?.click()}
-                className="px-3 py-1.5 bg-white text-[#292824] rounded-xl text-xs font-bold shadow-md hover:bg-slate-50 flex items-center gap-1 cursor-pointer"
-              >
-                <Upload className="w-3.5 h-3.5 text-[#537895]" />
-                Replace
-              </button>
-            </div>
+            {/* Always-visible Retake / Change — bottom-right */}
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm text-[#292824] rounded-xl text-xs font-bold shadow-md hover:bg-white active:scale-95 transition-all cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-[#445D3E]" />
+              Retake / Change
+            </button>
           </div>
         ) : (
-          <div className="h-44 flex flex-col items-center justify-center gap-2 text-[#77736B] p-4 text-center">
+          /* Clickable empty placeholder */
+          <div
+            className="h-44 flex flex-col items-center justify-center gap-2 text-[#77736B] p-4 text-center cursor-pointer hover:bg-[#EDE8DD] transition-colors"
+            onClick={() => inputRef.current?.click()}
+          >
             <div className="w-12 h-12 rounded-full bg-[#E8E2D5] flex items-center justify-center text-[#524E47]">
               <Camera className="w-6 h-6" />
             </div>
             <div>
               <span className="text-xs font-bold text-[#292824] block">{label}</span>
               <span className="text-[11px] text-[#77736B]">
-                Take a direct snapshot with camera or select an existing photo
+                Tap to capture with camera or select from device gallery
               </span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Explicit Option Buttons: Camera vs Device Gallery */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => cameraInputRef.current?.click()}
-          className="px-3 py-2.5 bg-[#445D3E] hover:bg-[#33472F] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-        >
-          <Camera className="w-4 h-4" />
-          <span>{preview ? 'Retake Camera' : 'Take Photo (Camera)'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => galleryInputRef.current?.click()}
-          className="px-3 py-2.5 bg-[#FCF9F3] hover:bg-[#F3EEE4] text-[#292824] border border-[#E8E2D5] text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-        >
-          <Upload className="w-4 h-4 text-[#537895]" />
-          <span>{preview ? 'Change from Gallery' : 'Upload from Device'}</span>
-        </button>
-      </div>
+      {/* ── Primary action button ── */}
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="w-full px-3 py-2.5 bg-[#445D3E] hover:bg-[#33472F] active:scale-[0.98] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+      >
+        {photo ? (
+          <>
+            <RefreshCw className="w-4 h-4" />
+            <span>Retake / Change {label}</span>
+          </>
+        ) : (
+          <>
+            <Camera className="w-4 h-4" />
+            <span>Take / Upload {label}</span>
+          </>
+        )}
+      </button>
     </div>
   );
 
@@ -430,20 +444,19 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                   </div>
                   <PhotoUploadTile
                     label="Before Photo"
-                    preview={beforePreview}
-                    cameraInputRef={beforeCameraInputRef}
-                    galleryInputRef={beforeGalleryInputRef}
-                    onCapture={handleBeforePhotoSelected}
+                    photo={beforePhoto}
+                    inputRef={beforeInputRef}
+                    onPhotoSelected={handleBeforePhotoSelected}
                   />
                   <Button
                     variant="primary"
                     size="lg"
                     className="w-full"
                     onClick={() => setWizardStep(2)}
-                    disabled={!beforePreview}
+                    disabled={!beforePhoto}
                     rightIcon={<ArrowRight className="w-4 h-4" />}
                   >
-                    {beforePreview ? 'Before Photo Captured — Continue' : 'Capture Before Photo to Proceed'}
+                    {beforePhoto ? 'Before Photo Captured — Continue' : 'Capture Before Photo to Proceed'}
                   </Button>
                 </div>
               )}
@@ -456,9 +469,9 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                     <br />Before photo recorded. You're ready to begin the repair. Tap below to officially start.
                   </div>
                   {/* Thumbnail of before photo */}
-                  {beforePreview && (
+                  {beforePhoto && (
                     <div className="relative rounded-xl overflow-hidden border border-[#E8E2D5]">
-                      <img src={beforePreview} alt="Before" className="w-full h-28 object-cover" />
+                      <img src={beforePhoto} alt="Before" className="w-full h-28 object-cover" />
                       <div className="absolute top-2 left-2 bg-[#6E8B67] text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
                         ✓ Before
                       </div>
@@ -497,37 +510,45 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                   </div>
                   {/* Side-by-side thumbnails */}
                   <div className="grid grid-cols-2 gap-2">
-                    {beforePreview && (
+                    {beforePhoto && (
                       <div className="relative rounded-xl overflow-hidden border border-[#E8E2D5]">
-                        <img src={beforePreview} alt="Before" className="w-full h-24 object-cover" />
+                        <img src={beforePhoto} alt="Before" className="w-full h-24 object-cover" />
                         <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                           Before
                         </div>
                       </div>
                     )}
-                    <div className="relative rounded-xl overflow-hidden border-2 border-dashed border-[#D8D3C8] bg-[#F3EEE4] flex items-center justify-center h-24">
-                      <div className="text-center text-[#77736B]">
-                        <ImageIcon className="w-5 h-5 mx-auto mb-1" />
-                        <span className="text-[9px] font-semibold">After</span>
+                    {afterPhoto ? (
+                      <div className="relative rounded-xl overflow-hidden border border-[#6E8B67]">
+                        <img src={afterPhoto} alt="After" className="w-full h-24 object-cover" />
+                        <div className="absolute bottom-1 left-1 bg-[#6E8B67] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                          After ✓
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="relative rounded-xl overflow-hidden border-2 border-dashed border-[#D8D3C8] bg-[#F3EEE4] flex items-center justify-center h-24">
+                        <div className="text-center text-[#77736B]">
+                          <ImageIcon className="w-5 h-5 mx-auto mb-1" />
+                          <span className="text-[9px] font-semibold">After</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <PhotoUploadTile
                     label="After Photo"
-                    preview={afterPreview}
-                    cameraInputRef={afterCameraInputRef}
-                    galleryInputRef={afterGalleryInputRef}
-                    onCapture={handleAfterPhotoSelected}
+                    photo={afterPhoto}
+                    inputRef={afterInputRef}
+                    onPhotoSelected={handleAfterPhotoSelected}
                   />
                   <Button
                     variant="primary"
                     size="lg"
                     className="w-full"
                     onClick={() => setWizardStep(4)}
-                    disabled={!afterPreview}
+                    disabled={!afterPhoto}
                     rightIcon={<ArrowRight className="w-4 h-4" />}
                   >
-                    {afterPreview ? 'After Photo Captured — Continue' : 'Capture After Photo to Proceed'}
+                    {afterPhoto ? 'After Photo Captured — Continue' : 'Capture After Photo to Proceed'}
                   </Button>
                 </div>
               )}
@@ -542,17 +563,17 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
 
                   {/* Before/After comparison */}
                   <div className="grid grid-cols-2 gap-2">
-                    {beforePreview && (
+                    {beforePhoto && (
                       <div className="relative rounded-xl overflow-hidden border border-[#E8E2D5]">
-                        <img src={beforePreview} alt="Before" className="w-full h-32 object-cover" />
+                        <img src={beforePhoto} alt="Before" className="w-full h-32 object-cover" />
                         <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                           Before
                         </div>
                       </div>
                     )}
-                    {afterPreview && (
+                    {afterPhoto && (
                       <div className="relative rounded-xl overflow-hidden border border-[#6E8B67]">
-                        <img src={afterPreview} alt="After" className="w-full h-32 object-cover" />
+                        <img src={afterPhoto} alt="After" className="w-full h-32 object-cover" />
                         <div className="absolute bottom-1 left-1 bg-[#6E8B67] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                           After ✓
                         </div>
@@ -566,6 +587,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                     </div>
                   )}
 
+                  {/* Submit Quality Proof — passes beforePhoto & afterPhoto to handler */}
                   <Button
                     variant="primary"
                     size="lg"
@@ -574,7 +596,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                     isLoading={isSubmitting}
                     leftIcon={<Sparkles className="w-5 h-5" />}
                   >
-                    Submit for Verification
+                    Submit Quality Proof
                   </Button>
                   <p className="text-center text-[10px] text-[#77736B]">
                     Job will enter the manager verification queue. Customer will be notified.

@@ -218,7 +218,7 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
 
             {job.state === 'IN_PROGRESS' && (
               <>
-                <Button variant="outline" onClick={() => alert('📸 Job Verification module — Person 2')} leftIcon={<Camera className="w-4 h-4" />} className="w-full sm:w-auto">
+                <Button variant="outline" onClick={() => alert('Job verification photos can be captured and reviewed during active job execution.')} leftIcon={<Camera className="w-4 h-4" />} className="w-full sm:w-auto">
                   Verify Work
                 </Button>
                 <Button variant="primary" onClick={() => updateBookingState(job.id, 'COMPLETED')} leftIcon={<CheckCircle2 className="w-4 h-4" />} className="w-full sm:w-auto">

@@ -26,6 +26,7 @@ import {
   CreditCard,
   ArrowRight,
   ShieldAlert,
+  HeadphonesIcon,
 } from 'lucide-react';
 
 interface CustomerDashboardProps {
@@ -36,6 +37,7 @@ interface CustomerDashboardProps {
   onPayBooking: (booking: Booking) => void;
   onRateBooking: (booking: Booking) => void;
   onViewActivity?: () => void;
+  onOpenSupport?: () => void;
 }
 
 const CATEGORY_ITEMS = [
@@ -52,11 +54,13 @@ const CATEGORY_ITEMS = [
 
 export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onRequestService,
+  onOpenEmergency,
   onOpenCommunity,
   onTrackBooking,
   onPayBooking,
   onRateBooking,
   onViewActivity,
+  onOpenSupport,
 }) => {
   const { currentUser, bookings, communityBookings, communityMessages, joinCommunityBooking, showToast } = useCooperativeStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -623,6 +627,41 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* 9. DIRECT HUMAN CUSTOMER SUPPORT CARD */}
+      {/* ========================================================================= */}
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-[#FAF7F2] to-[#FCF9F3] border border-[#E8E2D5] rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-[#E6ECE4] border border-[#CFDDD0] flex items-center justify-center text-[#445D3E] shrink-0 shadow-xs">
+            <HeadphonesIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-bold text-[#292824]">
+                Need Help? Talk to a Human Support Specialist
+              </h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E6ECE4] text-[#364A32] hidden sm:inline">
+                No Chatbots
+              </span>
+            </div>
+            <p className="text-xs text-[#77736B] mt-0.5">
+              Live in-app chat, one-tap callback request, and WhatsApp support with auto-attached booking IDs.
+            </p>
+          </div>
+        </div>
+
+        {onOpenSupport && (
+          <button
+            type="button"
+            onClick={onOpenSupport}
+            className="w-full sm:w-auto px-4 py-2.5 bg-[#445D3E] hover:bg-[#364A32] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shrink-0"
+          >
+            <HeadphonesIcon className="w-3.5 h-3.5" />
+            <span>Connect with Human Agent</span>
+          </button>
+        )}
+      </div>
 
       {/* WORKER PROFILE MODAL */}
       <WorkerProfileModal

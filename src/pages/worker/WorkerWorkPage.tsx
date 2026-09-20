@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Booking } from '../../types';
 import { Card } from '../../components/common/Card';
@@ -31,6 +31,7 @@ import {
   Calendar,
   AlertCircle,
   Image as ImageIcon,
+  RefreshCw,
 } from 'lucide-react';
 
 interface WorkerWorkPageProps {
@@ -56,6 +57,10 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
   // Modals
   const [sosJob, setSosJob] = useState<Booking | null>(null);
   const [verificationJob, setVerificationJob] = useState<{ id: string; service: string } | null>(null);
+  const [verificationBeforePhoto, setVerificationBeforePhoto] = useState<string | null>(null);
+  const [verificationAfterPhoto, setVerificationAfterPhoto] = useState<string | null>(null);
+  const verificationBeforeInputRef = useRef<HTMLInputElement>(null);
+  const verificationAfterInputRef = useRef<HTMLInputElement>(null);
   const [detailsJobId, setDetailsJobId] = useState<string | null>(null);
 
   // OTP inputs
@@ -392,16 +397,18 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     </button>
 
                     <div className="flex items-center gap-2 flex-wrap">
-                      {/* Job Verification Integration Point (Person 2) */}
+                      {/* Job Verification */}
                       <button
                         type="button"
-                        onClick={() =>
-                          setVerificationJob({ id: job.id, service: `${job.serviceCategory} — ${job.problemType}` })
-                        }
+                        onClick={() => {
+                          setVerificationBeforePhoto(null);
+                          setVerificationAfterPhoto(null);
+                          setVerificationJob({ id: job.id, service: `${job.serviceCategory} — ${job.problemType}` });
+                        }}
                         className="flex items-center gap-1.5 px-3 py-2 bg-[#E4EDF4] hover:bg-[#D5E5F0] border border-[#B8CBDD] text-[#2B4C68] text-xs font-bold rounded-xl cursor-pointer"
                       >
                         <Camera className="w-3.5 h-3.5" />
-                        Job Verification (Person 2)
+                        Job Verification
                       </button>
 
                       {/* State progressions */}
@@ -506,19 +513,21 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                   </button>
 
                   <div className="flex items-center gap-2">
-                    {/* Person 2 Verification Integration Point */}
+                    {/* Job Verification */}
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        setVerificationBeforePhoto(null);
+                        setVerificationAfterPhoto(null);
                         setVerificationJob({
                           id: MOCK_IN_PROGRESS_JOB.jobId,
                           service: `${MOCK_IN_PROGRESS_JOB.serviceType} — ${MOCK_IN_PROGRESS_JOB.problemType}`,
-                        })
-                      }
+                        });
+                      }}
                       className="flex items-center gap-1.5 px-3 py-2 bg-[#E4EDF4] hover:bg-[#D5E5F0] border border-[#B8CBDD] text-[#2B4C68] text-xs font-bold rounded-xl cursor-pointer"
                     >
                       <Camera className="w-3.5 h-3.5" />
-                      Job Verification (Person 2)
+                      Job Verification
                     </button>
 
                     <Button
@@ -889,51 +898,134 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
         <WorkerSOSModal isOpen={sosJob !== null} onClose={() => setSosJob(null)} job={sosJob} />
       )}
 
-      {/* JOB VERIFICATION MODAL (Person 2 Integration Point) */}
+      {/* JOB VERIFICATION MODAL */}
       <Modal
         isOpen={verificationJob !== null}
         onClose={() => setVerificationJob(null)}
-        title="Job Verification (Person 2 Integration)"
+        title="Job Verification"
         subtitle={verificationJob?.service}
         maxWidth="md"
       >
         <div className="space-y-4">
-          <div className="p-3.5 bg-[#E4EDF4] border border-[#B8CBDD] rounded-xl text-xs text-[#263D50]">
-            <p className="font-bold flex items-center gap-1.5">
-              <Camera className="w-4 h-4 text-[#324F66]" />
-              Before & After Quality Verification
-            </p>
-            <p className="text-[11px] text-[#537895] mt-1">
-              Person 2's verification module will capture geo-tagged before/after photos here to guarantee 100% quality resolution.
-            </p>
-          </div>
+          <input
+            ref={verificationBeforeInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = () => setVerificationBeforePhoto(reader.result as string);
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
+          <input
+            ref={verificationAfterInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = () => setVerificationAfterPhoto(reader.result as string);
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="border-2 border-dashed border-[#B8CBDD] rounded-2xl p-4 text-center space-y-2 bg-[#FAF7F2]">
-              <ImageIcon className="w-8 h-8 text-[#537895] mx-auto opacity-60" />
-              <span className="text-xs font-bold text-[#292824] block">Before Photo</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Before Photo */}
+            <div className="border-2 border-dashed border-[#B8CBDD] rounded-2xl p-3 text-center space-y-2 bg-[#FAF7F2] flex flex-col justify-between">
+              <div>
+                <span className="text-xs font-bold text-[#292824] block mb-2">Before Photo</span>
+                {verificationBeforePhoto ? (
+                  <div className="relative rounded-xl overflow-hidden border border-[#B8CBDD]">
+                    <img
+                      src={verificationBeforePhoto}
+                      alt="Before repair preview"
+                      className="w-full h-36 object-cover"
+                    />
+                    <div className="absolute top-1.5 left-1.5 bg-[#445D3E] text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Recorded
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => verificationBeforeInputRef.current?.click()}
+                    className="h-36 rounded-xl border border-dashed border-[#D8D3C8] bg-white flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-[#F3EEE4] transition-colors p-2"
+                  >
+                    <ImageIcon className="w-7 h-7 text-[#537895] opacity-60" />
+                    <span className="text-[11px] text-[#77736B]">Tap to capture or upload before photo</span>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={() =>
-                  showToast({ title: 'Photo Captured', message: 'Before-repair photo attached.', type: 'info' })
-                }
-                className="px-3 py-1.5 bg-[#FCF9F3] border border-[#E8E2D5] text-[11px] font-bold rounded-xl text-[#292824] cursor-pointer hover:bg-[#F3EEE4]"
+                onClick={() => verificationBeforeInputRef.current?.click()}
+                className="w-full px-3 py-1.5 bg-[#FCF9F3] border border-[#E8E2D5] text-xs font-bold rounded-xl text-[#292824] cursor-pointer hover:bg-[#F3EEE4] flex items-center justify-center gap-1.5"
               >
-                Upload Before
+                {verificationBeforePhoto ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 text-[#537895]" />
+                    Retake / Change
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-3.5 h-3.5 text-[#537895]" />
+                    Upload Before
+                  </>
+                )}
               </button>
             </div>
 
-            <div className="border-2 border-dashed border-[#CFDDD0] rounded-2xl p-4 text-center space-y-2 bg-[#FAF7F2]">
-              <ImageIcon className="w-8 h-8 text-[#6E8B67] mx-auto opacity-60" />
-              <span className="text-xs font-bold text-[#292824] block">After Photo</span>
+            {/* After Photo */}
+            <div className="border-2 border-dashed border-[#CFDDD0] rounded-2xl p-3 text-center space-y-2 bg-[#FAF7F2] flex flex-col justify-between">
+              <div>
+                <span className="text-xs font-bold text-[#292824] block mb-2">After Photo</span>
+                {verificationAfterPhoto ? (
+                  <div className="relative rounded-xl overflow-hidden border border-[#CFDDD0]">
+                    <img
+                      src={verificationAfterPhoto}
+                      alt="After repair preview"
+                      className="w-full h-36 object-cover"
+                    />
+                    <div className="absolute top-1.5 left-1.5 bg-[#445D3E] text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Recorded
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => verificationAfterInputRef.current?.click()}
+                    className="h-36 rounded-xl border border-dashed border-[#CFDDD0] bg-white flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-[#EEF3EC] transition-colors p-2"
+                  >
+                    <ImageIcon className="w-7 h-7 text-[#6E8B67] opacity-60" />
+                    <span className="text-[11px] text-[#77736B]">Tap to capture or upload after photo</span>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={() =>
-                  showToast({ title: 'Photo Captured', message: 'After-repair photo attached.', type: 'success' })
-                }
-                className="px-3 py-1.5 bg-[#6E8B67] text-[11px] font-bold rounded-xl text-white cursor-pointer hover:bg-[#587352]"
+                onClick={() => verificationAfterInputRef.current?.click()}
+                className="w-full px-3 py-1.5 bg-[#6E8B67] text-xs font-bold rounded-xl text-white cursor-pointer hover:bg-[#587352] flex items-center justify-center gap-1.5"
               >
-                Upload After
+                {verificationAfterPhoto ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Retake / Change
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-3.5 h-3.5" />
+                    Upload After
+                  </>
+                )}
               </button>
             </div>
           </div>

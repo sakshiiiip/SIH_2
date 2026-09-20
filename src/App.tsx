@@ -25,6 +25,7 @@ import { LiveTrackingModal } from './pages/customer/LiveTrackingModal';
 import { PaymentModal } from './pages/customer/PaymentModal';
 import { RatingAndDisputeModal } from './pages/customer/RatingAndDisputeModal';
 import { ActiveJobSOSModal } from './pages/customer/ActiveJobSOSModal';
+import { HumanSupportPage } from './pages/support/HumanSupportPage';
 
 import { CommunityBookingsPage } from './pages/community/CommunityBookingsPage';
 import { WorkerDashboard } from './pages/worker/WorkerDashboard';
@@ -174,6 +175,7 @@ function AppContent() {
                 onPayBooking={(b) => setPayingBooking(b)}
                 onRateBooking={(b) => setRatingBooking(b)}
                 onViewActivity={() => setCurrentTab('activity')}
+                onOpenSupport={() => setCurrentTab('support')}
               />
             )}
 
@@ -209,6 +211,10 @@ function AppContent() {
             {currentTab === 'community' && <CommunityBookingsPage />}
 
             {currentTab === 'fund' && <AdminCooperativeFund />}
+
+            {currentTab === 'support' && (
+              <HumanSupportPage onBack={() => setCurrentTab('home')} />
+            )}
           </>
         )}
 
@@ -262,7 +268,9 @@ function AppContent() {
             
             {currentTab === 'worker_profile' && <WorkerProfilePage />}
             
-            {currentTab === 'worker_support' && <WorkerProfilePage />}
+            {currentTab === 'worker_support' && (
+              <HumanSupportPage onBack={() => setCurrentTab('worker_dashboard')} />
+            )}
 
             {currentTab === 'worker_community' && (
               <WorkerCommunityPage
