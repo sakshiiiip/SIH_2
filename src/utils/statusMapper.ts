@@ -111,6 +111,15 @@ export function mapBookingStatus(state: BookingState): StatusMappingResult {
         stepIndex: 3,
       };
 
+    case 'WORKER_ON_BREAK':
+      return {
+        customerStatus: 'WORKING',
+        headline: 'Worker on Short Break',
+        description: 'Your specialist is on a brief break and will resume shortly',
+        badgeVariant: 'urgent',
+        stepIndex: 3,
+      };
+
     case 'COMPLETED':
       return {
         customerStatus: 'COMPLETED',

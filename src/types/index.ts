@@ -228,6 +228,7 @@ export type BookingState =
   | 'WORKER_ON_BREAK'
   | 'WORKER_ON_BREAK'
   | 'AWAITING_VERIFICATION'
+  | 'WORKER_ON_BREAK'
   | 'COMPLETED'
   | 'PAID'
   | 'RATED'
@@ -304,6 +305,13 @@ export interface Booking {
   workPhotos?: string[];
   startedAt?: string;
   completedAt?: string;
+  /** Populated when booking state is WORKER_ON_BREAK */
+  breakDetails?: {
+    startedAt: string;
+    estimatedDurationMins: number;
+    reason?: string;
+  };
+}
   /** Populated when booking state is WORKER_ON_BREAK */
   breakDetails?: {
     startedAt: string;
