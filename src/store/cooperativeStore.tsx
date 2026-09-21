@@ -125,6 +125,10 @@ interface CooperativeStoreContextType {
   startWorkerBreak: (bookingId: string, durationMins: number, reason?: string) => void;
   /** Worker resumes — moves booking state back to IN_PROGRESS */
   endWorkerBreak: (bookingId: string) => void;
+  /** Worker takes a break — moves booking state to WORKER_ON_BREAK */
+  startWorkerBreak: (bookingId: string, durationMins: number, reason?: string) => void;
+  /** Worker resumes — moves booking state back to IN_PROGRESS */
+  endWorkerBreak: (bookingId: string) => void;
   uploadJobPhotos: (bookingId: string, photos: { beforeImage?: string; afterImage?: string }) => void;
   confirmCustomerJob: (bookingId: string) => void;
   verifyJobByManager: (bookingId: string, verificationData: { verifiedBy: string; status: 'APPROVED' | 'REJECTED' | 'REVISIT_NEEDED'; notes?: string }) => void;
@@ -1667,6 +1671,59 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     });
   };
 
+  // WORKER BREAK MANAGEMENT
+  const startWorkerBreak = (
+    bookingId: string,
+    durationMins: number,
+    reason?: string,
+  ) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: 'WORKER_ON_BREAK' as BookingState,
+              updatedAt: new Date().toISOString(),
+              breakDetails: {
+                startedAt: new Date().toISOString(),
+                estimatedDurationMins: durationMins,
+                reason,
+              },
+            }
+          : b,
+      ),
+    );
+    addNotification({
+      recipientRole: 'customer',
+      title: 'Worker is on a Short Break',
+      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
+      type: 'info',
+      relatedBookingId: bookingId,
+    });
+  };
+
+  const endWorkerBreak = (bookingId: string) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: 'IN_PROGRESS' as BookingState,
+              updatedAt: new Date().toISOString(),
+              breakDetails: undefined,
+            }
+          : b,
+      ),
+    );
+    addNotification({
+      recipientRole: 'customer',
+      title: 'Worker Resumed Work',
+      message: 'Your specialist has resumed work. Service is back in progress.',
+      type: 'success',
+      relatedBookingId: bookingId,
+    });
+  };
+
   // COMPLETE BOOKING — transitions to AWAITING_VERIFICATION for manager sign-off
   const completeBooking = (bookingId: string, notes?: string, photos?: string[]) => {
     setBookings((prev) =>
@@ -2657,6 +2714,8 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         verifyBookingOTP,
         verifyOTPAndStartJob,
         completeBooking,
+        startWorkerBreak,
+        endWorkerBreak,
         startWorkerBreak,
         endWorkerBreak,
         uploadJobPhotos,

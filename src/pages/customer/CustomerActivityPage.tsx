@@ -26,6 +26,9 @@ import {
   Coffee,
   Timer,
   Wrench,
+  Coffee,
+  Timer,
+  Wrench,
   RotateCcw,
   ImageIcon,
   Check,
@@ -160,7 +163,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
   const { currentUser, bookings, confirmCustomerJob } = useCooperativeStore();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
-  const [sosJob, setSosJob]       = useState<Booking | null>(null);
+  const [sosJob, setSosJob]             = useState<Booking | null>(null);
   const [revisitModalJob, setRevisitModalJob] = useState<Booking | null>(null);
 
   const customerBookings = bookings.filter((b) => b.customerId === currentUser.id);
@@ -175,9 +178,10 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
       'TRAVELLING',
       'ARRIVED',
     
+    
       'IN_PROGRESS', 'WORKER_ON_BREAK',
       'AWAITING_VERIFICATION',
-      'RE_MATCHING',
+      'WORKER_ON_BREAK', 'RE_MATCHING',
     ].includes(b.state)
   );
 
@@ -208,13 +212,6 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
       case 'active':    return activeBookings;
       case 'completed': return completedBookings;
       case 'issues':    return qualityBookings;
-      case 'history':
-        return historyBookings.filter((b) => {
-          if (historyFilter === 'finished') return ['COMPLETED', 'PAID', 'RATED'].includes(b.state);
-          if (historyFilter === 'revisited') return ['REVISIT', 'REVISIT_REQUESTED', 'REVISIT_SCHEDULED'].includes(b.state);
-          if (historyFilter === 'cancelled') return b.state === 'CANCELLED';
-          return true;
-        });
       default:          return customerBookings;
     }
   };
@@ -252,7 +249,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
             key={t.key}
             type="button"
             onClick={() => setActiveTab(t.key)}
-            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
               activeTab === t.key
                 ? 'bg-[#E6ECE4] text-[#2A3927] border border-[#CFDDD0] font-extrabold shadow-2xs'
                 : 'text-[#77736B] hover:text-[#292824] hover:bg-[#F3EEE4]'
@@ -295,13 +292,16 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
       {/* Bookings List */}
       <div className="space-y-3">
         {filteredList.map((b) => {
-          const statusInfo    = mapBookingStatus(b.state);
+          const statusInfo       = mapBookingStatus(b.state);
           const isOnBreak     = b.state === 'WORKER_ON_BREAK';
-          const isSOSApplicable = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'WORKER_ON_BREAK'].includes(b.state);
+          const isOnBreak     = b.state === 'WORKER_ON_BREAK';
+          const isSOSApplicable = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'WORKER_ON_BREAK', 'WORKER_ON_BREAK'].includes(b.state);
           // Disable "Mark Completed" actions while worker is on break
           const actionsDisabled = isOnBreak;
           const isAwaitingVerification = b.state === 'AWAITING_VERIFICATION';
           const isRevisitFlow = ['REVISIT_REQUESTED', 'REVISIT_SCHEDULED'].includes(b.state);
+          // Disable "Mark Completed" actions while worker is on break
+          const actionsDisabled = isOnBreak;
 
           return (
             <div
@@ -326,32 +326,33 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                     {b.serviceCategory} — {b.problemType}
                   </h3>
 
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-[#77736B]">
-                      {b.matchedWorker && (
-                        <span>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-[#77736B]">
+                        {b.matchedWorker && (
+                          <span>
                         Worker: <strong className="text-[#292824]">{b.matchedWorker.name}</strong>
                       </span>
-                      )}
-                      <span>
+                        )}
+                        <span>
                       Total: <strong className="text-[#292824] font-mono">₹{b.pricing.total}</strong>
                     </span>
-                      <span>{b.createdAt?.split('T')[0] || 'Today'}</span>
+                        <span>{b.createdAt?.split('T')[0] || 'Today'}</span>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Top Action Buttons */}
-                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                    {isSOSApplicable && (
-                      <button
-                        type="button"
-                        onClick={() => setSosJob(b)}
-                        className="px-2.5 py-1.5 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                    {/* Top Action Buttons */}
+                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                      {isSOSApplicable && (
+                        <button
+                          type="button"
+                          onClick={() => setSosJob(b)}
+                          className="px-2.5 py-1.5 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
                       title="Emergency SOS — always available"
+                        title="Emergency SOS — always available"
                       >
-                        <ShieldAlert className="w-3.5 h-3.5 text-[#C93B2B]" />
-                        <span>SOS</span>
-                      </button>
-                    )}
+                          <ShieldAlert className="w-3.5 h-3.5 text-[#C93B2B]" />
+                          <span>SOS</span>
+                        </button>
+                      )}
 
                   <button
                     type="button"
@@ -362,27 +363,36 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
 
-                    {b.state === 'COMPLETED' && (
-                      <button
-                        type="button"
-                        onClick={() => onPayBooking(b)}
+                      {b.state === 'COMPLETED' && (
+                        <button
+                          type="button"
+                          onClick={() => onPayBooking(b)}
                       disabled={actionsDisabled}
-                        className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Pay <span className="font-mono">₹{b.pricing.total}</span>
-                      </button>
-                    )}
+                        disabled={actionsDisabled}
+                        className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Pay <span className="font-mono">₹{b.pricing.total}</span>
+                        </button>
+                      )}
 
-                    {b.state === 'PAID' && (
-                      <button
-                        type="button"
-                        onClick={() => onRateBooking(b)}
-                        className="px-3.5 py-2 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                      >
-                        Rate Service
-                      </button>
-                    )}
-                  </div>
+                      {b.state === 'PAID' && (
+                        <button
+                          type="button"
+                          onClick={() => onRateBooking(b)}
+                          className="px-3.5 py-2 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                        >
+                          Rate Service
+                        </button>
+                      )}
+                    </div>
+              </div>
+
+              {/* ── Break banner — only shown when WORKER_ON_BREAK ── */}
+              {isOnBreak && (
+                <div className="px-4 pb-4">
+                  <BreakBanner booking={b} />
+                </div>
+              )}
               </div>
 
               {/* ── Break banner — only shown when WORKER_ON_BREAK ── */}
