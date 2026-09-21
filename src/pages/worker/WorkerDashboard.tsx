@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
+import { useGeolocation } from '../../hooks/useGeolocation';
+import { CooperativeMap } from '../../components/common/Map/CooperativeMap';
 import { Booking } from '../../types';
 import { Badge } from '../../components/common/Badge';
 import { WorkerJobExecutionModal } from './WorkerJobExecutionModal';
@@ -23,6 +25,9 @@ import {
   TrendingUp,
   Star,
   Map,
+  Crosshair,
+  Radio,
+  Navigation,
 } from 'lucide-react';
 
 interface WorkerDashboardProps {
@@ -61,6 +66,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     toggleWorkerAvailability,
     showToast,
   } = useCooperativeStore();
+
+  const { workerTracking, toggleWorkerLocationSharing, currentAddress, currentCoordinates } = useGeolocation();
 
   const currentWorker =
     workers.find((w) => w.id === currentUser.id) ||
@@ -325,8 +332,48 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
-            <span className={`w-2 h-2 rounded-full ${!isAvailable && !isOnBreak ? 'bg-[#B86B6B]' : 'bg-[#F4D7D7]'}`} />
+            <span className={`w-2 h-2 rounded-full ${!isAvailable && !isOnBreak ? 'bg-[#D32F2F]' : 'bg-[#E8E2D5]'}`} />
             Offline
+          </button>
+        </div>
+      </div>
+
+      {/* GPS Telemetry & Location Sharing Control */}
+      <div className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+            workerTracking.isSharing ? 'bg-[#E6ECE4] text-[#445D3E] border border-[#CFDDD0]' : 'bg-[#FAF7F2] text-[#9A958B] border border-[#E8E2D5]'
+          }`}>
+            <Radio className={`w-4 h-4 ${workerTracking.isSharing ? 'animate-pulse text-[#6E8B67]' : 'text-[#9A958B]'}`} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <strong className="text-xs font-bold text-[#292824]">
+                {workerTracking.isSharing ? 'Live Location Sharing Active' : 'Location Sharing Paused'}
+              </strong>
+              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                workerTracking.isSharing ? 'bg-[#E6ECE4] text-[#445D3E]' : 'bg-[#FAF7F2] text-[#77736B]'
+              }`}>
+                {workerTracking.isSharing ? 'GPS ±12m' : 'Offline'}
+              </span>
+            </div>
+            <p className="text-[11px] text-[#77736B] mt-0.5">
+              Station: <span className="font-semibold text-[#524E47]">{currentWorker.lastKnownArea || currentWorker.societyName || 'Green Residency'}</span> · Ping: <span className="font-mono">{workerTracking.lastUpdated || 'Just now'}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          <button
+            type="button"
+            onClick={() => toggleWorkerLocationSharing(currentWorker.id)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              workerTracking.isSharing
+                ? 'bg-[#E6ECE4] hover:bg-[#CFDDD0] text-[#364A32] border border-[#CFDDD0]'
+                : 'bg-[#FAF7F2] hover:bg-[#E8E2D5] text-[#524E47] border border-[#E8E2D5]'
+            }`}
+          >
+            {workerTracking.isSharing ? '● Sharing Active' : 'Enable Sharing'}
           </button>
         </div>
       </div>
@@ -658,30 +705,71 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
       <Modal
         isOpen={showDemandHeatmapModal}
         onClose={() => setShowDemandHeatmapModal(false)}
-        title="Predictive Demand Heatmap"
-        subtitle="Cooperative Spatial Dispatch Engine (Person 5 Integration)"
-        maxWidth="md"
+        title="Predictive Demand & Operational Sectors"
+        subtitle="Cooperative Spatial Dispatch Engine & Active Clusters"
+        maxWidth="lg"
       >
         <div className="space-y-4 text-xs">
           <div className="p-3 bg-[#E4EDF4] border border-[#B8CBDD] rounded-xl text-[#263D50]">
             <p className="font-bold flex items-center gap-1.5">
               <Map className="w-4 h-4 text-[#324F66]" />
-              Predictive Demand Heatmap Module
+              <span>Active Cooperative Demand Hotspots</span>
             </p>
-            <p className="text-[11px] text-[#537895] mt-1">
-              Person 5 is connecting the geospatial predictive model. This screen previews active cluster demand around your registered cooperative hub.
+            <p className="text-[11px] text-[#537895] mt-0.5">
+              Live spatial demand distribution across Western Pune member societies and high-volume sectors.
             </p>
           </div>
 
-          <div className="space-y-2">
+          {/* Interactive Leaflet Demand Map */}
+          <CooperativeMap
+            height={260}
+            markers={[
+              {
+                id: 'my_worker_pos',
+                type: 'worker',
+                title: `${currentWorker.name} (You)`,
+                profession: primarySkill,
+                status: 'AVAILABLE',
+                avatar: currentWorker.avatar,
+                coordinates: {
+                  lat: currentWorker.latitude || 18.5590,
+                  lng: currentWorker.longitude || 73.7868,
+                },
+              },
+              {
+                id: 'demand_baner',
+                type: 'job',
+                title: 'High Demand: Baner Tower A',
+                urgencyTier: 'URGENT',
+                coordinates: { lat: 18.5595, lng: 73.7880 },
+              },
+              {
+                id: 'demand_balewadi',
+                type: 'job',
+                title: 'Medium Demand: Balewadi High St',
+                urgencyTier: 'STANDARD',
+                coordinates: { lat: 18.5742, lng: 73.7725 },
+              },
+              {
+                id: 'demand_pashan',
+                type: 'job',
+                title: 'Emergency: Pashan Lake Road',
+                urgencyTier: 'EMERGENCY',
+                coordinates: { lat: 18.5362, lng: 73.7925 },
+              },
+            ]}
+            autoFitBounds={true}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {MOCK_DEMAND_AREAS.map((item) => (
-              <div key={item.area} className="p-3 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl flex justify-between items-center">
+              <div key={item.area} className="p-2.5 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl flex justify-between items-center">
                 <div>
-                  <strong className="text-[#292824] block">{item.area}</strong>
-                  <span className="text-[#77736B]">{item.serviceType} · Proximity: {item.distance}</span>
+                  <strong className="text-[#292824] block leading-tight">{item.area}</strong>
+                  <span className="text-[10px] text-[#77736B]">{item.serviceType} · {item.distance}</span>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-[#FAEDE8] text-[#80432E]">
-                  {item.demandLevel.toUpperCase()} DEMAND
+                <span className="px-2 py-0.5 rounded-full font-bold text-[10px] bg-[#FAEDE8] text-[#80432E]">
+                  {item.demandLevel.toUpperCase()}
                 </span>
               </div>
             ))}
@@ -690,9 +778,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           <button
             type="button"
             onClick={() => setShowDemandHeatmapModal(false)}
-            className="w-full py-2 bg-[#292824] text-white font-bold rounded-xl cursor-pointer"
+            className="w-full py-2.5 bg-[#292824] text-white font-bold rounded-xl cursor-pointer hover:bg-black transition-colors"
           >
-            Close Heatmap Preview
+            Close Heatmap
           </button>
         </div>
       </Modal>

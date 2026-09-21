@@ -4,7 +4,10 @@ import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
+import { CooperativeMap } from '../../components/common/Map/CooperativeMap';
+import { MapMarkerEntity } from '../../types/location';
 import { mapBookingStatus } from '../../utils/statusMapper';
+import { formatDistance, estimateETA, generateGoogleMapsUrl } from '../../utils/geoUtils';
 import {
   CheckCircle2,
   Clock,
@@ -19,6 +22,8 @@ import {
   ShieldAlert,
   CreditCard,
   ChevronRight,
+  Navigation,
+  ExternalLink,
 } from 'lucide-react';
 
 interface LiveTrackingModalProps {
@@ -50,8 +55,46 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
   ];
 
   const currentStepIndex = statusInfo.stepIndex;
-
   const isSOSApplicable = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(booking.state);
+
+  // Coordinates resolution
+  const custLat = booking.customerLatitude || 18.5590;
+  const custLng = booking.customerLongitude || 73.7868;
+
+  // Worker coordinates during active job (slightly offset if travelling)
+  const isTravelling = booking.state === 'TRAVELLING';
+  const isWorking = booking.state === 'IN_PROGRESS' || booking.state === 'ARRIVED';
+
+  const workerLat = booking.matchedWorker?.latitude || (custLat + (isTravelling ? 0.008 : 0.0002));
+  const workerLng = booking.matchedWorker?.longitude || (custLng + (isTravelling ? 0.008 : 0.0002));
+
+  const distanceKm = isWorking ? 0.05 : booking.distanceKm || 1.2;
+  const eta = estimateETA(distanceKm);
+
+  // Build live map markers
+  const trackingMarkers: MapMarkerEntity[] = [
+    {
+      id: 'customer_dest',
+      type: 'user',
+      title: 'Your Residence',
+      subtitle: booking.customerAddress,
+      coordinates: { lat: custLat, lng: custLng },
+    },
+  ];
+
+  if (booking.matchedWorker) {
+    trackingMarkers.push({
+      id: `worker_${booking.matchedWorker.id}`,
+      type: 'worker',
+      title: booking.matchedWorker.name,
+      profession: booking.matchedWorker.skills[0] || 'Specialist',
+      status: isTravelling ? 'TRAVELLING' : isWorking ? 'ON_JOB' : 'AVAILABLE',
+      avatar: booking.matchedWorker.avatar,
+      coordinates: { lat: workerLat, lng: workerLng },
+    });
+  }
+
+  const googleMapsLink = generateGoogleMapsUrl(custLat, custLng, `Service Destination #${booking.id}`);
 
   return (
     <Modal
@@ -61,7 +104,7 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
       subtitle={<span>Booking <span className="font-mono font-bold">#{booking.id}</span> · {booking.serviceCategory}</span>}
       maxWidth="lg"
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* RE-MATCHING ALERT IF APPLICABLE */}
         {booking.state === 'RE_MATCHING' && (
           <div className="p-3.5 bg-[#FAEDE8] border border-[#F3C5B8] rounded-2xl flex items-start gap-3 animate-fade-in">
@@ -77,8 +120,41 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
           </div>
         )}
 
+        {/* LIVE INTERACTIVE TRACKING MAP */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#77736B] flex items-center gap-1.5">
+              <Navigation className="w-3.5 h-3.5 text-[#6E8B67]" />
+              <span>Live Operational Map</span>
+            </span>
+
+            {/* Real-time ETA Pill */}
+            {isTravelling && (
+              <span className="text-[11px] font-bold text-[#80432E] bg-[#FAEDE8] border border-[#F3C5B8] px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                <Clock className="w-3 h-3" />
+                <span>Estimated Arrival: <strong>{eta.formatted}</strong> ({formatDistance(distanceKm)})</span>
+              </span>
+            )}
+
+            {isWorking && (
+              <span className="text-[11px] font-bold text-[#445D3E] bg-[#E6ECE4] border border-[#CFDDD0] px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <HardHat className="w-3 h-3" />
+                <span>Specialist On Site · Working</span>
+              </span>
+            )}
+          </div>
+
+          <CooperativeMap
+            height={220}
+            markers={trackingMarkers}
+            autoFitBounds={true}
+            interactive={true}
+            showLegend={false}
+          />
+        </div>
+
         {/* 5-STAGE PROGRESS TIMELINE */}
-        <div className="p-4 bg-[#FCF9F3] rounded-2xl border border-[#E8E2D5] space-y-4">
+        <div className="p-4 bg-[#FCF9F3] rounded-2xl border border-[#E8E2D5] space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#77736B]">
               Current Status
@@ -89,7 +165,7 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
           </div>
 
           {/* Stepper Grid */}
-          <div className="relative pl-6 sm:pl-8 space-y-4 before:content-[''] before:absolute before:left-2.5 sm:before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#E8E2D5]">
+          <div className="relative pl-6 sm:pl-8 space-y-3.5 before:content-[''] before:absolute before:left-2.5 sm:before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#E8E2D5]">
             {customerSteps.map((step, idx) => {
               const isPast = idx < currentStepIndex;
               const isCurrent = idx === currentStepIndex;
@@ -174,13 +250,15 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
               </div>
             </div>
 
-            <a
-              href={`tel:${booking.matchedWorker.phone}`}
-              className="p-2.5 rounded-xl bg-[#F3EEE4] hover:bg-[#E8E2D5] text-[#524E47] transition-colors flex items-center gap-1.5 text-xs font-bold"
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Call</span>
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href={`tel:${booking.matchedWorker.phone}`}
+                className="p-2.5 rounded-xl bg-[#F3EEE4] hover:bg-[#E8E2D5] text-[#524E47] transition-colors flex items-center gap-1.5 text-xs font-bold"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>Call</span>
+              </a>
+            </div>
           </div>
         )}
 
@@ -191,7 +269,7 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
             <button
               type="button"
               onClick={() => onOpenSOS(booking)}
-              className="px-3 py-2.5 rounded-xl bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+              className="px-3 py-2.5 rounded-xl bg-[#FAEDE8] hover:bg-[#F33B2B]/15 text-[#80432E] border border-[#F3C5B8] text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <ShieldAlert className="w-3.5 h-3.5 text-[#C93B2B]" />
               <span>Emergency SOS</span>

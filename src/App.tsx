@@ -3,6 +3,7 @@ import {
   CooperativeStoreProvider,
   useCooperativeStore,
 } from './store/cooperativeStore';
+import { LocationProvider } from './context/LocationContext';
 import { Booking, UserRole } from './types';
 import { DemoControlBar } from './components/common/DemoControlBar';
 import { Navbar } from './components/common/Navbar';
@@ -401,7 +402,9 @@ function AppContent() {
 export default function App() {
   return (
     <CooperativeStoreProvider>
-      <AppContent />
+      <LocationProvider>
+        <AppContent />
+      </LocationProvider>
     </CooperativeStoreProvider>
   );
 }

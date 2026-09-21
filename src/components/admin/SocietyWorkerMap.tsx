@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { Worker, WorkerLocationStatus } from '../../types';
 import { Badge } from '../common/Badge';
+import { CooperativeMap } from '../common/Map/CooperativeMap';
+import { MapMarkerEntity } from '../../types/location';
 import {
-  MapPin,
-  HardHat,
-  Star,
-  CheckCircle2,
-  Clock,
   Compass,
   Phone,
   ChevronRight,
+  Star,
+  CheckCircle2,
+  Clock,
+  HardHat,
   Filter,
-  Users,
-  Navigation,
-  Activity,
-  Layers,
 } from 'lucide-react';
 
 interface SocietyWorkerMapProps {
@@ -44,7 +41,7 @@ export const SocietyWorkerMap: React.FC<SocietyWorkerMapProps> = ({
     return true;
   });
 
-  const selectedWorker = workers.find((w) => w.id === selectedWorkerId) || workers[0];
+  const selectedWorker = workers.find((w) => w.id === selectedWorkerId) || filteredWorkers[0] || workers[0];
 
   const getStatusColor = (status?: WorkerLocationStatus) => {
     switch (status) {
@@ -72,17 +69,20 @@ export const SocietyWorkerMap: React.FC<SocietyWorkerMapProps> = ({
     }
   };
 
-  // Map pin position offsets for realistic visualization across society sectors
-  const sectorPositions = [
-    { top: '28%', left: '26%', label: 'Tower A (Residential)' },
-    { top: '35%', left: '68%', label: 'Tower B (Residential)' },
-    { top: '65%', left: '32%', label: 'Tower C & Clubhouse' },
-    { top: '72%', left: '62%', label: 'Tower D & Parking Bay' },
-    { top: '48%', left: '48%', label: 'Central Maintenance Depot' },
-    { top: '20%', left: '50%', label: 'North Gate & Commercial Plaza' },
-    { top: '80%', left: '45%', label: 'South Utility & Tool Bank Hub' },
-    { top: '55%', left: '80%', label: 'East Visitor Reception' },
-  ];
+  // Convert workers into MapMarkerEntity
+  const mapMarkers: MapMarkerEntity[] = filteredWorkers.map((w) => ({
+    id: w.id,
+    type: 'worker',
+    title: w.name,
+    profession: w.skills[0] || 'Worker',
+    status: w.locationStatus,
+    avatar: w.avatar,
+    coordinates: {
+      lat: w.latitude || 18.5590,
+      lng: w.longitude || 73.7868,
+    },
+    data: w,
+  }));
 
   return (
     <div className="space-y-4">
@@ -125,114 +125,26 @@ export const SocietyWorkerMap: React.FC<SocietyWorkerMapProps> = ({
 
       {/* Main Grid: Interactive Map Canvas + Worker Details Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* MAP CANVAS */}
-        <div className="lg:col-span-2 bg-[#FCF9F3] border-2 border-[#E8E2D5] rounded-3xl p-4 shadow-card relative overflow-hidden h-[380px] sm:h-[440px] flex flex-col justify-between select-none">
-          {/* Subtle Sector Grid Overlay Background */}
-          <div className="absolute inset-0 opacity-40 pointer-events-none">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E8E2D5" strokeWidth="1" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
-          </div>
-
-          {/* Society Sector Zone Landmarks */}
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Tower A */}
-            <div className="absolute top-[20%] left-[18%] p-2 rounded-2xl bg-[#E6ECE4]/50 border border-[#CFDDD0] text-[10px] font-bold text-[#445D3E]">
-              Tower A & B
-            </div>
-            {/* Central Depot */}
-            <div className="absolute top-[45%] left-[40%] p-2 rounded-2xl bg-[#FAEDE8]/60 border border-[#F3C5B8] text-[10px] font-bold text-[#80432E] flex items-center gap-1">
-              <HardHat className="w-3 h-3" />
-              <span>Coop Depot & Tool Bank</span>
-            </div>
-            {/* Tower C & D */}
-            <div className="absolute top-[68%] left-[58%] p-2 rounded-2xl bg-[#E4EDF4]/50 border border-[#CDE0EC] text-[10px] font-bold text-[#324F66]">
-              Tower C & D
-            </div>
-          </div>
-
-          {/* Map Top Compass & Legend */}
-          <div className="relative z-10 flex items-center justify-between pointer-events-none">
-            <div className="px-3 py-1 bg-white/90 backdrop-blur-xs rounded-xl border border-[#E8E2D5] text-[11px] font-bold text-[#292824] shadow-2xs">
-              📍 {societyName} Campus
-            </div>
-            <div className="flex items-center gap-2 text-[10px] font-semibold bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-xl border border-[#E8E2D5]">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6E8B67]" /> Available</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#537895]" /> On Job</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#B37055]" /> Travelling</span>
-            </div>
-          </div>
-
-          {/* Interactive Worker Map Markers */}
-          <div className="absolute inset-0">
-            {filteredWorkers.map((w, idx) => {
-              const pos = sectorPositions[idx % sectorPositions.length];
-              const isSelected = selectedWorkerId === w.id;
-              const colorInfo = getStatusColor(w.locationStatus);
-
-              return (
-                <div
-                  key={w.id}
-                  style={{ top: pos.top, left: pos.left }}
-                  onClick={() => setSelectedWorkerId(w.id)}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 z-20 group ${
-                    isSelected ? 'scale-110 z-30' : 'hover:scale-105'
-                  }`}
-                >
-                  {/* Pin Avatar Bubble */}
-                  <div className="relative flex flex-col items-center">
-                    <div
-                      className={`w-10 h-10 rounded-2xl p-0.5 bg-white border-2 shadow-md transition-all ${
-                        isSelected
-                          ? 'border-[#80432E] ring-4 ring-[#F3C5B8]'
-                          : 'border-[#E8E2D5] hover:border-[#80432E]'
-                      }`}
-                    >
-                      <img
-                        src={w.avatar}
-                        alt={w.name}
-                        className="w-full h-full rounded-xl object-cover"
-                      />
-                    </div>
-
-                    {/* Status Dot Ring */}
-                    <span
-                      className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full ${colorInfo.bg} border-2 border-white shadow-xs`}
-                    />
-
-                    {/* Label Pill */}
-                    <div
-                      className={`mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap shadow-xs transition-colors ${
-                        isSelected
-                          ? 'bg-[#292824] text-white'
-                          : 'bg-white/95 text-[#292824] border border-[#E8E2D5]'
-                      }`}
-                    >
-                      {w.name.split(' ')[0]} ({w.skills[0] || 'Worker'})
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Map Bottom Metadata */}
-          <div className="relative z-10 flex items-center justify-between text-[11px] text-[#77736B] pointer-events-none">
-            <span className="bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#E8E2D5]">
-              Showing <span className="font-mono font-bold text-[#292824]">{filteredWorkers.length}</span> stationed workers
-            </span>
-            <span className="bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#E8E2D5]">
-              GPS Accuracy: ±15m
-            </span>
-          </div>
+        {/* LEAFLET MAP CANVAS */}
+        <div className="lg:col-span-2">
+          <CooperativeMap
+            height={440}
+            markers={mapMarkers}
+            selectedMarkerId={selectedWorkerId}
+            center={
+              selectedWorker?.latitude && selectedWorker?.longitude
+                ? [selectedWorker.latitude, selectedWorker.longitude]
+                : [18.5590, 73.7868]
+            }
+            zoom={15}
+            autoFitBounds={true}
+            onMarkerClick={(marker) => {
+              setSelectedWorkerId(marker.id);
+            }}
+          />
         </div>
 
-        {/* SELECTED WORKER BOTTOM SHEET / DETAIL CARD */}
+        {/* SELECTED WORKER TELEMETRY & KYC CARD */}
         {selectedWorker ? (
           <div className="p-5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-3xl shadow-card flex flex-col justify-between space-y-4">
             <div className="space-y-3">
@@ -273,7 +185,7 @@ export const SocietyWorkerMap: React.FC<SocietyWorkerMapProps> = ({
                   <span className="text-[#77736B]">Last Ping:</span>
                   <span className="font-semibold text-[#524E47] flex items-center gap-1">
                     <Clock className="w-3 h-3 text-[#77736B]" />
-                    <span>{selectedWorker.locationUpdatedAt || '2 min ago'}</span>
+                    <span>{selectedWorker.locationUpdatedAt || 'Just now'}</span>
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -284,9 +196,9 @@ export const SocietyWorkerMap: React.FC<SocietyWorkerMapProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#77736B]">GPS Coordinates:</span>
+                  <span className="text-[#77736B]">GPS Telemetry:</span>
                   <span className="font-mono text-[10px] text-[#77736B]">
-                    {selectedWorker.latitude || 18.5590}° N, {selectedWorker.longitude || 73.7868}° E
+                    {selectedWorker.latitude ? `${selectedWorker.latitude.toFixed(4)}° N, ${selectedWorker.longitude?.toFixed(4)}° E` : '18.5590° N, 73.7868° E'}
                   </span>
                 </div>
               </div>

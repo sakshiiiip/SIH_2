@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Booking, Worker } from '../../types';
 import { Badge } from '../../components/common/Badge';
+import { LocationBadge } from '../../components/common/LocationBadge';
+import { LocationPickerModal } from '../../components/common/LocationPickerModal';
+import { useGeolocation } from '../../hooks/useGeolocation';
 import { WorkerProfileModal } from './WorkerProfileModal';
 import { ActiveJobSOSModal } from './ActiveJobSOSModal';
 import { mapBookingStatus } from '../../utils/statusMapper';
@@ -26,6 +29,7 @@ import {
   CreditCard,
   ArrowRight,
   ShieldAlert,
+  MapPin,
   HeadphonesIcon,
 } from 'lucide-react';
 
@@ -67,6 +71,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedWorkerForProfile, setSelectedWorkerForProfile] = useState<Worker | null>(null);
   const [sosJob, setSosJob] = useState<Booking | null>(null);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const prevActiveStateRef = useRef<string | null>(null);
 
@@ -157,7 +162,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       {/* 1. GREETING & 2. "WHAT DO YOU NEED HELP WITH?" WITH SEARCH (DOMINANT TOP) */}
       {/* ========================================================================= */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#292824] leading-tight flex items-center gap-2">
               <span>{getGreeting()}, {currentUser.name.split(' ')[0]}</span>
@@ -168,8 +173,11 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-[#364A32] bg-[#E6ECE4] border border-[#CFDDD0] px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            {/* Geolocation Address Selector Badge */}
+            <LocationBadge onClick={() => setIsLocationPickerOpen(true)} />
+
+            <span className="text-[11px] font-semibold text-[#364A32] bg-[#E6ECE4] border border-[#CFDDD0] px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
               <ShieldCheck className="w-3.5 h-3.5 text-[#6E8B67]" />
               <span>{currentUser.societyName || 'Green Residency'}</span>
             </span>
@@ -678,6 +686,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           onClose={() => setSosJob(null)}
         />
       )}
+
+      {/* LOCATION PICKER MODAL */}
+      <LocationPickerModal
+        isOpen={isLocationPickerOpen}
+        onClose={() => setIsLocationPickerOpen(false)}
+      />
     </div>
   );
 };

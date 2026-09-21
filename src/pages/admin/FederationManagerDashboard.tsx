@@ -4,6 +4,7 @@ import { Badge } from '../../components/common/Badge';
 import { SocietyData, Worker, WorkerVerificationStatus, PlatformAuditLog, ManagerActionType } from '../../types';
 import { Modal } from '../../components/common/Modal';
 import { WorkerProfileModal } from '../customer/WorkerProfileModal';
+import { FederationMapOverview } from '../../components/admin/FederationMapOverview';
 import { FederationWorkerReviewModal } from '../../components/admin/FederationWorkerReviewModal';
 import {
   Network,
@@ -19,6 +20,8 @@ import {
   CheckCircle2,
   RotateCcw,
   Clock,
+  MapPin,
+  Compass,
   Building2,
   Users,
   Filter,
@@ -66,7 +69,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
 
   const [matchingWeights, setMatchingWeights] = useState(config.matchingWeights);
   const [activeSubTab, setActiveSubTab] = useState<
-    'overview' | 'manager_activity' | 'worker_verification' | 'worker_directory' | 'societies' | 'job_verification' | 'tool_bank' | 'coop_fund' | 'matching'
+    'overview' | 'map' | 'manager_activity' | 'worker_verification' | 'worker_directory' | 'societies' | 'job_verification' | 'tool_bank' | 'coop_fund' | 'matching'
   >('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [selectedSocietyForDrilldown, setSelectedSocietyForDrilldown] = useState<SocietyData | null>(null);
@@ -483,6 +486,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
       <div className="flex items-center gap-1 border-b border-[#E8E2D5] overflow-x-auto no-scrollbar pb-1 text-xs font-bold">
         {[
           { key: 'overview', label: 'Overview' },
+          { key: 'map', label: `Regional Map (${societies.length} Societies)` },
           { key: 'manager_activity', label: `Manager Activity & Audit (${auditLogs.length})` },
           { key: 'worker_verification', label: `Worker Verification Queue (${federationWorkerQueue.length})` },
           { key: 'worker_directory', label: `Worker Directory (${workers.length})` },
@@ -510,6 +514,19 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
       {/* ========================================================================= */}
       {/* 4. SUB-TAB CONTENT */}
       {/* ========================================================================= */}
+
+      {/* SUB-TAB: REGIONAL GEOLOCATION & SOCIETIES OVERVIEW MAP */}
+      {activeSubTab === 'map' && (
+        <div className="animate-fade-in">
+          <FederationMapOverview
+            societies={societies}
+            workers={workers}
+            bookings={bookings}
+            onSelectSociety={(soc) => setSelectedSocietyForDrilldown(soc)}
+            onSelectWorker={(w) => setSelectedWorkerForProfile(w)}
+          />
+        </div>
+      )}
 
       {/* SUB-TAB: MANAGER ACTIVITY & AUDIT TRAIL */}
       {activeSubTab === 'manager_activity' && (

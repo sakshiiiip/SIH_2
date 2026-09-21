@@ -110,6 +110,9 @@ interface CooperativeStoreContextType {
     urgencyTier: UrgencyTier;
     societyName?: string;
     customAddress?: string;
+    customerCoordinates?: { latitude: number; longitude: number; accuracy?: number };
+    customerLocality?: string;
+    customerPostalCode?: string;
   }) => Booking;
   acceptBookingByWorker: (bookingId: string, workerId: string) => void;
   acceptJob: (jobId: string, workerId: string) => void;
@@ -160,7 +163,14 @@ interface CooperativeStoreContextType {
     bookingId: string,
     reportedBy: 'customer' | 'worker',
     reason: string,
-    details?: string
+    details?: string,
+    telemetry?: {
+      latitude?: number;
+      longitude?: number;
+      locationAccuracy?: number;
+      locationAddress?: string;
+      googleMapsUrl?: string;
+    }
   ) => ActiveJobSOSTicket;
   resolveSOSTicket: (ticketId: string, notes?: string) => void;
   // Cooperative Fund
@@ -1283,6 +1293,9 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     urgencyTier: UrgencyTier;
     societyName?: string;
     customAddress?: string;
+    customerCoordinates?: { latitude: number; longitude: number; accuracy?: number };
+    customerLocality?: string;
+    customerPostalCode?: string;
   }) => {
     const service = INITIAL_SERVICES.find(
       (s) => s.name.toLowerCase() === data.serviceCategory.toLowerCase()
@@ -1296,12 +1309,17 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     const societyShare = Math.round((totalAmount * config.societySharePercent) / 100);
     const cooperativeFundShare = totalAmount - workerShare - societyShare;
 
-    // Run AI / Fair Matching Engine
+    // Run AI / Fair Matching Engine with customer coordinates
+    const customerLocation = data.customerCoordinates
+      ? { lat: data.customerCoordinates.latitude, lng: data.customerCoordinates.longitude }
+      : { lat: 18.5590, lng: 73.7868 };
+
     const candidates = calculateCandidateScores(
       data.serviceCategory,
       workers,
       config.matchingWeights,
-      []
+      [],
+      customerLocation
     );
 
     const matchedCandidate = candidates[0];
@@ -1309,6 +1327,24 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
     // 4-digit OTP for secure customer-worker arrival verification
     const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Compute initial distance
+    let calculatedDistanceKm = matchedWorker?.distanceKm || 1.2;
+    if (
+      customerLocation &&
+      matchedWorker?.latitude !== undefined &&
+      matchedWorker?.longitude !== undefined
+    ) {
+      const dLat = ((matchedWorker.latitude - customerLocation.lat) * Math.PI) / 180;
+      const dLon = ((matchedWorker.longitude - customerLocation.lng) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((customerLocation.lat * Math.PI) / 180) *
+          Math.cos((matchedWorker.latitude * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      calculatedDistanceKm = parseFloat((6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(1));
+    }
 
     const newBooking: Booking = {
       id: `BKG-${Math.floor(2000 + Math.random() * 8000)}`,
@@ -1337,6 +1373,16 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       matchedWorkerId: matchedWorker?.id,
       matchedWorker,
       rejectedWorkerIds: [],
+      // Geolocation Telemetry
+      customerLatitude: customerLocation.lat,
+      customerLongitude: customerLocation.lng,
+      customerLocationAccuracy: data.customerCoordinates?.accuracy || 15,
+      customerLocality: data.customerLocality || 'Baner',
+      customerPostalCode: data.customerPostalCode || '411045',
+      workerLatitude: matchedWorker?.latitude,
+      workerLongitude: matchedWorker?.longitude,
+      distanceKm: calculatedDistanceKm,
+      estimatedDurationMinutes: Math.max(3, Math.round(calculatedDistanceKm * 3 + 2)),
     };
 
     setBookings((prev) => [newBooking, ...prev]);
@@ -1346,7 +1392,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       recipientRole: 'customer',
       title: data.urgencyTier === 'EMERGENCY' ? '🚨 Emergency Request Queued' : 'Request Submitted',
       message: matchedWorker
-        ? `Matched with ${matchedWorker.name} (${matchedWorker.distanceKm} km away). Awaiting confirmation.`
+        ? `Matched with ${matchedWorker.name} (${calculatedDistanceKm} km away). Awaiting confirmation.`
         : 'Finding the right verified worker for your request...',
       type: data.urgencyTier === 'EMERGENCY' ? 'emergency' : 'info',
       relatedBookingId: newBooking.id,
@@ -2301,7 +2347,14 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     bookingId: string,
     reportedBy: 'customer' | 'worker',
     reason: string,
-    details?: string
+    details?: string,
+    telemetry?: {
+      latitude?: number;
+      longitude?: number;
+      locationAccuracy?: number;
+      locationAddress?: string;
+      googleMapsUrl?: string;
+    }
   ): ActiveJobSOSTicket => {
     const newTicket: ActiveJobSOSTicket = {
       id: `SOS-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -2317,6 +2370,11 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       createdAt: new Date().toISOString(),
       status: 'active_emergency',
       assignedManager: 'Suresh Menon (Society Manager)',
+      latitude: telemetry?.latitude,
+      longitude: telemetry?.longitude,
+      locationAccuracy: telemetry?.locationAccuracy,
+      locationAddress: telemetry?.locationAddress,
+      googleMapsUrl: telemetry?.googleMapsUrl,
     };
 
     setSosTickets((prev) => [newTicket, ...prev]);

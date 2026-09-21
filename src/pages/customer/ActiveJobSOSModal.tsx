@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
+import { useGeolocation } from '../../hooks/useGeolocation';
 import { ServiceRequest } from '../../types';
+import { generateGoogleMapsUrl } from '../../utils/geoUtils';
 import {
   ShieldAlert,
   PhoneCall,
@@ -9,6 +11,9 @@ import {
   Building2,
   PhoneForwarded,
   Ambulance,
+  MapPin,
+  ExternalLink,
+  Navigation,
 } from 'lucide-react';
 
 interface ActiveJobSOSModalProps {
@@ -27,22 +32,58 @@ const CUSTOMER_SOS_REASONS = [
 ];
 
 export const ActiveJobSOSModal: React.FC<ActiveJobSOSModalProps> = ({ job, isOpen, onClose }) => {
-  const { triggerActiveJobSOS } = useCooperativeStore();
+  const { triggerActiveJobSOS, currentUser } = useCooperativeStore();
+  const { currentCoordinates, currentAddress, captureSOSSnapshot } = useGeolocation();
+
   const [selectedReason, setSelectedReason] = useState(CUSTOMER_SOS_REASONS[0]);
   const [details, setDetails] = useState('');
   const [submittedTicketId, setSubmittedTicketId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emergencyCoords, setEmergencyCoords] = useState(currentCoordinates);
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setSubmittedTicketId(null);
+      setEmergencyCoords(currentCoordinates);
+      const url = generateGoogleMapsUrl(
+        currentCoordinates.latitude,
+        currentCoordinates.longitude,
+        `Active Job SOS #${job.id}`
+      );
+      setGoogleMapsUrl(url);
+    }
+  }, [isOpen, currentCoordinates, job.id]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      const ticket = triggerActiveJobSOS(job.id, 'customer', selectedReason, details || 'Immediate escalation triggered by resident.');
+
+    try {
+      const snapshot = await captureSOSSnapshot(job.id, 'customer', currentUser.name);
+      setEmergencyCoords(snapshot.coordinates);
+      setGoogleMapsUrl(snapshot.googleMapsUrl);
+
+      const ticket = triggerActiveJobSOS(
+        job.id,
+        'customer',
+        selectedReason,
+        details || 'Immediate escalation triggered by resident.',
+        {
+          latitude: snapshot.coordinates.latitude,
+          longitude: snapshot.coordinates.longitude,
+          locationAccuracy: snapshot.coordinates.accuracy,
+          locationAddress: snapshot.address,
+          googleMapsUrl: snapshot.googleMapsUrl,
+        }
+      );
+
       setSubmittedTicketId(ticket.id);
+    } finally {
       setIsSubmitting(false);
-    }, 350);
+    }
   };
 
   return (
@@ -74,8 +115,32 @@ export const ActiveJobSOSModal: React.FC<ActiveJobSOSModalProps> = ({ job, isOpe
 
         {/* Content */}
         <div className="overflow-y-auto py-4 space-y-4">
+          {/* LOCATION TELEMETRY STATUS PILL */}
+          <div className="p-3 bg-[#FAEDE8]/60 border border-[#F3C5B8] rounded-2xl flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <MapPin className="w-4 h-4 text-[#C93B2B] shrink-0" />
+              <div className="min-w-0">
+                <span className="text-[10px] font-extrabold uppercase text-[#80432E] block">
+                  Captured GPS Telemetry
+                </span>
+                <strong className="text-[#292824] font-bold block truncate">
+                  {currentAddress.formattedAddress || 'Green Residency, Baner, Pune'}
+                </strong>
+              </div>
+            </div>
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 bg-white hover:bg-[#FAF7F2] text-[#80432E] border border-[#F3C5B8] rounded-lg text-[10px] font-bold flex items-center gap-1 shrink-0"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span>Maps</span>
+            </a>
+          </div>
+
           {submittedTicketId ? (
-            <div className="text-center py-4 space-y-3">
+            <div className="text-center py-3 space-y-3">
               <div className="w-14 h-14 bg-[#E6ECE4] border-2 border-[#CFDDD0] rounded-full flex items-center justify-center mx-auto text-[#445D3E]">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
@@ -85,26 +150,39 @@ export const ActiveJobSOSModal: React.FC<ActiveJobSOSModalProps> = ({ job, isOpe
                 </span>
                 <h4 className="text-lg font-black text-[#292824]">Ticket <span className="font-mono font-bold">#{submittedTicketId}</span></h4>
                 <p className="text-xs text-[#77736B] max-w-xs mx-auto">
-                  Your Society Manager and Emergency Response have been alerted with live job telemetry.
+                  Your Society Desk and Emergency Response have been alerted with live GPS telemetry.
                 </p>
               </div>
 
-              {/* Direct helpline */}
-              <div className="p-3 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
-                <span className="font-bold text-[#292824]">Cooperative Helpline</span>
-                <a
-                  href="tel:18002008899"
-                  className="px-3 py-1.5 bg-[#6E8B67] text-white font-bold rounded-lg flex items-center gap-1 text-xs"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span className="font-mono">Call 1800-200-8899</span>
-                </a>
+              {/* Direct Quick Emergency Helplines */}
+              <div className="space-y-2 pt-2">
+                <div className="p-3 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
+                  <span className="font-bold text-[#292824]">Police Control (112)</span>
+                  <a
+                    href="tel:112"
+                    className="px-3 py-1.5 bg-[#C93B2B] text-white font-bold rounded-lg flex items-center gap-1 text-xs shadow-2xs"
+                  >
+                    <PhoneCall className="w-3.5 h-3.5" />
+                    <span>Call 112</span>
+                  </a>
+                </div>
+
+                <div className="p-3 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
+                  <span className="font-bold text-[#292824]">Society Manager Desk</span>
+                  <a
+                    href="tel:9820411983"
+                    className="px-3 py-1.5 bg-[#6E8B67] text-white font-bold rounded-lg flex items-center gap-1 text-xs shadow-2xs"
+                  >
+                    <PhoneCall className="w-3.5 h-3.5" />
+                    <span>Call Desk</span>
+                  </a>
+                </div>
               </div>
 
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full py-2.5 bg-[#F3EEE4] hover:bg-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-[#F3EEE4] hover:bg-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl transition-colors cursor-pointer mt-2"
               >
                 Close Window
               </button>
@@ -160,7 +238,7 @@ export const ActiveJobSOSModal: React.FC<ActiveJobSOSModalProps> = ({ job, isOpe
                 ) : (
                   <>
                     <ShieldAlert className="w-4 h-4" />
-                    <span>Submit Emergency</span>
+                    <span>Submit Emergency SOS with Location</span>
                   </>
                 )}
               </button>

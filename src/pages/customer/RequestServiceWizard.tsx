@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
+import { useGeolocation } from '../../hooks/useGeolocation';
+import { LocationPickerModal } from '../../components/common/LocationPickerModal';
 import { INITIAL_SERVICES } from '../../store/initialData';
 import { UrgencyTier } from '../../types';
 import { Modal } from '../../components/common/Modal';
@@ -28,6 +30,8 @@ import {
   CheckCircle2,
   X,
   ImageIcon,
+  Crosshair,
+  Edit3,
 } from 'lucide-react';
 
 interface RequestServiceWizardProps {
@@ -58,6 +62,7 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
   onBookingCreated,
 }) => {
   const { currentUser, config, createBooking } = useCooperativeStore();
+  const { currentCoordinates, currentAddress, setManualLocation } = useGeolocation();
 
   // 3-Screen logical state
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -70,10 +75,15 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
   const [customProblem, setCustomProblem] = useState<string>('');
   const [details, setDetails] = useState<string>('');
   const [urgencyTier, setUrgencyTier] = useState<UrgencyTier>('STANDARD');
-  const [address, setAddress] = useState<string>(currentUser.address || 'Flat 402, Block B, Green Residency');
-  const [society, setSociety] = useState<string>(currentUser.societyName || 'Green Residency');
+  const [address, setAddress] = useState<string>(
+    currentUser.address || currentAddress.formattedAddress || 'Flat 402, Block B, Green Residency'
+  );
+  const [society, setSociety] = useState<string>(
+    currentUser.societyName || currentAddress.locality || 'Green Residency'
+  );
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
 
   // Hidden camera / file input ref
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +93,13 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
     if (preselectedService) setSelectedService(preselectedService);
     if (preselectedProblem) setSelectedProblem(preselectedProblem);
   }, [preselectedService, preselectedProblem]);
+
+  // Sync address if global currentAddress changes
+  React.useEffect(() => {
+    if (currentAddress?.formattedAddress && !address) {
+      setAddress(currentAddress.formattedAddress);
+    }
+  }, [currentAddress]);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -142,6 +159,9 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
         urgencyTier,
         societyName: society,
         customAddress: address,
+        customerCoordinates: currentCoordinates,
+        customerLocality: currentAddress.locality || society,
+        customerPostalCode: currentAddress.postalCode,
       });
 
       setIsSubmitting(false);
@@ -387,24 +407,44 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
                 )}
               </div>
 
-              {/* Society & Flat Location */}
-              <div className="p-3 rounded-2xl border border-[#E8E2D5] bg-[#FCF9F3] space-y-2">
-                <span className="text-xs font-bold text-[#292824] block">Service Address</span>
+              {/* Society & Flat Location with Map Action */}
+              <div className="p-3.5 rounded-2xl border border-[#E8E2D5] bg-[#FCF9F3] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#292824] flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-[#6E8B67]" />
+                    <span>Service Location</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsLocationPickerOpen(true)}
+                    className="text-[11px] font-bold text-[#6E8B67] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Crosshair className="w-3 h-3" />
+                    <span>Change on Map</span>
+                  </button>
+                </div>
+
+                <div
+                  onClick={() => setIsLocationPickerOpen(true)}
+                  className="p-2.5 bg-white border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-xl cursor-pointer transition-colors"
+                >
+                  <span className="text-[10px] text-[#77736B] block uppercase tracking-wider font-extrabold">
+                    Selected Area
+                  </span>
+                  <strong className="text-xs text-[#292824] font-bold block truncate mt-0.5">
+                    {currentAddress?.formattedAddress || address}
+                  </strong>
+                  <span className="text-[10px] text-[#6E8B67] font-mono mt-0.5 block">
+                    📍 {currentCoordinates.latitude.toFixed(4)}° N, {currentCoordinates.longitude.toFixed(4)}° E
+                  </span>
+                </div>
+
                 <div>
                   <input
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Flat & Block"
-                    className="w-full p-2 bg-white border border-[#E8E2D5] rounded-lg text-xs text-[#292824] focus:outline-none focus:ring-1 focus:ring-[#6E8B67]"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    value={society}
-                    onChange={(e) => setSociety(e.target.value)}
-                    placeholder="Society Name"
+                    placeholder="Flat & Block Details (e.g. Flat 402, Block B)"
                     className="w-full p-2 bg-white border border-[#E8E2D5] rounded-lg text-xs text-[#292824] focus:outline-none focus:ring-1 focus:ring-[#6E8B67]"
                   />
                 </div>
@@ -555,6 +595,17 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
           )}
         </div>
       </div>
+
+      {/* LOCATION PICKER MODAL */}
+      <LocationPickerModal
+        isOpen={isLocationPickerOpen}
+        onClose={() => setIsLocationPickerOpen(false)}
+        onLocationConfirmed={(coords, addr) => {
+          setAddress(addr.formattedAddress);
+          if (addr.locality) setSociety(addr.locality);
+          setIsLocationPickerOpen(false);
+        }}
+      />
     </Modal>
   );
 };

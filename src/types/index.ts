@@ -48,6 +48,8 @@ export interface CommunityChannel {
   lastActive: string;
 }
 
+export * from './location';
+
 export interface ActiveJobSOSTicket {
   id: string;
   bookingId: string;
@@ -64,6 +66,12 @@ export interface ActiveJobSOSTicket {
   status: 'active_emergency' | 'investigating' | 'resolved' | 'OPEN' | 'RESPONDING';
   assignedManager?: string;
   resolutionNotes?: string;
+  // Geolocation Telemetry
+  latitude?: number;
+  longitude?: number;
+  locationAccuracy?: number;
+  locationAddress?: string;
+  googleMapsUrl?: string;
 }
 
 export interface ToastMessage {
@@ -319,6 +327,16 @@ export interface Booking {
     reason: string;
     cancelledAt?: string;
   };
+  // Geolocation & Spatial Routing
+  customerLatitude?: number;
+  customerLongitude?: number;
+  customerLocationAccuracy?: number;
+  customerLocality?: string;
+  customerPostalCode?: string;
+  workerLatitude?: number;
+  workerLongitude?: number;
+  distanceKm?: number;
+  estimatedDurationMinutes?: number;
   // Compatibility aliases
   category?: string;
   workerId?: string;

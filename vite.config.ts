@@ -4,4 +4,8 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    host: true, // Listen on all local IPs (0.0.0.0) for Android LAN testing
+    port: 5173,
+  },
 })

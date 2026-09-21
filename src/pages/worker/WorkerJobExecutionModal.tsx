@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Booking } from '../../types';
 import { useCooperativeStore } from '../../store/cooperativeStore';
+import { useGeolocation } from '../../hooks/useGeolocation';
+import {
+  generateGoogleDirectionsUrl,
+  generateGoogleMapsUrl,
+  calculateHaversineDistanceKm,
+  formatDistance,
+  estimateETA,
+} from '../../utils/geoUtils';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
@@ -20,6 +28,8 @@ import {
   ArrowRight,
   ImageIcon,
   Sparkles,
+  ExternalLink,
+  Compass,
 } from 'lucide-react';
 
 interface WorkerJobExecutionModalProps {
@@ -50,11 +60,36 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
     uploadJobPhotos,
   } = useCooperativeStore();
 
+  const { currentCoordinates, workerTracking } = useGeolocation();
+
   const [enteredOtp, setEnteredOtp] = useState<string>('');
   const [otpError, setOtpError] = useState<string>('');
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [workNotes, setWorkNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Dynamic distance and ETA to customer
+  const destLat = booking?.customerLatitude;
+  const destLng = booking?.customerLongitude;
+  const originLat = currentCoordinates?.latitude;
+  const originLng = currentCoordinates?.longitude;
+
+  const dynamicDistanceKm = (destLat && destLng && originLat && originLng)
+    ? calculateHaversineDistanceKm(originLat, originLng, destLat, destLng)
+    : (booking?.distanceKm ?? null);
+
+  const dynamicETA = dynamicDistanceKm ? estimateETA(dynamicDistanceKm) : null;
+
+  const handleOpenGoogleMaps = () => {
+    if (!booking) return;
+    if (destLat && destLng) {
+      const url = generateGoogleDirectionsUrl(destLat, destLng, originLat, originLng);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      const fullQuery = `${booking.customerAddress}, ${booking.societyName || 'Pune'}`;
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullQuery)}`, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   // 4-step wizard state
   const [wizardStep, setWizardStep] = useState<WizardStep>(1);
@@ -291,26 +326,41 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
       <div className="space-y-6">
         {/* Customer Location & Problem Card */}
         <Card className="p-4 bg-[#FCF9F3] border-[#E8E2D5] space-y-3">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-[#77736B] uppercase tracking-wider">
-                Customer & Destination
-              </span>
-              <h4 className="text-base font-bold text-[#292824] mt-0.5">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-[#77736B] uppercase tracking-wider">
+                  Customer & Destination
+                </span>
+                {dynamicDistanceKm !== null && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EAF2E8] text-[#445D3E] border border-[#CFDDD0] flex items-center gap-1">
+                    <Compass className="w-3 h-3 text-[#6E8B67]" />
+                    <span>{formatDistance(dynamicDistanceKm)} · {dynamicETA?.formatted || '5 mins'}</span>
+                  </span>
+                )}
+              </div>
+              <h4 className="text-base font-bold text-[#292824]">
                 {booking.customerName}
               </h4>
-              <p className="text-xs text-[#524E47] flex items-center gap-1 mt-1">
-                <MapPin className="w-3.5 h-3.5 text-[#6E8B67]" />
+              <p className="text-xs text-[#524E47] flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-[#6E8B67] shrink-0" />
                 <span>{booking.customerAddress} ({booking.societyName})</span>
               </p>
+              {destLat && destLng && (
+                <span className="text-[10px] font-mono text-[#77736B] block">
+                  GPS Pin: {destLat.toFixed(4)}, {destLng.toFixed(4)}
+                </span>
+              )}
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => alert(`Navigating via GPS to ${booking.customerAddress}...`)}
+              onClick={handleOpenGoogleMaps}
+              className="bg-white hover:bg-[#F3EEE4] border-[#D8D3C8] text-[#292824] shrink-0 shadow-2xs"
               leftIcon={<Navigation className="w-3.5 h-3.5 text-[#6E8B67]" />}
+              rightIcon={<ExternalLink className="w-3 h-3 text-[#9A958B]" />}
             >
-              GPS Map
+              Navigate (Google Maps)
             </Button>
           </div>
 
@@ -351,12 +401,37 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
             </div>
           )}
 
-          {/* STATE 2: TRAVELLING -> CONFIRM ARRIVAL */}
+          {/* STATE 2: TRAVELLING -> CONFIRM ARRIVAL & NAVIGATION */}
           {booking.state === 'TRAVELLING' && (
             <div className="space-y-3">
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-                Customer has been notified that you are en route.
+              <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2">
+                <div className="flex items-center justify-between text-xs text-amber-900 font-bold">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                    En Route to Customer Residence
+                  </span>
+                  {dynamicETA && (
+                    <span className="text-amber-800 font-mono text-[11px]">
+                      ETA: {dynamicETA.formatted}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  Customer has been notified that you are en route. Live GPS telemetry is being transmitted for resident safety.
+                </p>
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={handleOpenGoogleMaps}
+                    className="w-full py-2 bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Navigation className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Open Live Turn-by-Turn GPS Navigation</span>
+                    <ExternalLink className="w-3 h-3 text-amber-600 ml-0.5" />
+                  </button>
+                </div>
               </div>
+
               <Button
                 variant="primary"
                 size="lg"
