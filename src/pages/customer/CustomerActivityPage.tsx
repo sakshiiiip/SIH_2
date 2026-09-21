@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useCallback } from 'react';
 import React, { useState, useEffect, useCallback, useEffect } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Booking } from '../../types';
@@ -146,6 +147,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
   const [sosJob, setSosJob]       = useState<Booking | null>(null);
   const [revisitModalJob, setRevisitModalJob] = useState<Booking | null>(null);
+  const [sosJob, setSosJob]       = useState<Booking | null>(null);
 
   const customerBookings = bookings.filter((b) => b.customerId === currentUser.id);
 
