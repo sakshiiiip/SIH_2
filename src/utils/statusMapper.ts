@@ -93,6 +93,15 @@ export function mapBookingStatus(state: BookingState): StatusMappingResult {
         stepIndex: 3,
       };
 
+    case 'WORKER_ON_BREAK':
+      return {
+        customerStatus: 'WORKING',
+        headline: 'Worker on Short Break',
+        description: 'Your specialist is on a brief break and will resume shortly',
+        badgeVariant: 'urgent',
+        stepIndex: 3,
+      };
+
     case 'COMPLETED':
       return {
         customerStatus: 'COMPLETED',
@@ -128,60 +137,6 @@ export function mapBookingStatus(state: BookingState): StatusMappingResult {
         description: 'Society manager is reviewing service feedback',
         badgeVariant: 'danger',
         stepIndex: 3,
-      };
-
-    case 'AWAITING_VERIFICATION':
-      return {
-        customerStatus: 'WORKING',
-        headline: 'Awaiting Verification',
-        description: 'Worker has finished work. Inspect & confirm or request revisit.',
-        badgeVariant: 'coop',
-        stepIndex: 3,
-      };
-
-    case 'REVISIT_REQUESTED':
-      return {
-        customerStatus: 'WORKING',
-        headline: 'Revisit Requested',
-        description: 'Your revisit request is pending society manager scheduling',
-        badgeVariant: 'urgent',
-        stepIndex: 3,
-      };
-
-    case 'REVISIT_SCHEDULED':
-      return {
-        customerStatus: 'WORKING',
-        headline: 'Revisit Scheduled',
-        description: 'Specialist has been scheduled for complimentary follow-up',
-        badgeVariant: 'verified',
-        stepIndex: 3,
-      };
-
-    case 'CANCELLED':
-      return {
-        customerStatus: 'COMPLETED',
-        headline: 'Booking Cancelled',
-        description: 'This booking has been cancelled and closed',
-        badgeVariant: 'danger',
-        stepIndex: 4,
-      };
-
-    case 'PENDING_ASSIGNMENT':
-      return {
-        customerStatus: 'REQUESTED',
-        headline: 'Pending Assignment',
-        description: 'Assigning to verified cooperative specialist',
-        badgeVariant: 'pending',
-        stepIndex: 0,
-      };
-
-    case 'WORKER_ASSIGNED':
-      return {
-        customerStatus: 'WORKER FOUND',
-        headline: 'Worker Assigned',
-        description: 'Specialist assigned and awaiting final dispatch',
-        badgeVariant: 'verified',
-        stepIndex: 1,
       };
 
     case 'REVISIT':

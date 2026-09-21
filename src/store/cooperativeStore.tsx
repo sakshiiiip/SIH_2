@@ -24,7 +24,6 @@ import {
   CommunityChannel,
   CommunityMessage,
   ActiveJobSOSTicket,
-  WorkerSkillEntry,
 } from '../types';
 import {
   DEMO_USERS,
@@ -44,12 +43,10 @@ import {
   INITIAL_AUDIT_LOGS,
   INITIAL_COMMUNITY_CHANNELS,
   INITIAL_COMMUNITY_MESSAGES,
-  createDefaultWorkerDocuments,
 } from './initialData';
 import { calculateCandidateScores } from '../utils/matchingEngine';
-import { workerAuthService } from '../services/workerAuthService';
 
-const STORAGE_KEY = 'cooperative_platform_state_v5';
+const STORAGE_KEY = 'cooperative_platform_state_v4';
 
 interface CooperativeStoreContextType {
   // Session & Authentication
@@ -77,29 +74,13 @@ interface CooperativeStoreContextType {
   platformMetrics: PlatformSystemMetrics;
   auditLogs: PlatformAuditLog[];
   allocateFederationGrant: (federationId: string, societyId: string, amount: number, purpose: string) => void;
-  updateCooperativeVerification: (
-    societyId: string,
-    status: 'VERIFIED' | 'PENDING_AUDIT' | 'SUSPENDED',
-    notes?: string
-  ) => void;
-  addAuditLog: (action: string, details: string, metadata?: Partial<PlatformAuditLog>) => void;
+  addAuditLog: (action: string, details: string) => void;
   // Workers & Verification
   workers: Worker[];
   updateWorkerVerification: (workerId: string, status: WorkerVerificationStatus) => void;
-  updateWorkerProfile: (workerId: string, updates: Partial<Worker>) => void;
-  deactivateWorker: (workerId: string, reason?: string) => void;
   reviewWorkerDocument: (workerId: string, documentId: string, status: DocumentStatus, notes?: string) => void;
-  endorseWorkerByManager: (workerId: string, notes?: string) => void;
-  rejectWorkerByManager: (workerId: string, reason: string) => void;
-  approveWorkerByFederation: (workerId: string, notes?: string) => void;
-  rejectWorkerByFederation: (workerId: string, reason: string) => void;
   updateWorkerLocation: (workerId: string, lat: number, lng: number, status?: WorkerLocationStatus) => void;
   toggleWorkerAvailability: (workerId: string) => void;
-  addWorker: (workerData: Partial<Worker> & { name: string; email: string; phone: string; skills: string[] }) => Worker;
-  addWorkerSkill: (workerId: string, skillData: Omit<WorkerSkillEntry, 'id' | 'status' | 'verifiedBy' | 'verifiedAt'>) => void;
-  verifyWorkerSkill: (workerId: string, skillId: string, status: 'VERIFIED' | 'REJECTED', reason?: string) => void;
-  verifyWorkerPersonalKyc: (workerId: string, status: 'VERIFIED' | 'REJECTED', notes?: string) => void;
-  removeWorkerSkill: (workerId: string, skillId: string) => void;
   // Bookings
   bookings: Booking[];
   createBooking: (data: {
@@ -110,23 +91,17 @@ interface CooperativeStoreContextType {
     urgencyTier: UrgencyTier;
     societyName?: string;
     customAddress?: string;
-    customerCoordinates?: { latitude: number; longitude: number; accuracy?: number };
-    customerLocality?: string;
-    customerPostalCode?: string;
   }) => Booking;
   acceptBookingByWorker: (bookingId: string, workerId: string) => void;
-  acceptJob: (jobId: string, workerId: string) => void;
   rejectBookingByWorker: (bookingId: string, workerId: string) => void;
   updateBookingState: (bookingId: string, newState: BookingState) => void;
   verifyBookingOTP: (bookingId: string, enteredOtp: string) => boolean;
   verifyOTPAndStartJob: (bookingId: string, enteredOtp: string) => boolean;
   completeBooking: (bookingId: string, notes?: string, photos?: string[]) => void;
-  uploadJobPhotos: (bookingId: string, photos: { beforeImage?: string; afterImage?: string }) => void;
-  confirmCustomerJob: (bookingId: string) => void;
-  verifyJobByManager: (bookingId: string, verificationData: { verifiedBy: string; status: 'APPROVED' | 'REJECTED' | 'REVISIT_NEEDED'; notes?: string }) => void;
-  requestRevisit: (bookingId: string, revisitData: { reason: string }) => void;
-  scheduleRevisit: (bookingId: string, newDate: string) => void;
-  cancelJob: (bookingId: string, cancellationData: { cancelledBy: string; reason: string }) => void;
+  /** Worker takes a break — moves booking state to WORKER_ON_BREAK */
+  startWorkerBreak: (bookingId: string, durationMins: number, reason?: string) => void;
+  /** Worker resumes — moves booking state back to IN_PROGRESS */
+  endWorkerBreak: (bookingId: string) => void;
   payBooking: (bookingId: string) => void;
   rateBooking: (bookingId: string, stars: number, comment: string) => void;
   reportQualityIssue: (
@@ -138,7 +113,6 @@ interface CooperativeStoreContextType {
   adminReassignQualityIssue: (bookingId: string, newWorkerId: string) => void;
   completeRevisit: (bookingId: string) => void;
   adminManualAssignWorker: (bookingId: string, workerId: string) => void;
-  assignWorkerToBooking: (bookingId: string, workerId: string) => void;
   // Community & Role-Aware Discussions
   communityBookings: CommunityBooking[];
   joinCommunityBooking: (communityBookingId: string, customerName: string, flatNumber: string) => void;
@@ -163,14 +137,7 @@ interface CooperativeStoreContextType {
     bookingId: string,
     reportedBy: 'customer' | 'worker',
     reason: string,
-    details?: string,
-    telemetry?: {
-      latitude?: number;
-      longitude?: number;
-      locationAccuracy?: number;
-      locationAddress?: string;
-      googleMapsUrl?: string;
-    }
+    details?: string
   ) => ActiveJobSOSTicket;
   resolveSOSTicket: (ticketId: string, notes?: string) => void;
   // Cooperative Fund
@@ -205,11 +172,6 @@ const CooperativeStoreContext = createContext<CooperativeStoreContextType | null
 export function CooperativeStoreProvider({ children }: { children: React.ReactNode }) {
   // Authentication & Role Session
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    const savedRole = localStorage.getItem(STORAGE_KEY + '_role') as UserRole;
-    if (savedRole === 'worker') {
-      const workerSession = workerAuthService.getActiveSession();
-      if (workerSession) return true;
-    }
     const saved = localStorage.getItem(STORAGE_KEY + '_auth');
     return saved === 'true';
   });
@@ -242,29 +204,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
   });
   const [workers, setWorkers] = useState<Worker[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_workers');
-    if (!saved) return INITIAL_WORKERS;
-    try {
-      const parsed: Worker[] = JSON.parse(saved);
-      return parsed.map((w) => {
-        const isVerified = w.verificationStatus === 'VERIFIED';
-        const isManagerVerified = w.verificationStatus === 'MANAGER_VERIFIED';
-        const docs =
-          w.documents && w.documents.length > 0
-            ? w.documents
-            : createDefaultWorkerDocuments(w.id, w.name, isVerified || isManagerVerified);
-        return {
-          ...w,
-          documents: docs,
-          personalKycStatus: w.personalKycStatus || (isVerified ? 'VERIFIED' : 'PENDING'),
-          skillEntries: w.skillEntries || [],
-          skills: w.skills && w.skills.length > 0 ? w.skills : w.skillEntries && w.skillEntries.length > 0 ? w.skillEntries.map((s) => s.name) : ['General Maintenance'],
-          verificationStatus: w.verificationStatus || 'PENDING',
-          kycDocumentsCount: docs.filter((d) => d.status === 'APPROVED').length,
-        };
-      });
-    } catch {
-      return INITIAL_WORKERS;
-    }
+    return saved ? JSON.parse(saved) : INITIAL_WORKERS;
   });
   const [bookings, setBookings] = useState<Booking[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_bookings');
@@ -305,16 +245,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
   const [societies, setSocieties] = useState<SocietyData[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_societies');
-    if (!saved) return INITIAL_SOCIETIES;
-    try {
-      const parsed: SocietyData[] = JSON.parse(saved);
-      return parsed.map((s) => ({
-        ...s,
-        cooperativeVerificationStatus: s.cooperativeVerificationStatus || 'VERIFIED',
-      }));
-    } catch {
-      return INITIAL_SOCIETIES;
-    }
+    return saved ? JSON.parse(saved) : INITIAL_SOCIETIES;
   });
   const [societyManagers, setSocietyManagers] = useState<SocietyManagerInfo[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_society_managers');
@@ -390,7 +321,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
   // Logout handler
   const logout = () => {
-    workerAuthService.clearSession();
     setIsAuthenticated(false);
     localStorage.setItem(STORAGE_KEY + '_auth', 'false');
     showToast({
@@ -410,22 +340,15 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     localStorage.setItem(STORAGE_KEY + '_user', JSON.stringify(user));
   };
 
-  const addAuditLog = (action: string, details: string, metadata?: Partial<PlatformAuditLog>) => {
+  const addAuditLog = (action: string, details: string) => {
     const newLog: PlatformAuditLog = {
-      id: `AUD-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      id: `AUD-${Date.now()}`,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      actor: metadata?.managerName
-        ? `${metadata.managerName} (${metadata.role || currentRole})`
-        : `${currentUser.name} (${currentRole})`,
-      role: (metadata?.role as any) || currentRole,
+      actor: `${currentUser.name} (${currentRole})`,
+      role: currentRole,
       action,
       details,
-      ipAddress: metadata?.ipAddress || '127.0.0.1',
-      actionType: metadata?.actionType || (action as any) || 'OTHER',
-      societyId: metadata?.societyId || (currentUser as any).societyId,
-      societyName: metadata?.societyName || currentUser.societyName,
-      managerName: metadata?.managerName || currentUser.name,
-      ...metadata,
+      ipAddress: '127.0.0.1',
     };
     setAuditLogs((prev) => [newLog, ...prev]);
   };
@@ -552,41 +475,20 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         const hasRejection = updatedDocs.some((d) => d.status === 'REJECTED');
         const hasCorrection = updatedDocs.some((d) => d.status === 'CORRECTION_REQUIRED');
 
-        const nextStatus: WorkerVerificationStatus =
-          w.verificationStatus === 'VERIFIED'
-            ? 'VERIFIED'
-            : allApproved
-            ? 'MANAGER_VERIFIED'
-            : hasRejection
-            ? 'MANAGER_REJECTED'
-            : hasCorrection
-            ? 'CORRECTION_REQUIRED'
-            : 'UNDER_REVIEW';
+        const nextStatus: WorkerVerificationStatus = allApproved
+          ? 'VERIFIED'
+          : hasRejection
+          ? 'FAILED'
+          : hasCorrection
+          ? 'CORRECTION_REQUIRED'
+          : 'UNDER_REVIEW';
 
         return {
           ...w,
           documents: updatedDocs,
           verificationStatus: nextStatus,
-          localVerificationStatus:
-            allApproved || nextStatus === 'MANAGER_VERIFIED' || nextStatus === 'VERIFIED'
-              ? 'verified'
-              : 'pending',
+          localVerificationStatus: allApproved ? 'verified' : 'pending',
           kycDocumentsCount: approvedCount,
-          managerVerification: allApproved
-            ? {
-                verifiedBy: currentUser.name || 'Society Manager',
-                verifiedAt: new Date().toISOString().split('T')[0],
-                status: 'APPROVED',
-                notes: notes || 'All KYC documents reviewed and approved.',
-              }
-            : hasRejection
-            ? {
-                verifiedBy: currentUser.name || 'Society Manager',
-                verifiedAt: new Date().toISOString().split('T')[0],
-                status: 'REJECTED',
-                notes: notes || 'One or more documents were rejected during manager review.',
-              }
-            : w.managerVerification,
         };
       })
     );
@@ -598,277 +500,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       type: status === 'APPROVED' ? 'success' : 'warning',
     });
 
-    const targetWorker = workers.find((w) => w.id === workerId);
-    addAuditLog(
-      'UPDATE_WORKER_DOCS',
-      `Worker Documents Updated: Document ${documentId} marked ${status} for ${targetWorker?.name || workerId}`,
-      {
-        actionType: 'UPDATE_WORKER_DOCS',
-        workerId,
-        workerName: targetWorker?.name,
-        societyId: targetWorker?.societyId,
-        societyName: targetWorker?.societyName,
-        managerName: currentUser.name,
-        notes,
-      }
-    );
-  };
-
-  const endorseWorkerByManager = (workerId: string, notes?: string) => {
-    const targetWorker = workers.find((w) => w.id === workerId);
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id !== workerId) return w;
-        const updatedDocs = (w.documents || []).map((d) => ({
-          ...d,
-          status: 'APPROVED' as DocumentStatus,
-          reviewedBy: d.reviewedBy || currentUser.name || 'Society Manager',
-          reviewedAt: d.reviewedAt || new Date().toISOString().split('T')[0],
-        }));
-        return {
-          ...w,
-          documents: updatedDocs,
-          verificationStatus: 'MANAGER_VERIFIED',
-          localVerificationStatus: 'verified',
-          kycDocumentsCount: updatedDocs.length,
-          rejectionReason: undefined,
-          managerVerification: {
-            verifiedBy: currentUser.name || 'Society Manager',
-            verifiedAt: new Date().toISOString().split('T')[0],
-            status: 'APPROVED',
-            notes: notes || 'Endorsed by Society Manager for Federation Review.',
-          },
-        };
-      })
-    );
-
-    addNotification({
-      recipientRole: 'worker',
-      title: 'Manager Endorsement Complete ✓',
-      message:
-        'Your profile has been endorsed by your Society Manager and escalated to the Federation for final credential review.',
-      type: 'info',
-    });
-
-    addNotification({
-      recipientRole: 'federation_manager',
-      title: 'New Worker Verification Request',
-      message: `A worker has been endorsed by society management and is awaiting Federation review.`,
-      type: 'info',
-    });
-
-    addAuditLog(
-      'MANAGER_ENDORSE',
-      `Worker Verified & Endorsed to Federation: ${targetWorker?.name || workerId}`,
-      {
-        actionType: 'MANAGER_ENDORSE',
-        workerId,
-        workerName: targetWorker?.name,
-        societyId: targetWorker?.societyId,
-        societyName: targetWorker?.societyName,
-        managerName: currentUser.name,
-        previousStatus: targetWorker?.verificationStatus,
-        newStatus: 'MANAGER_VERIFIED',
-        notes: notes || 'Endorsed by Society Manager for Federation Review.',
-      }
-    );
-    showToast({
-      title: 'Worker Endorsed',
-      message: 'Worker endorsed and escalated to Federation Verification queue.',
-      type: 'success',
-    });
-  };
-
-  const rejectWorkerByManager = (workerId: string, reason: string) => {
-    const targetWorker = workers.find((w) => w.id === workerId);
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id !== workerId) return w;
-        return {
-          ...w,
-          verificationStatus: 'MANAGER_REJECTED',
-          rejectionReason: reason,
-          managerVerification: {
-            verifiedBy: currentUser.name || 'Society Manager',
-            verifiedAt: new Date().toISOString().split('T')[0],
-            status: 'REJECTED',
-            notes: reason,
-          },
-        };
-      })
-    );
-
-    addNotification({
-      recipientRole: 'worker',
-      title: 'Verification Action Required',
-      message: `Your verification was rejected by Society Management: ${reason}`,
-      type: 'warning',
-    });
-
-    addAuditLog(
-      'REJECT_WORKER',
-      `Worker Rejected by Manager: ${targetWorker?.name || workerId} — Reason: ${reason}`,
-      {
-        actionType: 'REJECT_WORKER',
-        workerId,
-        workerName: targetWorker?.name,
-        societyId: targetWorker?.societyId,
-        societyName: targetWorker?.societyName,
-        managerName: currentUser.name,
-        previousStatus: targetWorker?.verificationStatus,
-        newStatus: 'MANAGER_REJECTED',
-        reason,
-      }
-    );
-    showToast({
-      title: 'Worker Rejected',
-      message: 'Worker verification has been marked rejected.',
-      type: 'warning',
-    });
-  };
-
-  const approveWorkerByFederation = (workerId: string, notes?: string) => {
-    const targetWorker = workers.find((w) => w.id === workerId);
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id !== workerId) return w;
-        return {
-          ...w,
-          verificationStatus: 'VERIFIED',
-          localVerificationStatus: 'verified',
-          rejectionReason: undefined,
-          federationVerification: {
-            approvedBy: currentUser.name || 'Federation Council',
-            approvedAt: new Date().toISOString().split('T')[0],
-            status: 'APPROVED',
-            notes: notes || 'Credentials and compliance confirmed by Federation Council.',
-          },
-        };
-      })
-    );
-
-    addNotification({
-      recipientRole: 'worker',
-      title: 'Federation Verification Complete! 🎉',
-      message:
-        'Congratulations! You are now a fully verified cooperative tradesperson eligible for automated job matching and customer bookings.',
-      type: 'success',
-    });
-
-    addNotification({
-      recipientRole: 'society_manager',
-      title: 'Worker Approved by Federation',
-      message: `Worker ${workerId} has received Federation approval.`,
-      type: 'success',
-    });
-
-    addAuditLog(
-      'FEDERATION_APPROVE',
-      `Federation approved worker ${targetWorker?.name || workerId}. Worker is now fully VERIFIED.`,
-      {
-        actionType: 'FEDERATION_APPROVE',
-        workerId,
-        workerName: targetWorker?.name,
-        societyId: targetWorker?.societyId,
-        societyName: targetWorker?.societyName,
-        managerName: currentUser.name,
-        previousStatus: 'MANAGER_VERIFIED',
-        newStatus: 'VERIFIED',
-        notes,
-      }
-    );
-    showToast({
-      title: 'Worker Fully Verified',
-      message: 'Federation credential approval granted. Worker is active for dispatch.',
-      type: 'success',
-    });
-  };
-
-  const rejectWorkerByFederation = (workerId: string, reason: string) => {
-    const targetWorker = workers.find((w) => w.id === workerId);
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id !== workerId) return w;
-        return {
-          ...w,
-          verificationStatus: 'FEDERATION_REJECTED',
-          rejectionReason: reason,
-          federationVerification: {
-            approvedBy: currentUser.name || 'Federation Council',
-            approvedAt: new Date().toISOString().split('T')[0],
-            status: 'REJECTED',
-            notes: reason,
-          },
-        };
-      })
-    );
-
-    addNotification({
-      recipientRole: 'worker',
-      title: 'Federation Review Feedback',
-      message: `Federation Council returned your application: ${reason}`,
-      type: 'warning',
-    });
-
-    addNotification({
-      recipientRole: 'society_manager',
-      title: 'Worker Rejected by Federation',
-      message: `Federation Council rejected worker ${workerId}: ${reason}`,
-      type: 'warning',
-    });
-
-    addAuditLog(
-      'FEDERATION_REJECT',
-      `Federation rejected worker ${targetWorker?.name || workerId}: ${reason}`,
-      {
-        actionType: 'FEDERATION_REJECT',
-        workerId,
-        workerName: targetWorker?.name,
-        societyId: targetWorker?.societyId,
-        societyName: targetWorker?.societyName,
-        managerName: currentUser.name,
-        previousStatus: 'MANAGER_VERIFIED',
-        newStatus: 'FEDERATION_REJECTED',
-        reason,
-      }
-    );
-    showToast({
-      title: 'Federation Rejection Recorded',
-      message: 'Application returned to society manager for rectification.',
-      type: 'warning',
-    });
-  };
-
-  const updateCooperativeVerification = (
-    societyId: string,
-    status: 'VERIFIED' | 'PENDING_AUDIT' | 'SUSPENDED',
-    notes?: string
-  ) => {
-    setSocieties((prev) =>
-      prev.map((s) =>
-        s.id === societyId
-          ? {
-              ...s,
-              cooperativeVerificationStatus: status,
-              verifiedAt: new Date().toISOString().split('T')[0],
-              verifiedBy: currentUser.name || 'Federation Council',
-            }
-          : s
-      )
-    );
-    addAuditLog(
-      'SOCIETY_AUDIT',
-      `Federation updated society ${societyId} verification status to ${status}${notes ? `: ${notes}` : ''}`
-    );
-    showToast({
-      title: 'Cooperative Status Updated',
-      message: `Society status updated to ${status}.`,
-      type: 'info',
-    });
-  };
-
-  const assignWorkerToBooking = (bookingId: string, workerId: string) => {
-    adminManualAssignWorker(bookingId, workerId);
+    addAuditLog('DOC_REVIEW', `Reviewed worker ${workerId} document ${documentId}: ${status}`);
   };
 
   const updateWorkerLocation = (
@@ -892,396 +524,20 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     );
   };
 
-  const updateWorkerProfile = (workerId: string, updates: Partial<Worker>) => {
-    let updatedWorker: Worker | undefined;
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id === workerId) {
-          updatedWorker = { ...w, ...updates };
-          return updatedWorker;
-        }
-        return w;
-      })
-    );
-    if (updatedWorker) {
-      addAuditLog(
-        'UPDATE_WORKER_PROFILE',
-        `Worker Profile Updated: ${updatedWorker.name} (${workerId})`,
-        {
-          actionType: 'UPDATE_WORKER_PROFILE',
-          workerId: updatedWorker.id,
-          workerName: updatedWorker.name,
-          societyId: updatedWorker.societyId,
-          societyName: updatedWorker.societyName,
-          managerName: currentUser.name,
-        }
-      );
-      showToast({
-        title: 'Worker Profile Updated',
-        message: `${updatedWorker.name}'s profile details updated.`,
-        type: 'info',
-      });
-    }
-  };
-
-  const deactivateWorker = (workerId: string, reason?: string) => {
-    let deactivatedWorker: Worker | undefined;
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id === workerId) {
-          deactivatedWorker = { ...w, availability: 'offline', locationStatus: 'OFFLINE' };
-          return deactivatedWorker;
-        }
-        return w;
-      })
-    );
-    if (deactivatedWorker) {
-      addAuditLog(
-        'DEACTIVATE_WORKER',
-        `Worker Deactivated: ${deactivatedWorker.name} (${workerId})${reason ? ` — Reason: ${reason}` : ''}`,
-        {
-          actionType: 'DEACTIVATE_WORKER',
-          workerId: deactivatedWorker.id,
-          workerName: deactivatedWorker.name,
-          societyId: deactivatedWorker.societyId,
-          societyName: deactivatedWorker.societyName,
-          managerName: currentUser.name,
-          reason,
-          previousStatus: 'online',
-          newStatus: 'offline',
-        }
-      );
-      showToast({
-        title: 'Worker Deactivated',
-        message: `${deactivatedWorker.name} is now offline/deactivated.`,
-        type: 'warning',
-      });
-    }
-  };
-
   const toggleWorkerAvailability = (workerId: string) => {
-    let changedWorker: Worker | undefined;
-    let nextStatus: string = 'online';
-    let prevStatus: string = 'offline';
     setWorkers((prev) =>
       prev.map((w) => {
         if (w.id === workerId) {
-          prevStatus = w.availability;
           const next = w.availability === 'online' ? 'offline' : 'online';
-          nextStatus = next;
-          changedWorker = {
+          return {
             ...w,
             availability: next,
             locationStatus: next === 'online' ? 'AVAILABLE' : 'OFFLINE',
           };
-          return changedWorker;
         }
         return w;
       })
     );
-    if (changedWorker) {
-      addAuditLog(
-        'CHANGE_WORKER_STATUS',
-        `Worker Status Changed: ${changedWorker.name} switched to ${nextStatus}`,
-        {
-          actionType: 'CHANGE_WORKER_STATUS',
-          workerId: changedWorker.id,
-          workerName: changedWorker.name,
-          societyId: changedWorker.societyId,
-          societyName: changedWorker.societyName,
-          managerName: currentUser.name,
-          previousStatus: prevStatus,
-          newStatus: nextStatus,
-        }
-      );
-    }
-  };
-
-  const addWorker = (
-    workerData: Partial<Worker> & { name: string; email: string; phone: string; skills?: string[] }
-  ): Worker => {
-    const generatedId = workerData.id || `WRK${String(workers.length + 1).padStart(3, '0')}`;
-    const targetSoc =
-      societies.find(
-        (s) =>
-          s.id === workerData.societyId ||
-          (workerData.societyName && s.name.toLowerCase() === workerData.societyName.toLowerCase())
-      ) || societies[0];
-
-    const initialDocs =
-      workerData.documents && workerData.documents.length > 0
-        ? workerData.documents
-        : createDefaultWorkerDocuments(generatedId, workerData.name, false).map((doc) => ({
-            ...doc,
-            status: 'PENDING' as DocumentStatus,
-            reviewedBy: undefined,
-            reviewedAt: undefined,
-            reviewNotes: undefined,
-          }));
-    const approvedDocsCount = initialDocs.filter((d) => d.status === 'APPROVED').length;
-
-    const workerSkills =
-      workerData.skills && workerData.skills.length > 0
-        ? workerData.skills
-        : workerData.skillEntries && workerData.skillEntries.length > 0
-        ? workerData.skillEntries.map((s) => s.name)
-        : ['General Maintenance'];
-
-    const newWorker: Worker = {
-      ...workerData,
-      id: generatedId,
-      name: workerData.name,
-      email: workerData.email,
-      phone: workerData.phone,
-      avatar:
-        workerData.avatar ||
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-      profession: workerData.profession || workerSkills[0] || 'General Maintenance',
-      societyId: targetSoc.id,
-      societyName: targetSoc.name,
-      managerId: workerData.managerId || targetSoc.managerId || 'user_soc_mgr_01',
-      managerName: workerData.managerName || targetSoc.managerName || 'Priya Sharma',
-      rating: 5.0,
-      totalReviews: 0,
-      completedJobs: 0,
-      hourlyRate: workerData.hourlyRate || 350,
-      distanceKm: 0.5,
-      availability: 'online',
-      currentWorkload: 0,
-      proficiencyScore: 88,
-      skills: workerSkills,
-      skillEntries: workerData.skillEntries || [],
-      certificates: workerData.certificates || ['Cooperative Verified Tradesperson'],
-      personalKycStatus: workerData.personalKycStatus || 'VERIFIED',
-      verificationStatus: workerData.verificationStatus || 'PENDING',
-      kycDocumentsCount: approvedDocsCount,
-      localVerificationStatus: workerData.verificationStatus === 'VERIFIED' ? 'verified' : 'pending',
-      cooperativeMemberId: `COP-${targetSoc.code || 'PUN'}-${Math.floor(1000 + Math.random() * 9000)}`,
-      joinedDate: new Date().toISOString().split('T')[0],
-      bio:
-        workerData.bio ||
-        `Cooperative worker profile for ${workerData.name} registered under ${targetSoc.name}.`,
-      locationStatus: 'AVAILABLE',
-      documents: initialDocs,
-    };
-
-    setWorkers((prev) => [newWorker, ...prev]);
-    showToast({
-      title: 'Worker Registered',
-      message: `${newWorker.name} added to ${newWorker.societyName} roster.`,
-      type: 'success',
-    });
-    addAuditLog(
-      'ADD_WORKER',
-      `New Worker Registered: ${newWorker.name} (${newWorker.id}) under ${newWorker.societyName}`,
-      {
-        actionType: 'ADD_WORKER',
-        workerId: newWorker.id,
-        workerName: newWorker.name,
-        societyId: newWorker.societyId,
-        societyName: newWorker.societyName,
-        managerName: newWorker.managerName || currentUser.name,
-        newStatus: newWorker.verificationStatus,
-      }
-    );
-    return newWorker;
-  };
-
-  const addWorkerSkill = (
-    workerId: string,
-    skillData: Omit<WorkerSkillEntry, 'id' | 'status' | 'verifiedBy' | 'verifiedAt'>
-  ) => {
-    const newSkillEntry: WorkerSkillEntry = {
-      ...skillData,
-      id: `skill_${Date.now()}_${Math.floor(100 + Math.random() * 900)}`,
-      workerId,
-      status: 'PENDING',
-    };
-
-    let targetWorker: Worker | undefined;
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id !== workerId) return w;
-        targetWorker = w;
-        const existingEntries = w.skillEntries || [];
-        const updatedSkills = Array.from(new Set([...w.skills, skillData.name]));
-        return {
-          ...w,
-          skills: updatedSkills,
-          profession: w.profession || skillData.name,
-          skillEntries: [...existingEntries, newSkillEntry],
-        };
-      })
-    );
-
-    showToast({
-      title: 'Skill Added',
-      message: `${skillData.name} (${skillData.experienceYears} yrs) submitted for Manager review.`,
-      type: 'info',
-    });
-    addAuditLog(
-      'ADD_WORKER_SKILL',
-      `New Skill Added: ${skillData.name} (${skillData.experienceYears} yrs) for ${targetWorker?.name || workerId}`,
-      {
-        actionType: 'ADD_WORKER_SKILL',
-        workerId,
-        workerName: targetWorker?.name,
-        societyId: targetWorker?.societyId,
-        societyName: targetWorker?.societyName,
-        managerName: currentUser.name,
-        skillName: skillData.name,
-      }
-    );
-  };
-
-  const verifyWorkerSkill = (
-    workerId: string,
-    skillId: string,
-    status: 'VERIFIED' | 'REJECTED',
-    reason?: string
-  ) => {
-    let targetWorker: Worker | undefined;
-    let skillName: string | undefined;
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id !== workerId) return w;
-        targetWorker = w;
-        const updatedEntries = (w.skillEntries || []).map((s) => {
-          if (s.id === skillId) {
-            skillName = s.name;
-            return {
-              ...s,
-              status,
-              verifiedBy: currentUser.name || 'Society Manager',
-              verifiedAt: new Date().toISOString().split('T')[0],
-              rejectionReason: status === 'REJECTED' ? reason : undefined,
-            };
-          }
-          return s;
-        });
-
-        // Check if worker has at least 1 VERIFIED skill AND personal KYC is VERIFIED
-        const hasVerifiedSkill = updatedEntries.some((s) => s.status === 'VERIFIED');
-        const isKycVerified = w.personalKycStatus === 'VERIFIED' || w.verificationStatus === 'VERIFIED';
-        const isCustomerEligible = hasVerifiedSkill && isKycVerified;
-
-        return {
-          ...w,
-          skillEntries: updatedEntries,
-          verificationStatus: isCustomerEligible ? 'VERIFIED' : 'PENDING',
-          localVerificationStatus: isCustomerEligible ? 'verified' : 'pending',
-        };
-      })
-    );
-
-    showToast({
-      title: `Skill ${status === 'VERIFIED' ? 'Verified ✓' : 'Rejected'}`,
-      message: `Skill information check updated by Society Manager.`,
-      type: status === 'VERIFIED' ? 'success' : 'warning',
-    });
-    addAuditLog(
-      'VERIFY_WORKER_SKILL',
-      `Worker Skill ${status === 'VERIFIED' ? 'Verified ✓' : 'Rejected'}: ${skillName || skillId} on ${targetWorker?.name || workerId}${reason ? ` — Reason: ${reason}` : ''}`,
-      {
-        actionType: 'VERIFY_WORKER_SKILL',
-        workerId,
-        workerName: targetWorker?.name,
-        societyId: targetWorker?.societyId,
-        societyName: targetWorker?.societyName,
-        managerName: currentUser.name,
-        skillName,
-        newStatus: status,
-        reason,
-      }
-    );
-  };
-
-  const verifyWorkerPersonalKyc = (
-    workerId: string,
-    status: 'VERIFIED' | 'REJECTED',
-    notes?: string
-  ) => {
-    let targetWorker: Worker | undefined;
-    let prevKycStatus: string | undefined;
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id !== workerId) return w;
-        targetWorker = w;
-        prevKycStatus = w.personalKycStatus;
-        const isKycVerified = status === 'VERIFIED';
-        const hasVerifiedSkill = (w.skillEntries || []).some((s) => s.status === 'VERIFIED');
-        const isCustomerEligible = isKycVerified && hasVerifiedSkill;
-
-        return {
-          ...w,
-          personalKycStatus: status,
-          personalKycNotes: notes,
-          personalKycVerifiedBy: currentUser.name || 'Society Manager',
-          personalKycVerifiedAt: new Date().toISOString().split('T')[0],
-          verificationStatus: isCustomerEligible ? 'VERIFIED' : 'PENDING',
-          localVerificationStatus: isCustomerEligible ? 'verified' : 'pending',
-        };
-      })
-    );
-
-    showToast({
-      title: `Personal KYC ${status === 'VERIFIED' ? 'Verified ✓' : 'Rejected'}`,
-      message: `Worker Personal KYC profile status set to ${status}.`,
-      type: status === 'VERIFIED' ? 'success' : 'warning',
-    });
-    addAuditLog(
-      'VERIFY_PERSONAL_KYC',
-      `Personal KYC ${status === 'VERIFIED' ? 'Verified ✓' : 'Rejected'} by Society Manager for ${targetWorker?.name || workerId}`,
-      {
-        actionType: 'VERIFY_PERSONAL_KYC',
-        workerId,
-        workerName: targetWorker?.name,
-        societyId: targetWorker?.societyId,
-        societyName: targetWorker?.societyName,
-        managerName: currentUser.name,
-        previousStatus: prevKycStatus,
-        newStatus: status,
-        notes,
-      }
-    );
-  };
-
-  const removeWorkerSkill = (workerId: string, skillId: string) => {
-    let targetWorker: Worker | undefined;
-    let removedSkillName: string | undefined;
-    setWorkers((prev) =>
-      prev.map((w) => {
-        if (w.id !== workerId) return w;
-        targetWorker = w;
-        const skillToRemove = (w.skillEntries || []).find((s) => s.id === skillId);
-        removedSkillName = skillToRemove?.name;
-        const updatedEntries = (w.skillEntries || []).filter((s) => s.id !== skillId);
-        const hasVerifiedSkill = updatedEntries.some((s) => s.status === 'VERIFIED');
-        const isCustomerEligible = hasVerifiedSkill && w.personalKycStatus === 'VERIFIED';
-        return {
-          ...w,
-          skillEntries: updatedEntries,
-          skills: updatedEntries.map((s) => s.name),
-          verificationStatus: isCustomerEligible ? 'VERIFIED' : 'PENDING',
-          localVerificationStatus: isCustomerEligible ? 'verified' : 'pending',
-        };
-      })
-    );
-    if (targetWorker) {
-      addAuditLog(
-        'CHANGE_WORKER_STATUS',
-        `Worker Skill Removed: ${removedSkillName || skillId} from ${targetWorker.name}`,
-        {
-          actionType: 'CHANGE_WORKER_STATUS',
-          workerId: targetWorker.id,
-          workerName: targetWorker.name,
-          societyId: targetWorker.societyId,
-          societyName: targetWorker.societyName,
-          managerName: currentUser.name,
-          skillName: removedSkillName,
-        }
-      );
-    }
   };
 
   // CREATE BOOKING
@@ -1293,9 +549,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     urgencyTier: UrgencyTier;
     societyName?: string;
     customAddress?: string;
-    customerCoordinates?: { latitude: number; longitude: number; accuracy?: number };
-    customerLocality?: string;
-    customerPostalCode?: string;
   }) => {
     const service = INITIAL_SERVICES.find(
       (s) => s.name.toLowerCase() === data.serviceCategory.toLowerCase()
@@ -1309,17 +562,12 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     const societyShare = Math.round((totalAmount * config.societySharePercent) / 100);
     const cooperativeFundShare = totalAmount - workerShare - societyShare;
 
-    // Run AI / Fair Matching Engine with customer coordinates
-    const customerLocation = data.customerCoordinates
-      ? { lat: data.customerCoordinates.latitude, lng: data.customerCoordinates.longitude }
-      : { lat: 18.5590, lng: 73.7868 };
-
+    // Run AI / Fair Matching Engine
     const candidates = calculateCandidateScores(
       data.serviceCategory,
       workers,
       config.matchingWeights,
-      [],
-      customerLocation
+      []
     );
 
     const matchedCandidate = candidates[0];
@@ -1327,24 +575,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
     // 4-digit OTP for secure customer-worker arrival verification
     const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
-
-    // Compute initial distance
-    let calculatedDistanceKm = matchedWorker?.distanceKm || 1.2;
-    if (
-      customerLocation &&
-      matchedWorker?.latitude !== undefined &&
-      matchedWorker?.longitude !== undefined
-    ) {
-      const dLat = ((matchedWorker.latitude - customerLocation.lat) * Math.PI) / 180;
-      const dLon = ((matchedWorker.longitude - customerLocation.lng) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((customerLocation.lat * Math.PI) / 180) *
-          Math.cos((matchedWorker.latitude * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      calculatedDistanceKm = parseFloat((6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(1));
-    }
 
     const newBooking: Booking = {
       id: `BKG-${Math.floor(2000 + Math.random() * 8000)}`,
@@ -1357,7 +587,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       problemType: data.problemType,
       details: data.details,
       photos: data.photos || [],
-      beforeImage: data.photos && data.photos.length > 0 ? data.photos[0] : undefined,
       urgencyTier: data.urgencyTier,
       state: 'PENDING_WORKER_ACCEPTANCE',
       createdAt: new Date().toISOString(),
@@ -1373,16 +602,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       matchedWorkerId: matchedWorker?.id,
       matchedWorker,
       rejectedWorkerIds: [],
-      // Geolocation Telemetry
-      customerLatitude: customerLocation.lat,
-      customerLongitude: customerLocation.lng,
-      customerLocationAccuracy: data.customerCoordinates?.accuracy || 15,
-      customerLocality: data.customerLocality || 'Baner',
-      customerPostalCode: data.customerPostalCode || '411045',
-      workerLatitude: matchedWorker?.latitude,
-      workerLongitude: matchedWorker?.longitude,
-      distanceKm: calculatedDistanceKm,
-      estimatedDurationMinutes: Math.max(3, Math.round(calculatedDistanceKm * 3 + 2)),
     };
 
     setBookings((prev) => [newBooking, ...prev]);
@@ -1392,7 +611,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       recipientRole: 'customer',
       title: data.urgencyTier === 'EMERGENCY' ? '🚨 Emergency Request Queued' : 'Request Submitted',
       message: matchedWorker
-        ? `Matched with ${matchedWorker.name} (${calculatedDistanceKm} km away). Awaiting confirmation.`
+        ? `Matched with ${matchedWorker.name} (${matchedWorker.distanceKm} km away). Awaiting confirmation.`
         : 'Finding the right verified worker for your request...',
       type: data.urgencyTier === 'EMERGENCY' ? 'emergency' : 'info',
       relatedBookingId: newBooking.id,
@@ -1411,19 +630,17 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     return newBooking;
   };
 
-  // ACCEPT JOB / ASSIGN WORKER
-  const acceptJob = (jobId: string, workerId: string) => {
-    const worker = workers.find((w) => w.id === workerId);
+  // ACCEPT BOOKING
+  const acceptBookingByWorker = (bookingId: string, workerId: string) => {
     setBookings((prev) =>
       prev.map((b) => {
-        if (b.id === jobId) {
-          const assignedWorker = worker || b.matchedWorker;
+        if (b.id === bookingId) {
+          const worker = workers.find((w) => w.id === workerId) || b.matchedWorker;
           return {
             ...b,
-            state: 'WORKER_ASSIGNED',
-            workerId: workerId,
+            state: 'CONFIRMED',
             matchedWorkerId: workerId,
-            matchedWorker: assignedWorker,
+            matchedWorker: worker,
             updatedAt: new Date().toISOString(),
           };
         }
@@ -1433,22 +650,11 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
     addNotification({
       recipientRole: 'customer',
-      title: 'Worker Assigned!',
-      message: `${worker?.name || 'Verified specialist'} has been assigned to your service request.`,
+      title: 'Worker Confirmed!',
+      message: `Your booking has been accepted by verified cooperative worker.`,
       type: 'success',
-      relatedBookingId: jobId,
+      relatedBookingId: bookingId,
     });
-
-    showToast({
-      title: 'Job Accepted',
-      message: `Assigned to request #${jobId}.`,
-      type: 'success',
-    });
-  };
-
-  // ACCEPT BOOKING (compatibility handler)
-  const acceptBookingByWorker = (bookingId: string, workerId: string) => {
-    acceptJob(bookingId, workerId);
   };
 
   // REJECT BOOKING & AUTOMATIC REMATCH
@@ -1557,14 +763,67 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     return false;
   };
 
-  // COMPLETE BOOKING — transitions to AWAITING_VERIFICATION for manager sign-off
+  // WORKER BREAK MANAGEMENT
+  const startWorkerBreak = (
+    bookingId: string,
+    durationMins: number,
+    reason?: string,
+  ) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: 'WORKER_ON_BREAK' as BookingState,
+              updatedAt: new Date().toISOString(),
+              breakDetails: {
+                startedAt: new Date().toISOString(),
+                estimatedDurationMins: durationMins,
+                reason,
+              },
+            }
+          : b,
+      ),
+    );
+    addNotification({
+      recipientRole: 'customer',
+      title: 'Worker is on a Short Break',
+      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
+      type: 'info',
+      relatedBookingId: bookingId,
+    });
+  };
+
+  const endWorkerBreak = (bookingId: string) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: 'IN_PROGRESS' as BookingState,
+              updatedAt: new Date().toISOString(),
+              breakDetails: undefined,
+            }
+          : b,
+      ),
+    );
+    addNotification({
+      recipientRole: 'customer',
+      title: 'Worker Resumed Work',
+      message: 'Your specialist has resumed work. Service is back in progress.',
+      type: 'success',
+      relatedBookingId: bookingId,
+    });
+  };
+
+  // COMPLETE BOOKING
   const completeBooking = (bookingId: string, notes?: string, photos?: string[]) => {
     setBookings((prev) =>
       prev.map((b) => {
         if (b.id === bookingId) {
           return {
             ...b,
-            state: 'AWAITING_VERIFICATION' as const,
+            state: 'COMPLETED',
             notes: notes || b.notes,
             workPhotos: photos || b.workPhotos,
             completedAt: new Date().toISOString(),
@@ -1577,270 +836,11 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
     addNotification({
       recipientRole: 'customer',
-      title: 'Job Completed — Awaiting Verification',
-      message: 'Worker has marked the job done. Please review and confirm the work, or request a revisit.',
+      title: 'Job Completed!',
+      message: 'Service has been marked complete. Please review and approve payment.',
       type: 'success',
       relatedBookingId: bookingId,
     });
-
-    addNotification({
-      recipientRole: 'society_manager',
-      title: '🔍 Job Ready for Verification',
-      message: `Booking ${bookingId} has been completed by the worker and is pending your approval.`,
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-
-    showToast({
-      title: 'Job Submitted for Verification',
-      message: 'Awaiting customer confirmation and manager sign-off.',
-      type: 'success',
-    });
-  };
-
-  // UPLOAD JOB PHOTOS (before/after evidence)
-  const uploadJobPhotos = (
-    bookingId: string,
-    photos: { beforeImage?: string; afterImage?: string }
-  ) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              beforeImage: photos.beforeImage ?? b.beforeImage,
-              afterImage: photos.afterImage ?? b.afterImage,
-              updatedAt: new Date().toISOString(),
-            }
-          : b
-      )
-    );
-  };
-
-  // CUSTOMER CONFIRMS JOB IS DONE SATISFACTORILY
-  const confirmCustomerJob = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              customerConfirmation: true,
-              customerConfirmedAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }
-          : b
-      )
-    );
-
-    addNotification({
-      recipientRole: 'society_manager',
-      title: '✅ Customer Confirmed Job',
-      message: `Customer has confirmed work for Booking ${bookingId}. Ready for final approval.`,
-      type: 'success',
-      relatedBookingId: bookingId,
-    });
-
-    showToast({
-      title: 'Job Confirmed',
-      message: 'Thank you! Your confirmation has been recorded.',
-      type: 'success',
-    });
-  };
-
-  // MANAGER VERIFIES COMPLETED JOB
-  const verifyJobByManager = (
-    bookingId: string,
-    verificationData: {
-      verifiedBy: string;
-      status: 'APPROVED' | 'REJECTED' | 'REVISIT_NEEDED';
-      notes?: string;
-    }
-  ) => {
-    const nextState =
-      verificationData.status === 'APPROVED'
-        ? ('COMPLETED' as const)
-        : verificationData.status === 'REVISIT_NEEDED'
-        ? ('REVISIT_REQUESTED' as const)
-        : ('QUALITY_ISSUE' as const);
-
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: nextState,
-              managerVerification: {
-                verifiedBy: verificationData.verifiedBy,
-                status: verificationData.status,
-                notes: verificationData.notes,
-                verifiedAt: new Date().toISOString(),
-              },
-              updatedAt: new Date().toISOString(),
-            }
-          : b
-      )
-    );
-
-    const toastMsg =
-      verificationData.status === 'APPROVED'
-        ? { title: 'Job Approved ✓', message: 'Job verified and marked complete.', type: 'success' as const }
-        : verificationData.status === 'REVISIT_NEEDED'
-        ? { title: 'Revisit Required', message: 'Booking flagged for revisit. Customer notified.', type: 'warning' as const }
-        : { title: 'Job Rejected', message: 'Quality issue logged for this booking.', type: 'warning' as const };
-
-    showToast(toastMsg);
-
-    addNotification({
-      recipientRole: 'customer',
-      title:
-        verificationData.status === 'APPROVED'
-          ? 'Service Approved by Manager!'
-          : verificationData.status === 'REVISIT_NEEDED'
-          ? 'Revisit Arranged by Manager'
-          : 'Service Quality Issue Noted',
-      message:
-        verificationData.status === 'APPROVED'
-          ? 'Your service has been verified and approved. You can now proceed to payment.'
-          : verificationData.status === 'REVISIT_NEEDED'
-          ? `Manager flagged this for revisit: ${verificationData.notes || 'Quality check required.'}`
-          : `Manager rejected the job: ${verificationData.notes || 'Work did not meet standards.'}`,
-      type: verificationData.status === 'APPROVED' ? 'success' : 'warning',
-      relatedBookingId: bookingId,
-    });
-
-    addAuditLog(
-      'JOB_VERIFICATION',
-      `Manager ${verificationData.verifiedBy} verified Booking ${bookingId}: ${verificationData.status}${verificationData.notes ? ` — ${verificationData.notes}` : ''}`
-    );
-  };
-
-  // CUSTOMER REQUESTS A REVISIT
-  const requestRevisit = (bookingId: string, revisitData: { reason: string }) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'REVISIT_REQUESTED' as const,
-              revisitDetails: {
-                reason: revisitData.reason,
-                status: 'PENDING' as const,
-                requestedAt: new Date().toISOString(),
-              },
-              updatedAt: new Date().toISOString(),
-            }
-          : b
-      )
-    );
-
-    addNotification({
-      recipientRole: 'society_manager',
-      title: '🔄 Revisit Requested by Customer',
-      message: `Booking ${bookingId}: "${revisitData.reason}"`,
-      type: 'warning',
-      relatedBookingId: bookingId,
-    });
-
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Revisit Request Logged',
-      message: 'Your revisit request has been sent to the society manager. They will schedule it shortly.',
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-
-    showToast({
-      title: 'Revisit Requested',
-      message: 'Society Manager has been notified. Hang tight!',
-      type: 'info',
-    });
-  };
-
-  // MANAGER SCHEDULES A REVISIT DATE
-  const scheduleRevisit = (bookingId: string, newDate: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'REVISIT_SCHEDULED' as const,
-              revisitDetails: b.revisitDetails
-                ? { ...b.revisitDetails, scheduledDate: newDate, status: 'SCHEDULED' as const }
-                : { reason: 'Revisit arranged by manager', scheduledDate: newDate, status: 'SCHEDULED' as const },
-              updatedAt: new Date().toISOString(),
-            }
-          : b
-      )
-    );
-
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Revisit Scheduled',
-      message: `Your revisit has been scheduled for ${newDate}. The worker will arrive as arranged.`,
-      type: 'success',
-      relatedBookingId: bookingId,
-    });
-
-    addNotification({
-      recipientRole: 'worker',
-      title: 'Revisit Job Assigned',
-      message: `Please attend revisit for Booking ${bookingId} on ${newDate}.`,
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-
-    showToast({
-      title: 'Revisit Scheduled',
-      message: `Revisit confirmed for ${newDate}. Customer notified.`,
-      type: 'success',
-    });
-  };
-
-  // CANCEL A JOB
-  const cancelJob = (
-    bookingId: string,
-    cancellationData: { cancelledBy: string; reason: string }
-  ) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'CANCELLED' as const,
-              cancellationDetails: {
-                cancelledBy: cancellationData.cancelledBy,
-                reason: cancellationData.reason,
-                cancelledAt: new Date().toISOString(),
-              },
-              updatedAt: new Date().toISOString(),
-            }
-          : b
-      )
-    );
-
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Booking Cancelled',
-      message: `Your booking has been cancelled. Reason: ${cancellationData.reason}`,
-      type: 'warning',
-      relatedBookingId: bookingId,
-    });
-
-    addNotification({
-      recipientRole: 'worker',
-      title: 'Job Cancelled',
-      message: `Booking ${bookingId} has been cancelled.`,
-      type: 'warning',
-      relatedBookingId: bookingId,
-    });
-
-    showToast({
-      title: 'Booking Cancelled',
-      message: `Booking ${bookingId} has been cancelled.`,
-      type: 'warning',
-    });
-
-    addAuditLog('JOB_CANCEL', `Booking ${bookingId} cancelled by ${cancellationData.cancelledBy}: ${cancellationData.reason}`);
   };
 
   // PAY BOOKING
@@ -2076,20 +1076,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       type: 'info',
       relatedBookingId: bookingId,
     });
-
-    addAuditLog(
-      'ASSIGN_WORKER_JOB',
-      `Worker Assigned to Job: ${worker.name} (${worker.id}) assigned to Booking ${bookingId}`,
-      {
-        actionType: 'ASSIGN_WORKER_JOB',
-        workerId: worker.id,
-        workerName: worker.name,
-        societyId: worker.societyId,
-        societyName: worker.societyName,
-        managerName: currentUser.name,
-        bookingId,
-      }
-    );
   };
 
   // COMMUNITY BOOKINGS
@@ -2347,14 +1333,7 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     bookingId: string,
     reportedBy: 'customer' | 'worker',
     reason: string,
-    details?: string,
-    telemetry?: {
-      latitude?: number;
-      longitude?: number;
-      locationAccuracy?: number;
-      locationAddress?: string;
-      googleMapsUrl?: string;
-    }
+    details?: string
   ): ActiveJobSOSTicket => {
     const newTicket: ActiveJobSOSTicket = {
       id: `SOS-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -2370,11 +1349,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
       createdAt: new Date().toISOString(),
       status: 'active_emergency',
       assignedManager: 'Suresh Menon (Society Manager)',
-      latitude: telemetry?.latitude,
-      longitude: telemetry?.longitude,
-      locationAccuracy: telemetry?.locationAccuracy,
-      locationAddress: telemetry?.locationAddress,
-      googleMapsUrl: telemetry?.googleMapsUrl,
     };
 
     setSosTickets((prev) => [newTicket, ...prev]);
@@ -2419,45 +1393,16 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
 
   // Dynamic Hierarchy Getters
   const getWorkersBySociety = (societyIdOrName: string): Worker[] => {
-    if (!societyIdOrName) return [];
-    const targetSoc = societies.find(
-      (s) =>
-        s.id === societyIdOrName ||
-        (s.name && s.name.toLowerCase() === societyIdOrName.toLowerCase())
-    );
-    const targetId = targetSoc?.id || societyIdOrName;
-    const targetName = targetSoc?.name || societyIdOrName;
-
-    return workers.filter(
-      (w) =>
-        w.societyId === targetId ||
-        w.societyId === societyIdOrName ||
-        (w.societyName && targetName && w.societyName.toLowerCase() === targetName.toLowerCase()) ||
-        (w.societyName && w.societyName.toLowerCase() === societyIdOrName.toLowerCase())
-    );
+    return workers.filter((w) => w.societyId === societyIdOrName || w.societyName === societyIdOrName);
   };
 
   const getSocietyWorkersCount = (societyIdOrName: string): number => {
-    return getWorkersBySociety(societyIdOrName).length;
+    return workers.filter((w) => w.societyId === societyIdOrName || w.societyName === societyIdOrName).length;
   };
 
   const getSocietyActiveBookingsCount = (societyIdOrName: string): number => {
-    if (!societyIdOrName) return 0;
-    const targetSoc = societies.find(
-      (s) =>
-        s.id === societyIdOrName ||
-        (s.name && s.name.toLowerCase() === societyIdOrName.toLowerCase())
-    );
-    const targetId = targetSoc?.id || societyIdOrName;
-    const targetName = targetSoc?.name || societyIdOrName;
-
     return bookings.filter(
-      (b) =>
-        (b.societyId === targetId ||
-          b.societyId === societyIdOrName ||
-          (b.societyName && targetName && b.societyName.toLowerCase() === targetName.toLowerCase()) ||
-          (b.societyName && b.societyName.toLowerCase() === societyIdOrName.toLowerCase())) &&
-        !['COMPLETED', 'PAID', 'RATED'].includes(b.state)
+      (b) => (b.societyId === societyIdOrName || b.societyName === societyIdOrName) && !['COMPLETED', 'PAID', 'RATED'].includes(b.state)
     ).length;
   };
 
@@ -2520,39 +1465,22 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         platformMetrics,
         auditLogs,
         allocateFederationGrant,
-        updateCooperativeVerification,
         addAuditLog,
         workers,
         updateWorkerVerification,
-        updateWorkerProfile,
-        deactivateWorker,
         reviewWorkerDocument,
-        endorseWorkerByManager,
-        rejectWorkerByManager,
-        approveWorkerByFederation,
-        rejectWorkerByFederation,
         updateWorkerLocation,
         toggleWorkerAvailability,
-        addWorker,
-        addWorkerSkill,
-        verifyWorkerSkill,
-        verifyWorkerPersonalKyc,
-        removeWorkerSkill,
         bookings,
         createBooking,
         acceptBookingByWorker,
-        acceptJob,
         rejectBookingByWorker,
         updateBookingState,
         verifyBookingOTP,
         verifyOTPAndStartJob,
         completeBooking,
-        uploadJobPhotos,
-        confirmCustomerJob,
-        verifyJobByManager,
-        requestRevisit,
-        scheduleRevisit,
-        cancelJob,
+        startWorkerBreak,
+        endWorkerBreak,
         payBooking,
         rateBooking,
         reportQualityIssue,
@@ -2560,7 +1488,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         adminReassignQualityIssue,
         completeRevisit,
         adminManualAssignWorker,
-        assignWorkerToBooking,
         communityBookings,
         joinCommunityBooking,
         createCommunityBooking,
