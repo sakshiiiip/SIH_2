@@ -21,6 +21,7 @@ import {
   Clock,
   Building2,
   Users,
+  User,
   Filter,
   Award,
   Check,
@@ -45,9 +46,11 @@ interface FederationManagerDashboardProps {
   onSelectTab?: (tab: string) => void;
 }
 
-export const FederationManagerDashboard: React.FC<FederationManagerDashboardProps> = () => {
+export const FederationManagerDashboard: React.FC<FederationManagerDashboardProps> = ({ onSelectTab }) => {
   const {
+    currentUser,
     federations,
+    federationApplications,
     societies,
     workers,
     bookings,
@@ -66,7 +69,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
 
   const [matchingWeights, setMatchingWeights] = useState(config.matchingWeights);
   const [activeSubTab, setActiveSubTab] = useState<
-    'overview' | 'manager_activity' | 'worker_verification' | 'worker_directory' | 'societies' | 'job_verification' | 'tool_bank' | 'coop_fund' | 'matching'
+    'overview' | 'manager_activity' | 'worker_verification' | 'worker_directory' | 'societies' | 'accreditation' | 'job_verification' | 'tool_bank' | 'coop_fund' | 'matching'
   >('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [selectedSocietyForDrilldown, setSelectedSocietyForDrilldown] = useState<SocietyData | null>(null);
@@ -160,12 +163,21 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
       Boolean(b.managerVerification)
   );
 
-  const currentFederation = federations[0] || {
-    id: 'fed_mumbai_pune',
-    name: 'Maharashtra Community Federation',
-    adminName: 'Meera Nambiar',
-    region: 'Mumbai - Pune Region',
-  };
+  const currentFederation =
+    federations.find((f) => f.id === currentUser.federationId) ||
+    federations[0] || {
+      id: 'fed_mcf',
+      name: 'Maharashtra Community Federation',
+      adminName: 'Meera Nambiar',
+      region: 'Western Maharashtra Urban Zone',
+    };
+
+  const currentApp = federationApplications.find(
+    (a) =>
+      a.federationId === currentFederation.id ||
+      a.officialEmail === currentUser.email ||
+      a.authorizedPersonEmail === currentUser.email
+  );
 
   const totalHouseholds = societies.reduce((acc, s) => acc + (s.totalHouseholds || 0), 0);
   const totalFederationWorkers = getFederationWorkersCount();
@@ -487,6 +499,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
           { key: 'worker_verification', label: `Worker Verification Queue (${federationWorkerQueue.length})` },
           { key: 'worker_directory', label: `Worker Directory (${workers.length})` },
           { key: 'societies', label: `Member Societies & Audit (${societies.length})` },
+          { key: 'accreditation', label: `Apex Accreditation (${currentApp?.status || 'APPROVED'})` },
           { key: 'job_verification', label: `Job Review Queue (${pendingVerificationJobs.length})` },
           { key: 'matching', label: 'Matching Preferences' },
           { key: 'coop_fund', label: 'Cooperative Fund' },
@@ -1486,6 +1499,145 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* SUB-TAB: APEX ACCREDITATION & STATUTORY REGISTRATION */}
+      {activeSubTab === 'accreditation' && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Status Header */}
+          <div className="p-5 rounded-2xl border border-[#DFD8E8] bg-[#FAF8FC] flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-serif font-bold text-[#141413]">
+                    {currentApp?.federationName || currentFederation.name}
+                  </h2>
+                  <Badge variant={currentApp?.status === 'APPROVED' || !currentApp ? 'success' : currentApp?.status === 'CHANGES_REQUIRED' ? 'warning' : 'neutral'} size="md">
+                    {currentApp?.status ? `${currentApp.status} · PLATFORM REGISTRY` : 'ACCREDITED APEX'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-[#77736B] mt-0.5">
+                  Multi-State Cooperative Societies Act Compliance & Central Platform Authority Certification
+                </p>
+              </div>
+            </div>
+
+            {currentApp?.reviewedBy && (
+              <div className="text-right text-xs">
+                <span className="text-[#77736B] block">Audited & Certified By:</span>
+                <span className="font-bold text-purple-900">{currentApp.reviewedBy}</span>
+                <span className="text-[11px] text-[#77736B] block">on {currentApp.reviewedAt}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Details Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div className="p-4 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] space-y-2.5">
+              <h3 className="font-bold text-[#504161] flex items-center gap-2 uppercase tracking-wider text-[11px]">
+                <Building2 className="w-4 h-4" /> Registered Apex Body Credentials
+              </h3>
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Registration Number:</span>
+                  <span className="font-mono font-bold text-[#141413]">
+                    {currentApp?.registrationNumber || currentFederation.registrationNumber || 'MSCS/CR/2023/8842'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Federation Type:</span>
+                  <span className="font-semibold text-[#141413]">{currentApp?.federationType || 'State Federation'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Jurisdiction:</span>
+                  <span className="font-semibold text-[#141413]">{currentApp?.district || 'Pune'}, {currentApp?.state || 'Maharashtra'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Official Email:</span>
+                  <span className="font-semibold text-[#141413]">{currentApp?.officialEmail || currentFederation.officialEmail || 'contact@maharashtracoop.org'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Official Phone:</span>
+                  <span className="font-semibold text-[#141413]">{currentApp?.officialPhone || currentFederation.officialPhone || '9822377410'}</span>
+                </div>
+                <div className="pt-2 border-t border-[#E8E2D5]">
+                  <span className="text-[#77736B] block mb-0.5">Headquarters Premises:</span>
+                  <p className="font-medium text-[#141413]">
+                    {currentApp?.fullAddress || currentFederation.fullAddress || 'Federation Apex House, Senapati Bapat Road, Pune, Maharashtra 411016'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] space-y-2.5">
+              <h3 className="font-bold text-[#504161] flex items-center gap-2 uppercase tracking-wider text-[11px]">
+                <User className="w-4 h-4" /> Board Authorized Representative
+              </h3>
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Designated Official:</span>
+                  <span className="font-bold text-[#141413]">{currentApp?.authorizedPersonName || currentFederation.adminName || 'Meera Nambiar'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Designation:</span>
+                  <span className="font-semibold text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                    {currentApp?.authorizedPersonDesignation || 'Federation Manager'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Direct Email:</span>
+                  <span className="font-semibold text-[#141413]">{currentApp?.authorizedPersonEmail || currentFederation.adminEmail || 'meera.nambiar@maharashtracoop.org'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">Direct Phone:</span>
+                  <span className="font-semibold text-[#141413]">{currentApp?.authorizedPersonPhone || currentFederation.adminPhone || '9822377410'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#77736B]">ID Proof Verified:</span>
+                  <span className="font-semibold text-[#141413]">{currentApp?.authorizedPersonIdType || 'Aadhaar'} ({currentApp?.authorizedPersonIdNumber || 'Verified'})</span>
+                </div>
+                <div className="pt-2 border-t border-[#E8E2D5]">
+                  <span className="text-[#77736B] block mb-0.5">Statutory Authority:</span>
+                  <p className="font-medium text-[#141413]">
+                    Authorized to oversee cooperative dispute resolution, tool banks, and relief fund disbursements.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Statutory Documents Record */}
+          <div className="p-5 rounded-2xl border border-[#E8E2D5] bg-[#FCF9F3] space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#504161] flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Uploaded Statutory Compliance Documents
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(currentApp?.documents || currentFederation.documents || [
+                { id: '1', title: 'Registration Certificate', fileName: 'MSCS_Certificate_MCF_Pune.pdf', fileSize: '2.4 MB', status: 'VERIFIED' as const, uploadedAt: '2025-11-01', documentType: 'registration_certificate' },
+                { id: '2', title: 'Board Resolution & Manager Authorization', fileName: 'Board_Resolution_Meera_Nambiar.pdf', fileSize: '1.1 MB', status: 'VERIFIED' as const, uploadedAt: '2025-11-01', documentType: 'authorization_letter' },
+                { id: '3', title: 'Registered Cooperative Bye-Laws', fileName: 'Registered_ByeLaws_MCF_2023.pdf', fileSize: '4.8 MB', status: 'VERIFIED' as const, uploadedAt: '2025-11-01', documentType: 'bye_laws' },
+                { id: '4', title: 'Apex Office Address Proof', fileName: 'Apex_House_Address_Proof_Pune.pdf', fileSize: '1.7 MB', status: 'VERIFIED' as const, uploadedAt: '2025-11-01', documentType: 'address_proof' },
+              ]).map((doc) => (
+                <div key={doc.id} className="p-3 bg-white rounded-xl border border-[#E8E2D5] flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <FileText className="w-4 h-4 text-purple-600 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="font-bold text-[#141413] block truncate">{doc.title}</span>
+                      <span className="text-[11px] text-[#77736B] font-mono block truncate">{doc.fileName} ({doc.fileSize})</span>
+                    </div>
+                  </div>
+                  <Badge variant={doc.status === 'VERIFIED' ? 'success' : doc.status === 'NEEDS_CORRECTION' ? 'warning' : 'neutral'} size="sm">
+                    {doc.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

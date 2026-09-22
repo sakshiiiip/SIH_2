@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
-import { UserRole, User, Worker, SocietyManagerInfo } from '../../types';
+import { UserRole, User, Worker, SocietyManagerInfo, FederationApplication } from '../../types';
 import { DEMO_USERS } from '../../store/initialData';
 import { Badge } from '../../components/common/Badge';
 import {
@@ -21,6 +21,11 @@ import {
   Star,
   Sparkles,
   Filter,
+  AlertTriangle,
+  XCircle,
+  Clock,
+  FileText,
+  RotateCcw,
 } from 'lucide-react';
 import {
   useCardMotion,
@@ -29,6 +34,7 @@ import {
 } from '../../hooks/useCursorReactive';
 
 import { WorkerLoginScreen } from './WorkerLoginScreen';
+import { FederationRegistrationPage } from '../admin/FederationRegistrationPage';
 
 interface RoleLoginScreenProps {
   role: UserRole;
@@ -41,10 +47,10 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
   onBack,
   onSuccess,
 }) => {
-  const { login, workers, societyManagers, societies } = useCooperativeStore();
+  const { login, workers, societyManagers, societies, federations, federationApplications } = useCooperativeStore();
 
   const defaultDemoUser = DEMO_USERS[role] || DEMO_USERS.customer;
-  const isEmailRole = ['society_manager', 'federation_manager', 'federation_admin'].includes(role);
+  const isEmailRole = ['society_manager', 'federation_manager', 'federation_admin', 'platform_admin'].includes(role);
 
   // Selected account state
   const [selectedUser, setSelectedUser] = useState<User>(defaultDemoUser);
@@ -57,6 +63,14 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
   const [accountSearch, setAccountSearch] = useState('');
   const [workerTradeFilter, setWorkerTradeFilter] = useState('All');
   const [activeLoginMode, setActiveLoginMode] = useState<'quick_select' | 'manual_form'>('quick_select');
+
+  // Federation Auth & Registration state
+  const [federationAuthMode, setFederationAuthMode] = useState<'login' | 'register'>('login');
+  const [federationStatusView, setFederationStatusView] = useState<{
+    app: FederationApplication;
+    type: 'PENDING' | 'CHANGES_REQUIRED' | 'REJECTED';
+  } | null>(null);
+  const [editApplicationId, setEditApplicationId] = useState<string | null>(null);
 
   const { bgRef } = useBackgroundParallax(0.02);
   const {
@@ -99,6 +113,20 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
 
   const getRoleConfig = () => {
     switch (role) {
+      case 'platform_admin':
+        return {
+          title: 'Platform Central Authority',
+          personaTitle: `${selectedUser.name} (Chief Registrar)`,
+          subtitle: 'Apex Federation Accreditation, Statutory Verification & Central Regulatory Governance',
+          badge: 'Platform Central Authority',
+          badgeVariant: 'coop' as const,
+          icon: <ShieldCheck className="w-6 h-6 text-purple-400" />,
+          accentRgb: '147, 51, 234',
+          btnClass: 'bg-[#141413] hover:bg-black text-white shadow-md border border-purple-500/30',
+          focusRing: 'focus:ring-purple-600 focus:border-purple-600',
+          ambientBg: 'from-purple-900/20 via-transparent to-transparent',
+          buttonLabel: 'Enter Central Authority Desk',
+        };
       case 'worker':
         return {
           title: 'Worker Portal',
@@ -224,8 +252,48 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (role === 'federation_admin' || role === 'federation_manager') {
+      // Find matching application by official email or representative email
+      const emailQuery = identifier.trim().toLowerCase();
+      const matchingApp = federationApplications.find(
+        (a) =>
+          a.officialEmail.toLowerCase() === emailQuery ||
+          a.authorizedPersonEmail.toLowerCase() === emailQuery ||
+          (selectedUser.federationId && a.federationId === selectedUser.federationId)
+      );
+
+      if (matchingApp) {
+        if (matchingApp.status === 'PENDING_VERIFICATION') {
+          setFederationStatusView({ app: matchingApp, type: 'PENDING' });
+          return;
+        }
+        if (matchingApp.status === 'CHANGES_REQUIRED') {
+          setFederationStatusView({ app: matchingApp, type: 'CHANGES_REQUIRED' });
+          return;
+        }
+        if (matchingApp.status === 'REJECTED') {
+          setFederationStatusView({ app: matchingApp, type: 'REJECTED' });
+          return;
+        }
+      }
+    }
+
     handleDirectLogin();
   };
+
+  // If in Federation Registration Mode, render statutory registration page directly
+  if ((role === 'federation_admin' || role === 'federation_manager') && federationAuthMode === 'register') {
+    return (
+      <FederationRegistrationPage
+        existingApplicationId={editApplicationId || undefined}
+        onNavigateBack={() => {
+          setFederationAuthMode('login');
+          setEditApplicationId(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-[100dvh] flex flex-col justify-center items-center px-4 py-8 bg-[#F8F4EC] relative selection:bg-[#CFDDD0] selection:text-[#2A3927] overflow-y-auto animate-fade-in">
@@ -423,123 +491,334 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                 </div>
               )}
 
-              {/* 4. FEDERATION ADMIN ACCOUNT */}
+              {/* 4. FEDERATION ADMIN ACCOUNT & ENTRY WORKFLOW */}
               {(role === 'federation_admin' || role === 'federation_manager') && (
-                <div className="p-3.5 bg-[#EFEBF4] rounded-2xl border border-[#DFD8E8] flex items-center justify-between text-xs relative z-10">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={selectedUser.avatar || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'}
-                      alt={selectedUser.name}
-                      className="w-10 h-10 rounded-full object-cover border border-[#DFD8E8]"
-                    />
-                    <div>
-                      <span className="text-[10px] text-[#504161] font-bold uppercase block leading-none">Federation Admin</span>
-                      <strong className="text-sm font-bold text-[#292824] block mt-0.5">{selectedUser.name}</strong>
-                      <span className="text-[11px] text-[#77736B]">{selectedUser.federationName || 'Maharashtra Community Federation'}</span>
+                <div className="space-y-4 relative z-10">
+                  {/* Status Block if user tried to sign into an application that is not APPROVED */}
+                  {federationStatusView ? (
+                    <div className="p-5 rounded-2xl border space-y-4 animate-fade-in bg-white shadow-sm border-[#DFD8E8]">
+                      {federationStatusView.type === 'PENDING' && (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                              <Clock className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <Badge variant="warning" size="sm">PENDING VERIFICATION</Badge>
+                              <h3 className="text-base font-serif font-bold text-[#141413] mt-0.5">
+                                Registration Pending Platform Verification
+                              </h3>
+                              <p className="text-xs text-[#77736B]">
+                                Application Ref: <strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-950 space-y-1">
+                            <div className="font-bold flex items-center gap-1.5">
+                              <AlertTriangle className="w-4 h-4 text-amber-700" />
+                              <span>Workspace Access Locked</span>
+                            </div>
+                            <p className="text-[11px] leading-relaxed text-amber-900">
+                              Your statutory application for <strong>{federationStatusView.app.federationName}</strong> has been transmitted and is currently undergoing audit by the <strong>Platform Central Authority (Dr. Rajeshwar Sengupta, Chief Registrar)</strong>. Workspace access will be unlocked once approved.
+                            </p>
+                          </div>
+
+                          <div className="p-3 bg-[#FCF9F3] rounded-xl border border-[#E8E2D5] text-xs space-y-1.5">
+                            <div className="flex justify-between">
+                              <span className="text-[#77736B]">Registration No:</span>
+                              <span className="font-mono font-bold text-[#141413]">{federationStatusView.app.registrationNumber}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#77736B]">Representative:</span>
+                              <span className="font-semibold text-[#141413]">{federationStatusView.app.authorizedPersonName} ({federationStatusView.app.authorizedPersonDesignation})</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#77736B]">Declared Scope:</span>
+                              <span className="font-semibold text-[#141413]">{federationStatusView.app.societiesCount || federationStatusView.app.declaredSocieties?.length || 1} Societies</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#77736B]">Submitted Date:</span>
+                              <span className="text-[#141413]">{federationStatusView.app.submittedAt || 'Recent'}</span>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 flex justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setFederationStatusView(null)}
+                              className="px-4 py-2 rounded-xl bg-white border border-[#D5D0C7] text-xs font-semibold text-[#141413] hover:bg-[#FAF9F5] cursor-pointer"
+                            >
+                              ← Back to Sign In
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditApplicationId(federationStatusView.app.id);
+                                setFederationAuthMode('register');
+                                setFederationStatusView(null);
+                              }}
+                              className="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>View Application Details</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {federationStatusView.type === 'CHANGES_REQUIRED' && (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                              <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <Badge variant="warning" size="sm">CHANGES REQUIRED</Badge>
+                              <h3 className="text-base font-serif font-bold text-[#141413] mt-0.5">
+                                Platform Admin Requested Corrections
+                              </h3>
+                              <p className="text-xs text-[#77736B]">
+                                Application Ref: <strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-950 space-y-1">
+                            <strong className="block">Reviewer Reason & Directives:</strong>
+                            <p className="text-xs font-medium text-amber-900 leading-relaxed italic">
+                              "{federationStatusView.app.changeRequestReason || 'Please review statutory documents and update accordingly.'}"
+                            </p>
+                            {federationStatusView.app.reviewedBy && (
+                              <span className="text-[11px] text-amber-700 block mt-1">
+                                Reviewed by {federationStatusView.app.reviewedBy} on {federationStatusView.app.reviewedAt}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="pt-2 flex justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setFederationStatusView(null)}
+                              className="px-4 py-2 rounded-xl bg-white border border-[#D5D0C7] text-xs font-semibold text-[#141413] hover:bg-[#FAF9F5] cursor-pointer"
+                            >
+                              ← Back to Sign In
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditApplicationId(federationStatusView.app.id);
+                                setFederationAuthMode('register');
+                                setFederationStatusView(null);
+                              }}
+                              className="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Update Documents & Resubmit</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {federationStatusView.type === 'REJECTED' && (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">
+                              <XCircle className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <Badge variant="danger" size="sm">REGISTRATION REJECTED</Badge>
+                              <h3 className="text-base font-serif font-bold text-rose-950 mt-0.5">
+                                Statutory Accreditation Denied
+                              </h3>
+                              <p className="text-xs text-[#77736B]">
+                                Application Ref: <strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 bg-rose-50 rounded-xl border border-rose-200 text-xs text-rose-950 space-y-1">
+                            <strong className="block">Central Authority Decision:</strong>
+                            <p className="text-xs font-medium text-rose-900 leading-relaxed italic">
+                              "{federationStatusView.app.rejectionReason || 'Application does not meet platform accreditation standards under the Multi-State Cooperative Societies Act.'}"
+                            </p>
+                            {federationStatusView.app.reviewedBy && (
+                              <span className="text-[11px] text-rose-700 block mt-1">
+                                Reviewed by {federationStatusView.app.reviewedBy} on {federationStatusView.app.reviewedAt}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="pt-2 flex justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setFederationStatusView(null)}
+                              className="px-4 py-2 rounded-xl bg-white border border-[#D5D0C7] text-xs font-semibold text-[#141413] hover:bg-[#FAF9F5] cursor-pointer"
+                            >
+                              ← Back to Sign In
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditApplicationId(null);
+                                setFederationAuthMode('register');
+                                setFederationStatusView(null);
+                              }}
+                              className="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Submit New Registration</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </div>
-                  <Badge variant="coop" size="sm">Level 3 Admin</Badge>
+                  ) : (
+                    <>
+                      {/* Entry Flow Switcher: Existing Approved Federation vs New Federation */}
+                      <div className="grid grid-cols-2 gap-2 p-1 bg-[#F3EEE4] rounded-2xl border border-[#E8E2D5] text-xs font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setFederationAuthMode('login')}
+                          className="py-2.5 px-3 rounded-xl transition-all cursor-pointer bg-white text-[#504161] shadow-2xs font-extrabold border border-[#DFD8E8] flex items-center justify-center gap-1.5"
+                        >
+                          <Network className="w-3.5 h-3.5" />
+                          <span>Existing Federation</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFederationAuthMode('register')}
+                          className="py-2.5 px-3 rounded-xl transition-all cursor-pointer text-[#504161] hover:bg-[#EFEBF4] flex items-center justify-center gap-1.5"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>+ New Registration</span>
+                        </button>
+                      </div>
+
+                      {/* Approved Federation Card Preview */}
+                      <div className="p-3.5 bg-[#EFEBF4] rounded-2xl border border-[#DFD8E8] flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={selectedUser.avatar || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'}
+                            alt={selectedUser.name}
+                            className="w-10 h-10 rounded-full object-cover border border-[#DFD8E8]"
+                          />
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-[#504161] font-bold uppercase block leading-none">Approved Federation</span>
+                              <span className="text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-bold">✓ Certified</span>
+                            </div>
+                            <strong className="text-sm font-bold text-[#292824] block mt-0.5">{selectedUser.name}</strong>
+                            <span className="text-[11px] text-[#77736B]">{selectedUser.federationName || 'Maharashtra Community Federation'}</span>
+                          </div>
+                        </div>
+                        <Badge variant="coop" size="sm">Level 3 Apex</Badge>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
-              {/* Selected Account Active Preview & Form */}
-              <form onSubmit={handleSubmit} className="relative z-10 space-y-4 pt-2 border-t border-[#E8E2D5]">
-                <div className="p-3.5 bg-[#F3EEE4] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    {selectedUser.avatar && (
-                      <img
-                        src={selectedUser.avatar}
-                        alt={selectedUser.name}
-                        className="w-9 h-9 rounded-full object-cover border border-[#E8E2D5]"
-                      />
-                    )}
-                    <div>
-                      <span className="text-[10px] text-[#77736B] block font-medium uppercase tracking-wider">Active Selected Persona:</span>
-                      <strong className="text-sm text-[#292824] font-bold block">{selectedUser.name}</strong>
-                      <span className="text-[11px] text-[#80432E] font-medium block">
-                        {selectedUser.tradeProfession ? `${selectedUser.tradeProfession} · ` : ''}
-                        {selectedUser.societyName || selectedUser.federationName || 'Cooperative'}
-                      </span>
+              {/* Selected Account Active Preview & Form (Only rendered when not viewing status card) */}
+              {!federationStatusView && (
+                <form onSubmit={handleSubmit} className="relative z-10 space-y-4 pt-2 border-t border-[#E8E2D5]">
+                  <div className="p-3.5 bg-[#F3EEE4] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      {selectedUser.avatar && (
+                        <img
+                          src={selectedUser.avatar}
+                          alt={selectedUser.name}
+                          className="w-9 h-9 rounded-full object-cover border border-[#E8E2D5]"
+                        />
+                      )}
+                      <div>
+                        <span className="text-[10px] text-[#77736B] block font-medium uppercase tracking-wider">Active Selected Persona:</span>
+                        <strong className="text-sm text-[#292824] font-bold block">{selectedUser.name}</strong>
+                        <span className="text-[11px] text-[#80432E] font-medium block">
+                          {selectedUser.tradeProfession ? `${selectedUser.tradeProfession} · ` : ''}
+                          {selectedUser.societyName || selectedUser.federationName || 'Cooperative'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-[11px] font-semibold text-[#364A32] bg-[#E6ECE4] border border-[#CFDDD0] px-2.5 py-1 rounded-full flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
-                    <span>Selected</span>
-                  </span>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-                    {isEmailRole ? 'Official Cooperative Email' : 'Phone Number or Email'}
-                  </label>
-                  <div className="relative">
-                    {isEmailRole ? (
-                      <Mail className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    ) : (
-                      <Phone className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    )}
-                    <input
-                      type={isEmailRole ? 'email' : 'text'}
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm font-medium text-[#292824] focus:outline-none focus:ring-2 shadow-subtle transition-all ${config.focusRing}`}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-bold text-[#524E47] uppercase tracking-wider">
-                      Password
-                    </label>
-                    <span className="text-[11px] text-[#9A958B]">
-                      Pre-filled in demo
+                    <span className="text-[11px] font-semibold text-[#364A32] bg-[#E6ECE4] border border-[#CFDDD0] px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
+                      <span>Selected</span>
                     </span>
                   </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className={`w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 shadow-subtle transition-all ${config.focusRing}`}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] transition-colors p-0.5 cursor-pointer"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
 
-                {/* Magnetic Submit Button */}
-                <button
-                  ref={btnRef}
-                  onPointerMove={onBtnMove}
-                  onPointerLeave={onBtnLeave}
-                  type="submit"
-                  disabled={isLoading}
-                  className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer shadow-sm active:scale-[0.98] will-change-transform ${config.btnClass}`}
-                >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>{config.buttonLabel}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </form>
+                  <div>
+                    <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
+                      {isEmailRole ? 'Official Cooperative Email' : 'Phone Number or Email'}
+                    </label>
+                    <div className="relative">
+                      {isEmailRole ? (
+                        <Mail className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      ) : (
+                        <Phone className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      )}
+                      <input
+                        type={isEmailRole ? 'email' : 'text'}
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        className={`w-full pl-10 pr-4 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm font-medium text-[#292824] focus:outline-none focus:ring-2 shadow-subtle transition-all ${config.focusRing}`}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-[#524E47] uppercase tracking-wider">
+                        Password
+                      </label>
+                      <span className="text-[11px] text-[#9A958B]">
+                        Pre-filled in demo
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className={`w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 shadow-subtle transition-all ${config.focusRing}`}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] transition-colors p-0.5 cursor-pointer"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Magnetic Submit Button */}
+                  <button
+                    ref={btnRef}
+                    onPointerMove={onBtnMove}
+                    onPointerLeave={onBtnLeave}
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer shadow-sm active:scale-[0.98] will-change-transform ${config.btnClass}`}
+                  >
+                    {isLoading ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <span>{config.buttonLabel}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
             </>
           )}
         </div>

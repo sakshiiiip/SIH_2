@@ -68,6 +68,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const getRoleLabel = () => {
     switch (currentRole) {
+      case 'platform_admin':
+        return 'Platform Admin';
       case 'worker':
         return 'Worker';
       case 'society_manager':
@@ -82,6 +84,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const getRoleBadgeVariant = () => {
     switch (currentRole) {
+      case 'platform_admin':
+        return 'bg-[#141413] text-purple-200 border-[#2A2926]';
       case 'worker':
         return 'bg-[#E4EDF4] text-[#263D50] border-[#CDE0EC]';
       case 'society_manager':
@@ -95,7 +99,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const handleHomeClick = () => {
-    if (currentRole === 'worker') onSelectTab('worker_dashboard');
+    if (currentRole === 'platform_admin') onSelectTab('plat_dashboard');
+    else if (currentRole === 'worker') onSelectTab('worker_dashboard');
     else if (currentRole === 'society_manager') onSelectTab('soc_dashboard');
     else if (currentRole === 'federation_admin' || currentRole === 'federation_manager') onSelectTab('fed_dashboard');
     else onSelectTab('home');
@@ -385,6 +390,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   )}
                 </div>
+              </>
+            )}
+
+            {/* 5. PLATFORM ADMIN TABS: Portal only (Reviews submitted applications) */}
+            {currentRole === 'platform_admin' && (
+              <>
+                <button
+                  onClick={() => onSelectTab('plat_dashboard')}
+                  className={`px-3 py-1.5 rounded-xl transition-colors cursor-pointer ${
+                    currentTab === 'plat_dashboard'
+                      ? 'text-purple-900 bg-purple-100 font-bold'
+                      : 'hover:text-[#292824] hover:bg-[#F3EEE4]'
+                  }`}
+                >
+                  Central Authority
+                </button>
               </>
             )}
           </nav>

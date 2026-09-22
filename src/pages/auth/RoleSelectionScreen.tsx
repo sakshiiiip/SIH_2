@@ -162,8 +162,8 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
               </span>
             </div>
 
-            {/* 3 Services Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            {/* 4 Services Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
               {/* WORKER CARD */}
               <div
                 onClick={() => onSelectRoleForAuth('worker')}
@@ -246,7 +246,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                       Federation Manager
                     </h3>
                     <p className="text-xs text-[#77736B] mt-1 leading-relaxed font-normal">
-                      Coordinate 8 member societies, govern multi-society managers, calibrate matching preferences, and oversee the 25% fund.
+                      Coordinate member societies, govern multi-society managers, calibrate matching preferences, and oversee the 25% fund.
                     </p>
                   </div>
                 </div>
@@ -254,6 +254,37 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                 <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#504161]">Login as Federation</span>
                   <ArrowRight className="w-4 h-4 text-[#504161] group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </div>
+
+              {/* PLATFORM ADMIN CARD */}
+              <div
+                onClick={() => onSelectRoleForAuth('platform_admin')}
+                className="group p-5 bg-[#FCF9F3] hover:bg-[#F3EEE4] border-2 border-[#E8E2D5] hover:border-[#3D314C] rounded-3xl shadow-card hover:shadow-card-hover transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 active:scale-[0.98]"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-2xl bg-[#141413] text-purple-300 border border-[#2A2926] flex items-center justify-center shadow-xs">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#141413] text-purple-200 border border-[#2A2926]">
+                      Central Authority
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-[#292824] group-hover:text-[#141413] tracking-tight">
+                      Platform Admin
+                    </h3>
+                    <p className="text-xs text-[#77736B] mt-1 leading-relaxed font-normal">
+                      Accredit and verify apex federations, audit statutory registration documents, and govern platform policies.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
+                  <span className="text-xs font-semibold text-purple-950 font-bold">Login as Authority</span>
+                  <ArrowRight className="w-4 h-4 text-purple-900 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
             </div>

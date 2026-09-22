@@ -42,6 +42,8 @@ import { WorkerJobDetails } from './pages/worker/WorkerJobDetails';
 
 import { SocietyManagerDashboard } from './pages/admin/SocietyManagerDashboard';
 import { FederationManagerDashboard } from './pages/admin/FederationManagerDashboard';
+import { PlatformAdminDashboard } from './pages/admin/PlatformAdminDashboard';
+import { FederationRegistrationPage } from './pages/admin/FederationRegistrationPage';
 import { AdminWorkerVerification } from './pages/admin/AdminWorkerVerification';
 import { AdminMatchingEngine } from './pages/admin/AdminMatchingEngine';
 import { AdminQualityControl } from './pages/admin/AdminQualityControl';
@@ -71,6 +73,9 @@ function AppContent() {
   // Sync tab defaults when role changes
   useEffect(() => {
     switch (currentRole) {
+      case 'platform_admin':
+        setCurrentTab('plat_dashboard');
+        break;
       case 'worker':
         setCurrentTab('worker_dashboard');
         break;
@@ -309,6 +314,17 @@ function AppContent() {
             {currentTab === 'fed_matching' && <AdminMatchingEngine />}
             {currentTab === 'fed_analytics' && <AdminAnalytics />}
             {currentTab === 'community' && <CommunityBookingsPage />}
+          </>
+        )}
+
+        {/* ROLE 5: PLATFORM CENTRAL AUTHORITY VIEWS */}
+        {currentRole === 'platform_admin' && (
+          <>
+            {(currentTab === 'plat_dashboard' || currentTab === 'home') && (
+              <PlatformAdminDashboard />
+            )}
+            {currentTab === 'plat_analytics' && <AdminAnalytics />}
+            {currentTab === 'plat_weights' && <AdminMatchingEngine />}
           </>
         )}
       </main>

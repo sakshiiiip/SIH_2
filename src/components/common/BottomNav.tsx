@@ -189,7 +189,26 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     );
   }
 
-  // 4. FEDERATION ADMIN MOBILE NAVIGATION: Home, Societies, Analytics, Fund
+  // 4. PLATFORM ADMIN MOBILE NAVIGATION: Authority Portal
+  if (currentRole === 'platform_admin') {
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[#141413]/95 backdrop-blur-md border-t border-[#2A2926] shadow-float safe-bottom text-white">
+        <div className="flex items-center justify-around px-2 h-16 max-w-lg mx-auto">
+          <button
+            onClick={() => onSelectTab('plat_dashboard')}
+            className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
+              currentTab === 'plat_dashboard' ? 'text-purple-300 font-bold' : 'text-[#77736B] hover:text-white'
+            }`}
+          >
+            <ShieldAlert className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px]">Central Authority</span>
+          </button>
+        </div>
+      </nav>
+    );
+  }
+
+  // 5. FEDERATION ADMIN MOBILE NAVIGATION: Home, Societies, Registration, Fund
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[#FCF9F3]/95 backdrop-blur-md border-t border-[#E8E2D5] shadow-float safe-bottom">
       <div className="flex items-center justify-around px-2 h-16 max-w-lg mx-auto">

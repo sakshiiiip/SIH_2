@@ -3,7 +3,8 @@ export type UserRole =
   | 'worker'
   | 'society_manager'
   | 'federation_admin'
-  | 'federation_manager';
+  | 'federation_manager'
+  | 'platform_admin';
 
 export interface User {
   id: string;
@@ -392,7 +393,7 @@ export interface WorkerEmergencyAidRequest {
 
 export interface NotificationItem {
   id: string;
-  recipientRole: 'customer' | 'worker' | 'society_manager' | 'federation_manager' | 'all';
+  recipientRole: 'customer' | 'worker' | 'society_manager' | 'federation_manager' | 'federation_admin' | 'platform_admin' | 'all';
   title: string;
   message: string;
   timestamp: string;
@@ -451,6 +452,83 @@ export interface SocietyData {
   registrationDocUrl?: string;
 }
 
+export type FederationApplicationStatus =
+  | 'PENDING_VERIFICATION'
+  | 'CHANGES_REQUIRED'
+  | 'APPROVED'
+  | 'REJECTED';
+
+export type FederationAuthorizedDesignation =
+  | 'Federation Manager'
+  | 'President'
+  | 'Secretary'
+  | 'CEO / Chief Executive'
+  | 'Chief Operating Officer'
+  | 'Director'
+  | 'Other';
+
+export interface FederationDocumentItem {
+  id: string;
+  documentType: 'registration_certificate' | 'authorization_letter' | 'bye_laws' | 'address_proof' | 'other';
+  title: string;
+  fileName: string;
+  fileUrl?: string;
+  fileSize?: string;
+  uploadedAt: string;
+  status?: 'PENDING' | 'UPLOADED' | 'VERIFIED' | 'NEEDS_CORRECTION' | 'REJECTED';
+}
+
+export interface DeclaredSocietyItem {
+  id: string;
+  name: string;
+  code?: string;
+  district?: string;
+  pincode?: string;
+  totalHouseholds?: number;
+  isVerifiedByManager?: boolean;
+}
+
+export interface FederationApplication {
+  id: string;
+  federationId?: string;
+  // A. Federation Basic Details
+  federationName: string;
+  federationType: string;
+  registrationNumber: string;
+  registrationDate: string;
+  state: string;
+  district: string;
+  fullAddress: string;
+  officialEmail: string;
+  officialPhone: string;
+  website?: string;
+  // B. Authorized Person Details
+  authorizedPersonName: string;
+  authorizedPersonDesignation: FederationAuthorizedDesignation;
+  authorizedPersonEmail: string;
+  authorizedPersonPhone: string;
+  authorizedPersonIdType: string;
+  authorizedPersonIdNumber?: string;
+  // C. Federation Documents
+  documents: FederationDocumentItem[];
+  // D. Federation Structure
+  societiesCount: number;
+  declaredSocieties: DeclaredSocietyItem[];
+  // E. Services / Areas
+  selectedServices: string[];
+  // Status & Timestamps
+  status: FederationApplicationStatus;
+  operatingStatus: 'ACTIVE' | 'INACTIVE' | 'PENDING';
+  submittedAt: string;
+  updatedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  rejectionReason?: string;
+  changeRequestReason?: string;
+  adminNotes?: string;
+  applicantUserId?: string;
+}
+
 export interface FederationData {
   id: string;
   name: string;
@@ -466,6 +544,26 @@ export interface FederationData {
   adminPhone?: string;
   adminEmail?: string;
   adminAvatar?: string;
+  applicationId?: string;
+  verificationStatus?: FederationApplicationStatus;
+  operatingStatus?: 'ACTIVE' | 'INACTIVE' | 'PENDING';
+  federationType?: string;
+  registrationNumber?: string;
+  state?: string;
+  district?: string;
+  fullAddress?: string;
+  officialEmail?: string;
+  officialPhone?: string;
+  website?: string;
+  authorizedPersonName?: string;
+  authorizedPersonDesignation?: FederationAuthorizedDesignation;
+  authorizedPersonEmail?: string;
+  authorizedPersonPhone?: string;
+  selectedServices?: string[];
+  documents?: FederationDocumentItem[];
+  declaredSocieties?: DeclaredSocietyItem[];
+  verifiedAt?: string;
+  verifiedBy?: string;
 }
 
 export interface PlatformSystemMetrics {
@@ -473,6 +571,8 @@ export interface PlatformSystemMetrics {
   totalWorkers: number;
   totalSocieties: number;
   totalFederations: number;
+  pendingFederationApplications: number;
+  approvedFederations: number;
   allTimeGMV: number;
   platformUptimePercent: number;
   activeSessions: number;
@@ -495,6 +595,12 @@ export type ManagerActionType =
   | 'FEDERATION_APPROVE'
   | 'FEDERATION_REJECT'
   | 'SOCIETY_AUDIT'
+  | 'FEDERATION_APPLY'
+  | 'FEDERATION_APP_UPDATE'
+  | 'FEDERATION_APP_RESUBMIT'
+  | 'FEDERATION_CHANGES_REQUESTED'
+  | 'FEDERATION_APPROVED'
+  | 'FEDERATION_APPLICATION_REJECTED'
   | 'WEIGHTS_CONFIG'
   | 'REVENUE_SPLIT_CONFIG'
   | 'FUND_ALLOCATION'
@@ -513,6 +619,8 @@ export interface PlatformAuditLog {
   workerName?: string;
   societyId?: string;
   societyName?: string;
+  federationId?: string;
+  federationName?: string;
   managerId?: string;
   managerName?: string;
   previousStatus?: string;
@@ -521,5 +629,7 @@ export interface PlatformAuditLog {
   notes?: string;
   skillName?: string;
   bookingId?: string;
+  applicationId?: string;
 }
+
 
