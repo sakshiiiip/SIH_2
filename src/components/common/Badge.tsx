@@ -8,7 +8,9 @@ export type BadgeVariant =
   | 'neutral'
   | 'urgent'
   | 'completed'
-  | 'danger';
+  | 'danger'
+  | 'success'
+  | 'warning';
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -27,7 +29,9 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const variantStyles = {
     verified: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]',
+    success: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]',
     pending: 'bg-[#FAEDE8] text-[#643222] border-[#F4DCD3]',
+    warning: 'bg-[#FFF8E6] text-[#855B00] border-[#FFE2A3]',
     urgent: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]',
     emergency: 'bg-[#FAEBEB] text-[#632727] border-[#F4D7D7] font-semibold',
     coop: 'bg-[#EFEBF4] text-[#3D314C] border-[#DFD8E8] font-medium',
@@ -38,7 +42,9 @@ export const Badge: React.FC<BadgeProps> = ({
 
   const dotColors = {
     verified: 'bg-[#6E8B67]',
+    success: 'bg-[#6E8B67]',
     pending: 'bg-[#B37055]',
+    warning: 'bg-[#D99B00]',
     urgent: 'bg-[#B37055]',
     emergency: 'bg-[#B86B6B] animate-pulse',
     coop: 'bg-[#7A6A8E]',

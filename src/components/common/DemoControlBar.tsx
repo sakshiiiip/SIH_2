@@ -16,6 +16,8 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
 
   const getRoleIcon = () => {
     switch (currentRole) {
+      case 'platform_admin':
+        return <ShieldCheck className="w-3.5 h-3.5 text-purple-300" />;
       case 'worker':
         return <HardHat className="w-3.5 h-3.5 text-[#B8CBDD]" />;
       case 'society_manager':
@@ -30,6 +32,8 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
 
   const getRoleLabel = () => {
     switch (currentRole) {
+      case 'platform_admin':
+        return 'Platform Admin';
       case 'worker':
         return 'Worker';
       case 'society_manager':

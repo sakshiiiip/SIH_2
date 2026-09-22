@@ -20,6 +20,10 @@ import {
   SocietyData,
   SocietyManagerInfo,
   FederationData,
+  FederationApplication,
+  FederationApplicationStatus,
+  FederationDocumentItem,
+  DeclaredSocietyItem,
   PlatformSystemMetrics,
   PlatformAuditLog,
   CommunityChannel,
@@ -41,6 +45,7 @@ import {
   INITIAL_SOCIETIES,
   INITIAL_SOCIETY_MANAGERS,
   INITIAL_FEDERATIONS,
+  INITIAL_FEDERATION_APPLICATIONS,
   INITIAL_PLATFORM_METRICS,
   INITIAL_AUDIT_LOGS,
   INITIAL_COMMUNITY_CHANNELS,
@@ -75,6 +80,7 @@ interface CooperativeStoreContextType {
   societies: SocietyData[];
   societyManagers: SocietyManagerInfo[];
   federations: FederationData[];
+  federationApplications: FederationApplication[];
   platformMetrics: PlatformSystemMetrics;
   auditLogs: PlatformAuditLog[];
   allocateFederationGrant: (federationId: string, societyId: string, amount: number, purpose: string) => void;
@@ -83,6 +89,21 @@ interface CooperativeStoreContextType {
     status: 'VERIFIED' | 'PENDING_AUDIT' | 'SUSPENDED',
     notes?: string
   ) => void;
+  submitFederationApplication: (
+    appData: Omit<FederationApplication, 'id' | 'status' | 'operatingStatus' | 'submittedAt' | 'updatedAt'>
+  ) => FederationApplication;
+  updateFederationApplication: (applicationId: string, updates: Partial<FederationApplication>) => void;
+  resubmitFederationApplication: (applicationId: string, updates: Partial<FederationApplication>) => void;
+  approveFederationApplication: (applicationId: string, notes?: string) => void;
+  requestChangesFederationApplication: (applicationId: string, reason: string, notes?: string) => void;
+  rejectFederationApplication: (applicationId: string, reason: string, notes?: string) => void;
+  reviewFederationDocument: (
+    applicationId: string,
+    docId: string,
+    status: 'VERIFIED' | 'NEEDS_CORRECTION' | 'REJECTED'
+  ) => void;
+  getFederationApplicationById: (applicationId: string) => FederationApplication | undefined;
+  getFederationApplicationByFederationId: (federationId: string) => FederationApplication | undefined;
   addAuditLog: (action: string, details: string, metadata?: Partial<PlatformAuditLog>) => void;
   // Workers & Verification
   workers: Worker[];
@@ -335,6 +356,10 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
     const saved = localStorage.getItem(STORAGE_KEY + '_federations');
     return saved ? JSON.parse(saved) : INITIAL_FEDERATIONS;
   });
+  const [federationApplications, setFederationApplications] = useState<FederationApplication[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY + '_fed_applications');
+    return saved ? JSON.parse(saved) : INITIAL_FEDERATION_APPLICATIONS;
+  });
   const [platformMetrics, setPlatformMetrics] = useState<PlatformSystemMetrics>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_metrics');
     return saved ? JSON.parse(saved) : INITIAL_PLATFORM_METRICS;
@@ -376,12 +401,13 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
       localStorage.setItem(STORAGE_KEY + '_societies', JSON.stringify(societies));
       localStorage.setItem(STORAGE_KEY + '_society_managers', JSON.stringify(societyManagers));
       localStorage.setItem(STORAGE_KEY + '_federations', JSON.stringify(federations));
+      localStorage.setItem(STORAGE_KEY + '_fed_applications', JSON.stringify(federationApplications));
       localStorage.setItem(STORAGE_KEY + '_metrics', JSON.stringify(platformMetrics));
       localStorage.setItem(STORAGE_KEY + '_audit', JSON.stringify(auditLogs));
     } catch (e) {
       console.warn('LocalStorage error:', e);
     }
-  }, [isAuthenticated, currentRole, currentUser, config, workers, bookings, communityBookings, communityChannels, communityMessages, sosTickets, cooperativeFund, emergencyAidRequests, toolBank, notifications, societies, societyManagers, federations, platformMetrics, auditLogs]);
+  }, [isAuthenticated, currentRole, currentUser, config, workers, bookings, communityBookings, communityChannels, communityMessages, sosTickets, cooperativeFund, emergencyAidRequests, toolBank, notifications, societies, societyManagers, federations, federationApplications, platformMetrics, auditLogs]);
 
   // Login handler with optional specific account override
   const login = (role: UserRole, userOverride?: User) => {
@@ -492,6 +518,383 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
       message: `₹${amount} transferred to local society reserve.`,
       type: 'success',
     });
+  };
+
+  const submitFederationApplication = (
+    appData: Omit<FederationApplication, 'id' | 'status' | 'operatingStatus' | 'submittedAt' | 'updatedAt'>
+  ): FederationApplication => {
+    const newId = `FED-APP-${Date.now().toString().slice(-4)}-${Math.floor(10 + Math.random() * 90)}`;
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const newApplication: FederationApplication = {
+      ...appData,
+      id: newId,
+      status: 'PENDING_VERIFICATION',
+      operatingStatus: 'PENDING',
+      submittedAt: now,
+      updatedAt: now,
+      documents: appData.documents || [],
+      declaredSocieties: appData.declaredSocieties || [],
+      selectedServices: appData.selectedServices || [],
+      societiesCount: appData.declaredSocieties?.length || appData.societiesCount || 0,
+    };
+
+    setFederationApplications((prev) => [newApplication, ...prev]);
+    setPlatformMetrics((prev) => ({
+      ...prev,
+      pendingFederationApplications: (prev.pendingFederationApplications || 0) + 1,
+    }));
+
+    addAuditLog('FEDERATION_APPLY', `New Federation application submitted: "${newApplication.federationName}" (Reg: ${newApplication.registrationNumber})`, {
+      actionType: 'FEDERATION_APPLY',
+      applicationId: newId,
+      federationName: newApplication.federationName,
+    });
+
+    addNotification({
+      recipientRole: 'platform_admin',
+      title: 'New Federation Application',
+      message: `${newApplication.federationName} submitted registration for Platform Admin review.`,
+      type: 'info',
+    });
+
+    showToast({
+      title: 'Application Submitted',
+      message: `Federation registration application (${newId}) submitted for Platform Admin review.`,
+      type: 'success',
+    });
+
+    return newApplication;
+  };
+
+  const updateFederationApplication = (
+    applicationId: string,
+    updates: Partial<FederationApplication>
+  ) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    setFederationApplications((prev) =>
+      prev.map((app) =>
+        app.id === applicationId
+          ? {
+              ...app,
+              ...updates,
+              updatedAt: now,
+            }
+          : app
+      )
+    );
+
+    addAuditLog('FEDERATION_APP_UPDATE', `Updated application details for #${applicationId}`, {
+      actionType: 'FEDERATION_APP_UPDATE',
+      applicationId,
+    });
+
+    showToast({
+      title: 'Application Updated',
+      message: 'Federation details have been saved.',
+      type: 'info',
+    });
+  };
+
+  const resubmitFederationApplication = (
+    applicationId: string,
+    updates: Partial<FederationApplication>
+  ) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    let appName = '';
+    setFederationApplications((prev) =>
+      prev.map((app) => {
+        if (app.id === applicationId) {
+          appName = app.federationName;
+          const wasPending = app.status === 'PENDING_VERIFICATION';
+          if (!wasPending) {
+            setPlatformMetrics((m) => ({
+              ...m,
+              pendingFederationApplications: (m.pendingFederationApplications || 0) + 1,
+            }));
+          }
+          const updatedDocs = (updates.documents || app.documents || []).map((doc) => ({
+            ...doc,
+            status: doc.status === 'NEEDS_CORRECTION' ? ('UPLOADED' as const) : doc.status,
+          }));
+
+          return {
+            ...app,
+            ...updates,
+            documents: updatedDocs,
+            status: 'PENDING_VERIFICATION' as const,
+            operatingStatus: 'PENDING' as const,
+            updatedAt: now,
+          };
+        }
+        return app;
+      })
+    );
+
+    addAuditLog('FEDERATION_APP_RESUBMIT', `Application #${applicationId} resubmitted for Platform Admin verification`, {
+      actionType: 'FEDERATION_APP_RESUBMIT',
+      applicationId,
+      federationName: appName,
+    });
+
+    addNotification({
+      recipientRole: 'platform_admin',
+      title: 'Application Resubmitted',
+      message: `${appName || applicationId} has updated documents and resubmitted for verification.`,
+      type: 'info',
+    });
+
+    showToast({
+      title: 'Application Resubmitted',
+      message: 'Your revised federation registration has been sent for Platform Admin verification.',
+      type: 'success',
+    });
+  };
+
+  const approveFederationApplication = (applicationId: string, notes?: string) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const targetApp = federationApplications.find((a) => a.id === applicationId);
+    if (!targetApp) return;
+
+    const fedId = targetApp.federationId || `fed_${targetApp.id.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+    setFederationApplications((prev) =>
+      prev.map((app) =>
+        app.id === applicationId
+          ? {
+              ...app,
+              federationId: fedId,
+              status: 'APPROVED',
+              operatingStatus: 'ACTIVE',
+              reviewedAt: now,
+              reviewedBy: currentUser.name,
+              adminNotes: notes || app.adminNotes,
+              updatedAt: now,
+            }
+          : app
+      )
+    );
+
+    setFederations((prev) => {
+      const existingIdx = prev.findIndex((f) => f.id === fedId || f.id === targetApp.federationId || f.applicationId === applicationId);
+      const fedEntry: FederationData = {
+        id: fedId,
+        name: targetApp.federationName,
+        region: `${targetApp.state} (${targetApp.district})`,
+        totalSocieties: targetApp.declaredSocieties?.length || targetApp.societiesCount || 0,
+        totalWorkers: prev[existingIdx]?.totalWorkers || 0,
+        monthlyGMV: prev[existingIdx]?.monthlyGMV || 0,
+        federationReliefFund: prev[existingIdx]?.federationReliefFund || 0,
+        crossSocietyRequests: prev[existingIdx]?.crossSocietyRequests || 0,
+        leadCoordinator: targetApp.authorizedPersonName,
+        adminName: targetApp.authorizedPersonName,
+        adminEmail: targetApp.authorizedPersonEmail,
+        adminPhone: targetApp.authorizedPersonPhone,
+        applicationId: targetApp.id,
+        verificationStatus: 'APPROVED',
+        operatingStatus: 'ACTIVE',
+        federationType: targetApp.federationType,
+        registrationNumber: targetApp.registrationNumber,
+        state: targetApp.state,
+        district: targetApp.district,
+        fullAddress: targetApp.fullAddress,
+        officialEmail: targetApp.officialEmail,
+        officialPhone: targetApp.officialPhone,
+        website: targetApp.website,
+        authorizedPersonName: targetApp.authorizedPersonName,
+        authorizedPersonDesignation: targetApp.authorizedPersonDesignation,
+        authorizedPersonEmail: targetApp.authorizedPersonEmail,
+        authorizedPersonPhone: targetApp.authorizedPersonPhone,
+        selectedServices: targetApp.selectedServices,
+        documents: targetApp.documents,
+        declaredSocieties: targetApp.declaredSocieties,
+        verifiedAt: now,
+        verifiedBy: currentUser.name,
+      };
+
+      if (existingIdx >= 0) {
+        const next = [...prev];
+        next[existingIdx] = { ...next[existingIdx], ...fedEntry };
+        return next;
+      } else {
+        return [...prev, fedEntry];
+      }
+    });
+
+    setPlatformMetrics((prev) => ({
+      ...prev,
+      pendingFederationApplications: Math.max(0, (prev.pendingFederationApplications || 1) - 1),
+      approvedFederations: (prev.approvedFederations || 0) + 1,
+      totalFederations: prev.totalFederations + 1,
+    }));
+
+    addAuditLog('FEDERATION_APPROVED', `Approved Federation registration for "${targetApp.federationName}" (Reg: ${targetApp.registrationNumber})`, {
+      actionType: 'FEDERATION_APPROVED',
+      applicationId,
+      federationId: fedId,
+      federationName: targetApp.federationName,
+      notes,
+    });
+
+    addNotification({
+      recipientRole: 'federation_admin',
+      title: '🎉 Federation Registration Approved!',
+      message: `Congratulations! ${targetApp.federationName} has been officially accredited by the Platform Central Authority.`,
+      type: 'success',
+    });
+
+    showToast({
+      title: 'Federation Approved',
+      message: `"${targetApp.federationName}" is now an Accredited Apex Federation on the platform.`,
+      type: 'success',
+    });
+  };
+
+  const requestChangesFederationApplication = (
+    applicationId: string,
+    reason: string,
+    notes?: string
+  ) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const targetApp = federationApplications.find((a) => a.id === applicationId);
+    if (!targetApp) return;
+
+    setFederationApplications((prev) =>
+      prev.map((app) =>
+        app.id === applicationId
+          ? {
+              ...app,
+              status: 'CHANGES_REQUIRED',
+              operatingStatus: 'PENDING',
+              changeRequestReason: reason,
+              adminNotes: notes || app.adminNotes,
+              reviewedAt: now,
+              reviewedBy: currentUser.name,
+              updatedAt: now,
+            }
+          : app
+      )
+    );
+
+    setPlatformMetrics((prev) => ({
+      ...prev,
+      pendingFederationApplications: Math.max(0, (prev.pendingFederationApplications || 1) - 1),
+    }));
+
+    addAuditLog('FEDERATION_CHANGES_REQUESTED', `Requested revisions for Federation "${targetApp.federationName}": ${reason}`, {
+      actionType: 'FEDERATION_CHANGES_REQUESTED',
+      applicationId,
+      federationName: targetApp.federationName,
+      reason,
+      notes,
+    });
+
+    addNotification({
+      recipientRole: 'federation_admin',
+      title: 'Revisions Requested for Federation Application',
+      message: `Platform Admin has requested changes for ${targetApp.federationName}: ${reason}`,
+      type: 'warning',
+    });
+
+    showToast({
+      title: 'Changes Requested',
+      message: `Sent change request to ${targetApp.authorizedPersonName}.`,
+      type: 'warning',
+    });
+  };
+
+  const rejectFederationApplication = (
+    applicationId: string,
+    reason: string,
+    notes?: string
+  ) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const targetApp = federationApplications.find((a) => a.id === applicationId);
+    if (!targetApp) return;
+
+    setFederationApplications((prev) =>
+      prev.map((app) =>
+        app.id === applicationId
+          ? {
+              ...app,
+              status: 'REJECTED',
+              operatingStatus: 'INACTIVE',
+              rejectionReason: reason,
+              adminNotes: notes || app.adminNotes,
+              reviewedAt: now,
+              reviewedBy: currentUser.name,
+              updatedAt: now,
+            }
+          : app
+      )
+    );
+
+    if (targetApp.federationId) {
+      setFederations((prev) =>
+        prev.map((f) =>
+          f.id === targetApp.federationId
+            ? { ...f, verificationStatus: 'REJECTED', operatingStatus: 'INACTIVE' }
+            : f
+        )
+      );
+    }
+
+    setPlatformMetrics((prev) => ({
+      ...prev,
+      pendingFederationApplications: Math.max(0, (prev.pendingFederationApplications || 1) - 1),
+    }));
+
+    addAuditLog('FEDERATION_APPLICATION_REJECTED', `Rejected Federation application for "${targetApp.federationName}": ${reason}`, {
+      actionType: 'FEDERATION_APPLICATION_REJECTED',
+      applicationId,
+      federationName: targetApp.federationName,
+      reason,
+      notes,
+    });
+
+    addNotification({
+      recipientRole: 'federation_admin',
+      title: 'Federation Application Rejected',
+      message: `Application for ${targetApp.federationName} was rejected: ${reason}`,
+      type: 'emergency',
+    });
+
+    showToast({
+      title: 'Application Rejected',
+      message: `Registration for "${targetApp.federationName}" has been rejected.`,
+      type: 'emergency',
+    });
+  };
+
+  const reviewFederationDocument = (
+    applicationId: string,
+    docId: string,
+    status: 'VERIFIED' | 'NEEDS_CORRECTION' | 'REJECTED'
+  ) => {
+    setFederationApplications((prev) =>
+      prev.map((app) => {
+        if (app.id === applicationId) {
+          const updatedDocs = (app.documents || []).map((d) =>
+            d.id === docId ? { ...d, status } : d
+          );
+          return { ...app, documents: updatedDocs };
+        }
+        return app;
+      })
+    );
+
+    showToast({
+      title: 'Document Status Updated',
+      message: `Federation document marked as ${status}.`,
+      type: 'info',
+    });
+  };
+
+  const getFederationApplicationById = (applicationId: string): FederationApplication | undefined => {
+    return federationApplications.find((a) => a.id === applicationId);
+  };
+
+  const getFederationApplicationByFederationId = (federationId: string): FederationApplication | undefined => {
+    return federationApplications.find((a) => a.federationId === federationId);
   };
 
   // Notification helper
@@ -2562,6 +2965,7 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
     setSocieties(INITIAL_SOCIETIES);
     setSocietyManagers(INITIAL_SOCIETY_MANAGERS);
     setFederations(INITIAL_FEDERATIONS);
+    setFederationApplications(INITIAL_FEDERATION_APPLICATIONS);
     setPlatformMetrics(INITIAL_PLATFORM_METRICS);
     setAuditLogs(INITIAL_AUDIT_LOGS);
     setCurrentRole('customer');
@@ -2590,10 +2994,20 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
         societies,
         societyManagers,
         federations,
+        federationApplications,
         platformMetrics,
         auditLogs,
         allocateFederationGrant,
         updateCooperativeVerification,
+        submitFederationApplication,
+        updateFederationApplication,
+        resubmitFederationApplication,
+        approveFederationApplication,
+        requestChangesFederationApplication,
+        rejectFederationApplication,
+        reviewFederationDocument,
+        getFederationApplicationById,
+        getFederationApplicationByFederationId,
         addAuditLog,
         workers,
         updateWorkerVerification,
