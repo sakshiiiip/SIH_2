@@ -72,7 +72,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
 
   const [matchingWeights, setMatchingWeights] = useState(config.matchingWeights);
   const [activeSubTab, setActiveSubTab] = useState<
-    'overview' | 'manager_activity' | 'worker_verification' | 'worker_directory' | 'societies' | 'job_verification' | 'tool_bank' | 'coop_fund' | 'matching'
+    'overview' | 'manager_activity' | 'worker_verification' | 'worker_directory' | 'societies' | 'accreditation' | 'job_verification' | 'tool_bank' | 'coop_fund' | 'matching'
   >('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [selectedSocietyForDrilldown, setSelectedSocietyForDrilldown] = useState<SocietyData | null>(null);
