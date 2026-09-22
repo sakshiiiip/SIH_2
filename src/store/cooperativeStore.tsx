@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react';
+import type { ReactNode } from 'react';
 import {
   User,
   UserRole,
@@ -120,11 +121,13 @@ interface CooperativeStoreContextType {
   updateBookingState: (bookingId: string, newState: BookingState) => void;
   verifyBookingOTP: (bookingId: string, enteredOtp: string) => boolean;
   verifyOTPAndStartJob: (bookingId: string, enteredOtp: string) => boolean;
-  completeBooking: (bookingId: string, notes?: string, photos?: string[]) => void;
-  /** Worker takes a break — moves booking state to WORKER_ON_BREAK */
-  startWorkerBreak: (bookingId: string, durationMins: number, reason?: string) => void;
-  /** Worker resumes — moves booking state back to IN_PROGRESS */
-  endWorkerBreak: (bookingId: string) => void;
+  completeBooking: (
+    bookingId: string,
+    notes?: string,
+    photos?: string[],
+    summary?: string,
+    evidenceImages?: string[]
+  ) => void;
   /** Worker takes a break — moves booking state to WORKER_ON_BREAK */
   startWorkerBreak: (bookingId: string, durationMins: number, reason?: string) => void;
   /** Worker resumes — moves booking state back to IN_PROGRESS */
@@ -210,7 +213,7 @@ interface CooperativeStoreContextType {
 
 const CooperativeStoreContext = createContext<CooperativeStoreContextType | null>(null);
 
-export function CooperativeStoreProvider({ children }: { children: React.ReactNode }) {
+export function CooperativeStoreProvider({ children }: { children: ReactNode }) {
   // Authentication & Role Session
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     const savedRole = localStorage.getItem(STORAGE_KEY + '_role') as UserRole;
@@ -1618,122 +1621,25 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
     });
   };
 
-  // WORKER BREAK MANAGEMENT
-  const startWorkerBreak = (
-    bookingId: string,
-    durationMins: number,
-    reason?: string,
-  ) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'WORKER_ON_BREAK' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: {
-                startedAt: new Date().toISOString(),
-                estimatedDurationMins: durationMins,
-                reason,
-              },
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker is on a Short Break',
-      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-  };
-
-  const endWorkerBreak = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'IN_PROGRESS' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: undefined,
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker Resumed Work',
-      message: 'Your specialist has resumed work. Service is back in progress.',
-      type: 'success',
-      relatedBookingId: bookingId,
-    });
-  };
-
-  // WORKER BREAK MANAGEMENT
-  const startWorkerBreak = (
-    bookingId: string,
-    durationMins: number,
-    reason?: string,
-  ) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'WORKER_ON_BREAK' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: {
-                startedAt: new Date().toISOString(),
-                estimatedDurationMins: durationMins,
-                reason,
-              },
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker is on a Short Break',
-      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-  };
-
-  const endWorkerBreak = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'IN_PROGRESS' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: undefined,
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker Resumed Work',
-      message: 'Your specialist has resumed work. Service is back in progress.',
-      type: 'success',
-      relatedBookingId: bookingId,
-    });
-  };
-
   // COMPLETE BOOKING — transitions to AWAITING_VERIFICATION for manager sign-off
-  const completeBooking = (bookingId: string, notes?: string, photos?: string[]) => {
+  const completeBooking = (
+    bookingId: string,
+    notes?: string,
+    photos?: string[],
+    summary?: string,
+    evidenceImages?: string[]
+  ) => {
+    // Prefer the before/after evidence images when provided
+    const proofPhotos = evidenceImages && evidenceImages.length > 0 ? evidenceImages : photos;
+
     setBookings((prev) =>
       prev.map((b) => {
         if (b.id === bookingId) {
           return {
             ...b,
             state: 'AWAITING_VERIFICATION' as const,
-            notes: notes || b.notes,
-            workPhotos: photos || b.workPhotos,
+            notes: notes || summary || b.notes,
+            workPhotos: proofPhotos && proofPhotos.length > 0 ? proofPhotos : b.workPhotos,
             completedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           };
@@ -2714,8 +2620,6 @@ export function CooperativeStoreProvider({ children }: { children: React.ReactNo
         verifyBookingOTP,
         verifyOTPAndStartJob,
         completeBooking,
-        startWorkerBreak,
-        endWorkerBreak,
         startWorkerBreak,
         endWorkerBreak,
         uploadJobPhotos,
