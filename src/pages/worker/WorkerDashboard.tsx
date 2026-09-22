@@ -28,6 +28,7 @@ import {
   Crosshair,
   Radio,
   Navigation,
+  DollarSign,
 } from 'lucide-react';
 
 interface WorkerDashboardProps {
