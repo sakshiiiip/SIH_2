@@ -2017,6 +2017,11 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
           : b,
       ),
     );
+    
+
+  
+
+  
     addNotification({
       recipientRole: 'customer',
       title: 'Worker Resumed Work',
@@ -2026,217 +2031,12 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
     });
   };
 
-  // WORKER BREAK MANAGEMENT
-  const startWorkerBreak = (
-    bookingId: string,
-    durationMins: number,
-    reason?: string,
-  ) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'WORKER_ON_BREAK' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: {
-                startedAt: new Date().toISOString(),
-                estimatedDurationMins: durationMins,
-                reason,
-              },
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker is on a Short Break',
-      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-  };
+  
 
-  const endWorkerBreak = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'IN_PROGRESS' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: undefined,
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker Resumed Work',
-      message: 'Your specialist has resumed work. Service is back in progress.',
-      type: 'success',
-      relatedBookingId: bookingId,
-    });
-  };
+  
+    
 
-  // WORKER BREAK MANAGEMENT
-  const startWorkerBreak = (
-    bookingId: string,
-    durationMins: number,
-    reason?: string,
-  ) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'WORKER_ON_BREAK' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: {
-                startedAt: new Date().toISOString(),
-                estimatedDurationMins: durationMins,
-                reason,
-              },
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker is on a Short Break',
-      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-  };
-
-  const endWorkerBreak = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'IN_PROGRESS' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: undefined,
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker Resumed Work',
-      message: 'Your specialist has resumed work. Service is back in progress.',
-      type: 'success',
-      relatedBookingId: bookingId,
-    });
-  };
-
-  // WORKER BREAK MANAGEMENT
-  const startWorkerBreak = (
-    bookingId: string,
-    durationMins: number,
-    reason?: string,
-  ) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'WORKER_ON_BREAK' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: {
-                startedAt: new Date().toISOString(),
-                estimatedDurationMins: durationMins,
-                reason,
-              },
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker is on a Short Break',
-      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-  };
-
-  const endWorkerBreak = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'IN_PROGRESS' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: undefined,
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker Resumed Work',
-      message: 'Your specialist has resumed work. Service is back in progress.',
-      type: 'success',
-      relatedBookingId: bookingId,
-    });
-  };
-
-  // WORKER BREAK MANAGEMENT
-  const startWorkerBreak = (
-    bookingId: string,
-    durationMins: number,
-    reason?: string,
-  ) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'WORKER_ON_BREAK' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: {
-                startedAt: new Date().toISOString(),
-                estimatedDurationMins: durationMins,
-                reason,
-              },
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker is on a Short Break',
-      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
-      type: 'info',
-      relatedBookingId: bookingId,
-    });
-  };
-
-  const endWorkerBreak = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? {
-              ...b,
-              state: 'IN_PROGRESS' as BookingState,
-              updatedAt: new Date().toISOString(),
-              breakDetails: undefined,
-            }
-          : b,
-      ),
-    );
-    addNotification({
-      recipientRole: 'customer',
-      title: 'Worker Resumed Work',
-      message: 'Your specialist has resumed work. Service is back in progress.',
-      type: 'success',
-      relatedBookingId: bookingId,
-    });
-  };
+  
 
   // COMPLETE BOOKING — transitions to AWAITING_VERIFICATION for manager sign-off
   const completeBooking = (
