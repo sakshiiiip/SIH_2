@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { CooperativeMap } from './Map/CooperativeMap';
 import { Modal } from './Modal';
@@ -31,6 +32,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
   onClose,
   onLocationConfirmed,
 }) => {
+  const { t } = useTranslation();
   const {
     currentCoordinates,
     currentAddress,
@@ -98,9 +100,9 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
     const result = await requestLocationPermission('Find verified cooperative workers in your exact society sector.');
     if (!result) {
       if (permissionStatus === 'denied') {
-        setPermissionAlert('Location permission is disabled in your browser. You can select your address from the search bar or move the pin on the map.');
+        setPermissionAlert(t('location.permissionDenied', { defaultValue: 'Location permission is disabled in your browser. You can select your address from the search bar or move the pin on the map.' }));
       } else {
-        setPermissionAlert('Unable to acquire exact GPS satellite fix. Using approximate sector location.');
+        setPermissionAlert(t('location.satelliteFailed', { defaultValue: 'Unable to acquire exact GPS satellite fix. Using approximate sector location.' }));
       }
     } else {
       setTempLat(currentCoordinates.latitude);
@@ -152,8 +154,8 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Choose Service Location"
-      subtitle="Find stationed specialists and calculate exact arrival distance"
+      title={t('location.chooseTitle', { defaultValue: 'Choose Service Location' })}
+      subtitle={t('location.chooseSubtitle', { defaultValue: 'Find stationed specialists and calculate exact arrival distance' })}
       maxWidth="lg"
     >
       <div className="space-y-4">
@@ -164,7 +166,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
               <Search className="w-4 h-4 text-[#9A958B] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search society, building, or area in Pune..."
+                placeholder={t('location.searchPlaceholder', { defaultValue: 'Search society, building, or area in Pune...' })}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-xs font-medium text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#6E8B67]"
@@ -181,7 +183,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
               className="px-3.5 py-2.5 bg-[#E6ECE4] hover:bg-[#CFDDD0] text-[#364A32] border border-[#CFDDD0] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
             >
               <Crosshair className={`w-4 h-4 ${isDetectingGPS ? 'animate-spin' : 'text-[#6E8B67]'}`} />
-              <span className="hidden sm:inline">Use GPS</span>
+              <span className="hidden sm:inline">{t('location.useGPS', { defaultValue: 'Use GPS' })}</span>
             </button>
           </div>
 
@@ -218,9 +220,9 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs text-[#77736B]">
             <span className="font-bold text-[#292824] uppercase text-[10px] tracking-wider">
-              Interactive Map Pin
+              {t('location.interactiveMapPin', { defaultValue: 'Interactive Map Pin' })}
             </span>
-            <span>Drag pin to fine-tune doorstep location</span>
+            <span>{t('location.dragPinNotice', { defaultValue: 'Drag pin to fine-tune doorstep location' })}</span>
           </div>
 
           <CooperativeMap
@@ -237,7 +239,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
               {
                 id: 'active_target_pin',
                 type: 'user',
-                title: 'Selected Location',
+                title: t('location.selectedLocation', { defaultValue: 'Selected Location' }),
                 coordinates: { lat: tempLat, lng: tempLng },
                 isDraggable: true,
               },
@@ -253,10 +255,10 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] uppercase font-bold text-[#77736B] block leading-tight">
-                Resolved Doorstep Address
+                {t('location.resolvedAddress', { defaultValue: 'Resolved Doorstep Address' })}
               </span>
               <strong className="text-xs text-[#292824] font-bold block truncate">
-                {isLoadingAddress ? 'Resolving street & society details...' : currentAddress.formattedAddress}
+                {isLoadingAddress ? t('location.resolvingAddress', { defaultValue: 'Resolving street & society details...' }) : currentAddress.formattedAddress}
               </strong>
             </div>
           </div>
@@ -267,7 +269,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             className="px-2.5 py-1.5 bg-[#FAF7F2] hover:bg-[#E8E2D5] text-[#524E47] border border-[#E8E2D5] rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
           >
             <Bookmark className="w-3.5 h-3.5 text-[#80432E]" />
-            <span className="hidden sm:inline">Save</span>
+            <span className="hidden sm:inline">{t('common.save', { defaultValue: 'Save' })}</span>
           </button>
         </div>
 
@@ -275,7 +277,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
         {showSaveForm && (
           <div className="p-3.5 bg-[#FAEDE8]/50 border border-[#F3C5B8] rounded-2xl space-y-3 animate-fade-in">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#80432E]">Bookmark this location</span>
+              <span className="text-xs font-bold text-[#80432E]">{t('location.bookmarkLocation', { defaultValue: 'Bookmark this location' })}</span>
               <div className="flex items-center gap-1 text-xs">
                 {(['home', 'work', 'other'] as SavedLocationTag[]).map((tag) => (
                   <button
@@ -288,7 +290,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
                         : 'bg-white text-[#77736B] border border-[#E8E2D5]'
                     }`}
                   >
-                    {tag}
+                    {tag === 'home' ? t('location.home', { defaultValue: 'home' }) : tag === 'work' ? t('location.work', { defaultValue: 'work' }) : t('location.other', { defaultValue: 'other' })}
                   </button>
                 ))}
               </div>
@@ -297,7 +299,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="e.g., Home (Flat 402), Parents Flat..."
+                placeholder={t('location.savePlaceholder', { defaultValue: 'e.g., Home (Flat 402), Parents Flat...' })}
                 value={saveLabel}
                 onChange={(e) => setSaveLabel(e.target.value)}
                 className="flex-1 p-2 bg-white border border-[#E8E2D5] rounded-xl text-xs text-[#292824] focus:outline-none focus:ring-1 focus:ring-[#80432E]"
@@ -308,7 +310,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
                 disabled={!saveLabel.trim()}
                 className="px-3.5 py-2 bg-[#80432E] hover:bg-[#683625] text-white text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
               >
-                Save
+                {t('common.save', { defaultValue: 'Save' })}
               </button>
             </div>
           </div>
@@ -318,7 +320,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
         {savedLocations.length > 0 && (
           <div>
             <span className="text-[10px] uppercase tracking-wider font-extrabold text-[#77736B] block mb-1.5">
-              Saved Places
+              {t('location.savedPlaces', { defaultValue: 'Saved Places' })}
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto">
               {savedLocations.map((loc) => {
@@ -380,7 +382,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-xs font-bold text-[#77736B] hover:text-[#292824] transition-colors cursor-pointer"
           >
-            Cancel
+            {t('common.cancel', { defaultValue: 'Cancel' })}
           </button>
 
           <button
@@ -389,7 +391,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             className="px-5 py-2.5 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Check className="w-4 h-4" />
-            <span>Confirm Service Location</span>
+            <span>{t('location.confirmLocation', { defaultValue: 'Confirm Service Location' })}</span>
           </button>
         </div>
       </div>

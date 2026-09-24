@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MOCK_EARNINGS } from '../../data/workerMockData';
 import { Badge } from '../../components/common/Badge';
 import { StatsCard } from '../../components/worker/StatsCard';
@@ -23,15 +24,16 @@ type EarningsPeriod = 'today' | 'week' | 'month';
 // with a real API call and map to the same EarningsData interface.
 // ==================================================================
 export const WorkerEarningsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [activePeriod, setActivePeriod] = useState<EarningsPeriod>('week');
   const [showAllPayments, setShowAllPayments] = useState(false);
 
   const earnings = MOCK_EARNINGS; // Replace with real API data (Person 3)
 
   const PERIOD_DATA = {
-    today: { label: 'Today',     amount: earnings.todayEarnings,   jobs: earnings.todayJobsCount },
-    week:  { label: 'This Week', amount: earnings.weeklyEarnings,  jobs: earnings.weeklyJobsCount },
-    month: { label: 'This Month',amount: earnings.monthlyEarnings, jobs: earnings.monthlyJobsCount },
+    today: { label: t('worker.earnings.today', 'Today'), amount: earnings.todayEarnings, jobs: earnings.todayJobsCount },
+    week:  { label: t('worker.earnings.thisWeek', 'This Week'), amount: earnings.weeklyEarnings, jobs: earnings.weeklyJobsCount },
+    month: { label: t('worker.earnings.thisMonth', 'This Month'), amount: earnings.monthlyEarnings, jobs: earnings.monthlyJobsCount },
   };
 
   const current = PERIOD_DATA[activePeriod];
@@ -46,13 +48,13 @@ export const WorkerEarningsPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-extrabold text-[#292824] tracking-tight flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-[#6E8B67]" />
-            My Earnings
+            {t('worker.earnings.myEarnings', 'My Earnings')}
           </h1>
           <p className="text-xs text-[#77736B] mt-1">
-            Your 70% cooperative worker share — real-time data powered by Person 3's payment module
+            {t('worker.earnings.earningsSubtitle', "Your 70% cooperative worker share — real-time data powered by cooperative payment engine")}
           </p>
         </div>
-        <Badge variant="coop" size="md"><span className="font-mono">70%</span> Share</Badge>
+        <Badge variant="coop" size="md"><span className="font-mono">70%</span> {t('worker.earnings.shareBadge', 'Share')}</Badge>
       </div>
 
       {/* Period toggle */}
@@ -75,28 +77,28 @@ export const WorkerEarningsPage: React.FC = () => {
 
       {/* Main earnings display */}
       <div className="p-6 bg-[#EEF3EC] border border-[#CFDDD0] rounded-2xl shadow-card text-center space-y-2">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#527048]">{current.label}'s Net Earnings</span>
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#527048]">{current.label}'s {t('worker.earnings.netEarnings', 'Net Earnings')}</span>
         <div className="text-5xl font-extrabold font-mono text-[#2A3927] mt-1">
           ₹{current.amount.toLocaleString('en-IN')}
         </div>
         <p className="text-sm text-[#527048]">
-          {current.jobs} job{current.jobs !== 1 ? 's' : ''} completed · 70% of total charges
+          {t('worker.earnings.jobsCompletedCount', { count: current.jobs, defaultValue: `${current.jobs} job(s) completed · 70% of total charges` })}
         </p>
       </div>
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 gap-3">
         <StatsCard
-          label="Pending Payout"
+          label={t('worker.earnings.pendingPayout', 'Pending Payout')}
           value={`₹${earnings.pendingAmount}`}
-          subLabel={`${earnings.pendingJobsCount} job(s) in progress`}
+          subLabel={t('worker.earnings.pendingJobsCount', { count: earnings.pendingJobsCount, defaultValue: `${earnings.pendingJobsCount} job(s) in progress` })}
           accent="orange"
           icon={<Clock className="w-4 h-4 text-[#80432E]" />}
         />
         <StatsCard
-          label="Total Lifetime"
+          label={t('worker.earnings.totalLifetime', 'Total Lifetime')}
           value={`₹${earnings.totalLifetimeEarnings.toLocaleString('en-IN')}`}
-          subLabel="All-time earnings"
+          subLabel={t('worker.earnings.allTimeEarnings', 'All-time earnings')}
           accent="green"
           icon={<BarChart2 className="w-4 h-4 text-[#6E8B67]" />}
         />
@@ -106,13 +108,13 @@ export const WorkerEarningsPage: React.FC = () => {
       <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-[#324F66] flex items-center gap-1.5">
           <DollarSign className="w-4 h-4 text-[#6E8B67]" />
-          Cooperative Revenue Split
+          {t('worker.earnings.coopSplit', 'Cooperative Revenue Split')}
         </h3>
         <div className="space-y-2">
           {[
-            { label: 'Your Share (Worker)', percent: 70, color: 'bg-[#6E8B67]', textColor: 'text-[#364A32]' },
-            { label: 'Society Share',       percent: 5,  color: 'bg-[#537895]', textColor: 'text-[#324F66]' },
-            { label: 'Cooperative Fund',    percent: 25, color: 'bg-[#7A6A8E]', textColor: 'text-[#3D314C]' },
+            { label: t('worker.earnings.yourShareWorker', 'Your Share (Worker)'), percent: 70, color: 'bg-[#6E8B67]', textColor: 'text-[#364A32]' },
+            { label: t('worker.earnings.societyShare', 'Society Share'),       percent: 5,  color: 'bg-[#537895]', textColor: 'text-[#324F66]' },
+            { label: t('worker.earnings.coopFund', 'Cooperative Fund'),    percent: 25, color: 'bg-[#7A6A8E]', textColor: 'text-[#3D314C]' },
           ].map(({ label, percent, color, textColor }) => (
             <div key={label} className="space-y-1">
               <div className="flex justify-between text-xs">
@@ -131,7 +133,7 @@ export const WorkerEarningsPage: React.FC = () => {
       <div className="space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-[#324F66] flex items-center gap-1.5">
           <Calendar className="w-4 h-4 text-[#537895]" />
-          Recent Payments
+          {t('worker.earnings.recentPayments', 'Recent Payments')}
         </h3>
         <div className="space-y-2">
           {displayedPayments.map((p) => (
@@ -156,7 +158,7 @@ export const WorkerEarningsPage: React.FC = () => {
               <div className="text-right">
                 <span className="text-sm font-bold font-mono text-[#292824] block">₹{p.amount}</span>
                 <span className={`text-[10px] font-bold ${p.status === 'paid' ? 'text-[#6E8B67]' : 'text-[#80432E]'}`}>
-                  {p.status === 'paid' ? 'Paid' : 'Pending'}
+                  {p.status === 'paid' ? t('worker.earnings.statusPaid', 'Paid') : t('worker.earnings.statusPending', 'Pending')}
                 </span>
               </div>
             </div>
@@ -170,22 +172,21 @@ export const WorkerEarningsPage: React.FC = () => {
             className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-[#537895] hover:underline cursor-pointer"
           >
             {showAllPayments ? (
-              <><ChevronUp className="w-3.5 h-3.5" /> Show Less</>
+              <><ChevronUp className="w-3.5 h-3.5" /> {t('worker.earnings.showLess', 'Show Less')}</>
             ) : (
-              <><ChevronDown className="w-3.5 h-3.5" /> Show All {earnings.recentPayments.length} Payments</>
+              <><ChevronDown className="w-3.5 h-3.5" /> {t('worker.earnings.showAllPayments', { count: earnings.recentPayments.length, defaultValue: `Show All ${earnings.recentPayments.length} Payments` })}</>
             )}
           </button>
         )}
       </div>
 
-      {/* Person 3 Integration Banner */}
+      {/* Integration Banner */}
       <div className="flex items-start gap-3 p-4 bg-[#E4EDF4] border border-[#B8CBDD] rounded-2xl">
         <AlertCircle className="w-5 h-5 text-[#324F66] shrink-0 mt-0.5" />
         <div>
-          <p className="text-xs font-bold text-[#324F66]">Payment & Earnings Backend</p>
+          <p className="text-xs font-bold text-[#324F66]">{t('worker.earnings.backendBannerTitle', 'Payment & Earnings Ledger')}</p>
           <p className="text-[10px] text-[#537895] mt-0.5">
-            This page shows mock earnings data. Person 3 will integrate the real payment system here.
-            API endpoint: <span className="font-mono">/api/worker/earnings</span>
+            {t('worker.earnings.backendBannerDesc', 'Verified payout settlements are routed directly to your designated bank account.')}
           </p>
         </div>
       </div>

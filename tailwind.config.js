@@ -7,6 +7,63 @@ export default {
   theme: {
     extend: {
       colors: {
+        primary: {
+          50: '#EEF2FF',
+          100: '#E0E7FF',
+          200: '#C7D2FE',
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#6366F1',
+          600: '#4F46E5', // Deep Indigo / Slate Blue
+          700: '#4338CA',
+          800: '#3730A3',
+          900: '#312E81',
+          DEFAULT: '#4F46E5',
+        },
+        secondary: {
+          50: '#ECFDF5',
+          100: '#D1FAE5',
+          200: '#A7F3D0',
+          300: '#6EE7B7',
+          400: '#34D399',
+          500: '#10B981',
+          600: '#059669', // Warm Emerald Green
+          700: '#047857',
+          800: '#065F46',
+          900: '#064E3B',
+          DEFAULT: '#059669',
+        },
+        accent: {
+          50: '#ECFDF5',
+          100: '#D1FAE5',
+          200: '#A7F3D0',
+          300: '#6EE7B7',
+          400: '#34D399',
+          500: '#10B981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065F46',
+          900: '#064E3B',
+          DEFAULT: '#059669',
+        },
+        slate: {
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B', // Neutral Muted
+          600: '#475569',
+          700: '#334155',
+          800: '#1E293B', // Slate
+          900: '#0F172A', // Card Dark
+          DEFAULT: '#1E293B',
+        },
+        neutral: {
+          light: '#F8FAFC',
+          cardDark: '#0F172A',
+          muted: '#64748B',
+        },
         cream: {
           50: '#FCFBF7',
           100: '#FAF7F2',
@@ -133,12 +190,19 @@ export default {
       },
       fontFamily: {
         sans: [
+          '"Inter"',
+          '"Noto Sans Devanagari"',
           '"DM Sans"',
           'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
           '"Segoe UI"',
           'Roboto',
+          'sans-serif',
+        ],
+        devanagari: [
+          '"Noto Sans Devanagari"',
+          'system-ui',
           'sans-serif',
         ],
         display: [

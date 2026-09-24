@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Booking } from '../../types';
 import { Badge } from '../../components/common/Badge';
@@ -52,6 +53,7 @@ interface BreakBannerProps {
 }
 
 function BreakBanner({ booking }: BreakBannerProps) {
+  const { t } = useTranslation();
   const bd = booking.breakDetails;
   const remaining = useBreakCountdown(bd);
 
@@ -93,26 +95,26 @@ function BreakBanner({ booking }: BreakBannerProps) {
         </span>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-extrabold text-amber-900 leading-tight">
-            Worker is on a Short Break
+            {t('customer.workerOnBreakTitle', 'Worker is on a Short Break')}
           </p>
           <p className="text-[11px] text-amber-700 mt-0.5">
-            {booking.matchedWorker?.name ?? 'Your specialist'} will resume work shortly
+            {t('customer.willResumeShortly', '{{name}} will resume work shortly', { name: booking.matchedWorker?.name ?? t('customer.yourSpecialist', 'Your specialist') })}
           </p>
         </div>
         <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-200 text-amber-900 border border-amber-300 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-          ON BREAK
+          {t('common.onBreak', 'ON BREAK')}
         </span>
       </div>
 
       {/* Details grid */}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="p-2 bg-white/70 rounded-xl border border-amber-200">
-          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Started</p>
+          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">{t('worker.jobExec.started', 'Started')}</p>
           <p className="text-xs font-bold text-amber-900 mt-0.5">{startTime}</p>
         </div>
         <div className="p-2 bg-white/70 rounded-xl border border-amber-200">
-          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Est. Resume</p>
+          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">{t('customer.estResume', 'Est. Resume')}</p>
           <p className="text-xs font-bold text-amber-900 mt-0.5">{resumeTime}</p>
         </div>
         <div
@@ -125,7 +127,7 @@ function BreakBanner({ booking }: BreakBannerProps) {
               overdue ? 'text-red-600' : 'text-amber-700'
             }`}
           >
-            {overdue ? 'Overdue' : 'Remaining'}
+            {overdue ? t('customer.overdue', 'Overdue') : t('customer.remaining', 'Remaining')}
           </p>
           <p
             className={`text-xs font-extrabold font-mono mt-0.5 ${
@@ -144,7 +146,7 @@ function BreakBanner({ booking }: BreakBannerProps) {
         <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-100 border border-amber-200 rounded-xl px-3 py-2">
           <span className="text-amber-600">{reasonIcon}</span>
           <span>
-            <strong>Reason:</strong> {bd.reason}
+            <strong>{t('worker.breakReason', 'Reason:')}</strong> {bd.reason}
           </span>
         </div>
       )}
@@ -191,6 +193,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
   onRateBooking,
   onRequestNew,
 }) => {
+  const { t } = useTranslation();
   const { currentUser, bookings, confirmCustomerJob } = useCooperativeStore();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
@@ -237,54 +240,53 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
   const filteredList = getFilteredBookings();
 
   const tabs: { key: TabType; label: string; count: number }[] = [
-    { key: 'all', label: 'All Requests', count: customerBookings.length },
-    { key: 'active', label: 'Active', count: activeBookings.length },
-    { key: 'completed', label: 'Completed', count: completedBookings.length },
-    { key: 'issues', label: 'Service Issues', count: qualityBookings.length },
-    { key: 'history', label: 'History', count: historyBookings.length },
+    { key: 'all', label: t('customer.tabs.all', 'All Requests'), count: customerBookings.length },
+    { key: 'active', label: t('customer.tabs.active', 'Active'), count: activeBookings.length },
+    { key: 'completed', label: t('customer.tabs.completed', 'Completed'), count: completedBookings.length },
+    { key: 'issues', label: t('customer.tabs.issues', 'Service Issues'), count: qualityBookings.length },
+    { key: 'history', label: t('customer.tabs.history', 'History'), count: historyBookings.length },
   ];
 
   const historyFilters: { id: HistoryFilter; label: string }[] = [
-    { id: 'all', label: 'All History' },
-    { id: 'finished', label: 'Finished' },
-    { id: 'revisited', label: 'Revisited' },
-    { id: 'cancelled', label: 'Cancelled' },
+    { id: 'all', label: t('customer.historyFilters.all', 'All History') },
+    { id: 'finished', label: t('customer.historyFilters.finished', 'Finished') },
+    { id: 'revisited', label: t('customer.historyFilters.revisited', 'Revisited') },
+    { id: 'cancelled', label: t('customer.historyFilters.cancelled', 'Cancelled') },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E2D5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#292824]">
-            My Service Activity
+            {t('customer.myServiceActivity', 'My Service Activity')}
           </h1>
           <p className="text-xs text-[#77736B] mt-0.5">
-            Full history of your cooperative household bookings in{' '}
-            {currentUser.societyName || 'Green Residency'}
+            {t('customer.activitySubtitle', 'Full history of your cooperative household bookings in {{society}}', { society: currentUser.societyName || 'Green Residency' })}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-[#445D3E] bg-[#E6ECE4] px-3 py-1.5 rounded-xl border border-[#CFDDD0]">
-            Total Settled: <span className="font-mono">₹{totalSpent.toLocaleString()}</span>
+            {t('customer.totalSettled', 'Total Settled:')} <span className="font-mono">₹{totalSpent.toLocaleString()}</span>
           </span>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-1.5 border-b border-[#E8E2D5] pb-1 text-xs font-bold overflow-x-auto">
-        {tabs.map((t) => (
+        {tabs.map((tItem) => (
           <button
-            key={t.key}
+            key={tItem.key}
             type="button"
-            onClick={() => setActiveTab(t.key)}
+            onClick={() => setActiveTab(tItem.key)}
             className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === t.key
+              activeTab === tItem.key
                 ? 'bg-[#E6ECE4] text-[#2A3927] border border-[#CFDDD0] font-extrabold shadow-2xs'
                 : 'text-[#77736B] hover:text-[#292824] hover:bg-[#F3EEE4]'
             }`}
           >
-            {t.label} (<span className="font-mono">{t.count}</span>)
+            {tItem.label} (<span className="font-mono">{tItem.count}</span>)
           </button>
         ))}
       </div>
@@ -294,7 +296,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
         <div className="flex items-center gap-2 flex-wrap pb-1">
           <span className="text-xs text-[#77736B] font-semibold flex items-center gap-1">
             <Filter className="w-3.5 h-3.5" />
-            Filter By:
+            {t('common.filterBy', 'Filter By:')}
           </span>
           {historyFilters.map((f) => (
             <button
@@ -348,14 +350,14 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                   <div className="flex flex-wrap items-center gap-3 text-xs text-[#77736B]">
                     {b.matchedWorker && (
                       <span>
-                        Worker: <strong className="text-[#292824]">{b.matchedWorker.name}</strong>
+                        {t('common.worker', 'Worker:')} <strong className="text-[#292824]">{b.matchedWorker.name}</strong>
                       </span>
                     )}
                     <span>
-                      Total:{' '}
+                      {t('common.total', 'Total:')}{' '}
                       <strong className="text-[#292824] font-mono">₹{b.pricing.total}</strong>
                     </span>
-                    <span>{b.createdAt?.split('T')[0] || 'Today'}</span>
+                    <span>{b.createdAt?.split('T')[0] || t('common.today', 'Today')}</span>
                   </div>
                 </div>
 
@@ -365,11 +367,11 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                     <button
                       type="button"
                       onClick={() => setSosJob(b)}
-                      title="Emergency SOS — always available"
+                      title={t('sos.title', 'Emergency SOS')}
                       className="px-2.5 py-1.5 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
                     >
                       <ShieldAlert className="w-3.5 h-3.5 text-[#C93B2B]" />
-                      <span>SOS</span>
+                      <span>{t('common.sos', 'SOS')}</span>
                     </button>
                   )}
 
@@ -378,7 +380,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                     onClick={() => onTrackBooking(b)}
                     className="px-3.5 py-2 bg-[#F3EEE4] hover:bg-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
                   >
-                    <span>Track</span>
+                    <span>{t('customer.track', 'Track')}</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
 
@@ -389,7 +391,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                       disabled={actionsDisabled}
                       className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Pay <span className="font-mono">₹{b.pricing.total}</span>
+                      {t('customer.payAmount', 'Pay')} <span className="font-mono">₹{b.pricing.total}</span>
                     </button>
                   )}
 
@@ -399,7 +401,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                       onClick={() => onRateBooking(b)}
                       className="px-3.5 py-2 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] text-xs font-bold rounded-xl transition-colors cursor-pointer"
                     >
-                      Rate Service
+                      {t('customer.rateService', 'Rate Service')}
                     </button>
                   )}
                 </div>
@@ -420,11 +422,10 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                       <div className="text-xs text-blue-950">
                         <strong className="font-bold text-sm text-blue-900 flex items-center gap-1.5">
                           <Sparkles className="w-4 h-4 text-blue-600" />
-                          Worker has finished! Please inspect &amp; confirm work.
+                          {t('customer.workerFinishedInspect', 'Worker has finished! Please inspect & confirm work.')}
                         </strong>
                         <p className="text-slate-600 text-[11px] mt-0.5">
-                          Compare the before &amp; after evidence photos below. If you're
-                          satisfied, confirm below. If not, request a free revisit.
+                          {t('customer.compareEvidenceDesc', 'Compare the before & after evidence photos below. If you\'re satisfied, confirm below. If not, request a free revisit.')}
                         </p>
                       </div>
                     </div>
@@ -442,11 +443,11 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                           ) : (
                             <div className="w-full h-28 flex flex-col items-center justify-center text-slate-400 text-[10px]">
                               <ImageIcon className="w-5 h-5 mb-1" />
-                              No Before Photo
+                              {t('customer.noBeforePhoto', 'No Before Photo')}
                             </div>
                           )}
                           <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            Before Repair
+                            {t('customer.beforeRepair', 'Before Repair')}
                           </span>
                         </div>
 
@@ -460,11 +461,11 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                           ) : (
                             <div className="w-full h-28 flex flex-col items-center justify-center text-slate-400 text-[10px]">
                               <ImageIcon className="w-5 h-5 mb-1" />
-                              No After Photo
+                              {t('customer.noAfterPhoto', 'No After Photo')}
                             </div>
                           )}
                           <span className="absolute bottom-1 left-1 bg-[#445D3E] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            After Repair ✓
+                            {t('customer.afterRepair', 'After Repair ✓')}
                           </span>
                         </div>
                       </div>
@@ -476,10 +477,10 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                         {b.customerConfirmation ? (
                           <span className="text-emerald-700 font-bold flex items-center gap-1">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            Confirmation recorded. Awaiting Society Manager final approval.
+                            {t('customer.confirmationRecorded', 'Confirmation recorded. Awaiting Society Manager final approval.')}
                           </span>
                         ) : (
-                          <span>Step 1: Confirm work or request a revisit.</span>
+                          <span>{t('customer.step1Confirm', 'Step 1: Confirm work or request a revisit.')}</span>
                         )}
                       </div>
 
@@ -490,7 +491,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                           className="px-3 py-1.5 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Request Revisit</span>
+                          <span>{t('customer.requestRevisit', 'Request Revisit')}</span>
                         </button>
 
                         {!b.customerConfirmation && (
@@ -500,7 +501,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                             className="px-3.5 py-1.5 bg-[#445D3E] hover:bg-[#33472F] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5" />
-                            <span>Confirm Work Done</span>
+                            <span>{t('customer.confirmWorkDone', 'Confirm Work Done')}</span>
                           </button>
                         )}
                       </div>
@@ -516,16 +517,16 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                     <div className="flex items-center justify-between">
                       <strong className="font-bold flex items-center gap-1">
                         <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
-                        Revisit Information:
+                        {t('customer.revisitInformation', 'Revisit Information:')}
                       </strong>
                       <Badge variant="urgent" size="sm">
-                        {b.state === 'REVISIT_SCHEDULED' ? 'Scheduled' : 'Pending Manager Review'}
+                        {b.state === 'REVISIT_SCHEDULED' ? t('customer.scheduled', 'Scheduled') : t('customer.pendingManagerReview', 'Pending Manager Review')}
                       </Badge>
                     </div>
-                    <p>Reason: "{b.revisitDetails.reason}"</p>
+                    <p>{t('worker.breakReason', 'Reason:')} "{b.revisitDetails.reason}"</p>
                     {b.revisitDetails.scheduledDate && (
                       <p className="font-semibold text-amber-800">
-                        📅 Scheduled Date: {b.revisitDetails.scheduledDate}
+                        📅 {t('customer.scheduledDate', 'Scheduled Date:')} {b.revisitDetails.scheduledDate}
                       </p>
                     )}
                   </div>
@@ -536,10 +537,12 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
               {b.cancellationDetails && (
                 <div className="px-4 pb-4">
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 space-y-0.5">
-                    <strong className="font-bold block">Cancellation Reason:</strong>
+                    <strong className="font-bold block">{t('customer.cancellationReason', 'Cancellation Reason:')}</strong>
                     <p>
-                      Cancelled by {b.cancellationDetails.cancelledBy}: "
-                      {b.cancellationDetails.reason}"
+                      {t('customer.cancelledByWithReason', 'Cancelled by {{cancelledBy}}: "{{reason}}"', {
+                        cancelledBy: b.cancellationDetails.cancelledBy,
+                        reason: b.cancellationDetails.reason,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -550,16 +553,16 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
 
         {filteredList.length === 0 && (
           <div className="p-8 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center space-y-2">
-            <span className="text-xs font-bold text-[#292824] block">No requests found.</span>
+            <span className="text-xs font-bold text-[#292824] block">{t('customer.noRequestsFound', 'No requests found.')}</span>
             <p className="text-xs text-[#77736B]">
-              You don't have any bookings matching this filter.
+              {t('customer.noBookingsMatchingFilter', 'You don\'t have any bookings matching this filter.')}
             </p>
             <button
               type="button"
               onClick={onRequestNew}
               className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer mt-1"
             >
-              Request a Service
+              {t('customer.requestAService', 'Request a Service')}
             </button>
           </div>
         )}

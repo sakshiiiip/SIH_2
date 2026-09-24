@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
@@ -22,6 +23,7 @@ interface WorkerCommunityPageProps {
 }
 
 export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpenEmergencyAid }) => {
+  const { t } = useTranslation();
   const {
     currentUser,
     communityChannels,
@@ -64,13 +66,17 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
 
   const handleCastVote = () => {
     if (!selectedVoteOption) {
-      showToast({ title: 'Please select an option', message: 'Choose your vote preference to proceed.', type: 'warning' });
+      showToast({
+        title: t('worker.community.selectOptionTitle', 'Please select an option'),
+        message: t('worker.community.selectOptionMsg', 'Choose your vote preference to proceed.'),
+        type: 'warning',
+      });
       return;
     }
     setHasVoted(true);
     showToast({
-      title: 'Vote Cast Successfully! 🗳️',
-      message: 'Your democratic vote has been recorded on the cooperative ledger.',
+      title: t('worker.community.voteCastTitle', 'Vote Cast Successfully! 🗳️'),
+      message: t('worker.community.voteCastMsg', 'Your democratic vote has been recorded on the cooperative ledger.'),
       type: 'success',
     });
   };
@@ -82,15 +88,15 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#364A32] bg-[#E6ECE4] px-2.5 py-0.5 rounded-md border border-[#CFDDD0]">
-              Worker Cooperative
+              {t('worker.community.badge', 'Worker Cooperative')}
             </span>
             <Badge variant="coop" size="sm">{currentUser.societyName || 'Green Residency'}</Badge>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292824] tracking-tight">
-            Community & Cooperative
+            {t('worker.community.title', 'Community & Cooperative')}
           </h1>
           <p className="text-xs sm:text-sm text-[#77736B] mt-1">
-            Democratic voting, society announcements, guild trade upskilling, and peer discussions.
+            {t('worker.community.subtitle', 'Democratic voting, society announcements, guild trade upskilling, and peer discussions.')}
           </p>
         </div>
 
@@ -105,7 +111,7 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                 : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
-            Cooperative & Voting
+            {t('worker.community.coopVotingTab', 'Cooperative & Voting')}
           </button>
           <button
             type="button"
@@ -117,7 +123,7 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>Trade Guilds</span>
+            <span>{t('worker.community.tradeGuildsTab', 'Trade Guilds')}</span>
           </button>
         </div>
       </div>
@@ -134,11 +140,11 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                   <Vote className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#292824] leading-tight">Worker Voting & Governance</h2>
-                  <span className="text-xs text-[#77736B]">1 Member, 1 Vote Democratic Platform</span>
+                  <h2 className="text-base font-bold text-[#292824] leading-tight">{t('worker.community.votingTitle', 'Worker Voting & Governance')}</h2>
+                  <span className="text-xs text-[#77736B]">{t('worker.community.votingSubtitle', '1 Member, 1 Vote Democratic Platform')}</span>
                 </div>
               </div>
-              <Badge variant="verified" size="sm">Active Ballots</Badge>
+              <Badge variant="verified" size="sm">{t('worker.community.activeBallots', 'Active Ballots')}</Badge>
             </div>
 
             {/* Active Vote Card */}
@@ -146,13 +152,13 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#324F66] bg-[#E4EDF4] px-2 py-0.5 rounded-md border border-[#B8CBDD]">
-                    Active Vote #2026-09
+                    {t('worker.community.activeVoteNum', 'Active Vote #2026-09')}
                   </span>
                   <h3 className="text-sm sm:text-base font-bold text-[#292824] mt-1.5">
-                    Monthly Work Schedule & Fair Rotation Policy
+                    {t('worker.community.proposalTitle', 'Monthly Work Schedule & Fair Rotation Policy')}
                   </h3>
                   <p className="text-xs text-[#524E47] mt-1">
-                    Proposal to adopt an algorithmic peak-hour rotation guaranteeing equitable job distribution across all society zones.
+                    {t('worker.community.proposalDesc', 'Proposal to adopt an algorithmic peak-hour rotation guaranteeing equitable job distribution across all society zones.')}
                   </p>
                 </div>
               </div>
@@ -160,22 +166,24 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-[#CDE0EC] text-xs text-[#524E47]">
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#80432E]" />
-                  <span>Vote deadline: <strong>Ends in 3 days</strong> (Sep 21, 2026)</span>
+                  <span>{t('worker.community.voteDeadline', 'Vote deadline:')} <strong>{t('worker.community.endsIn3Days', 'Ends in 3 days')}</strong> (Sep 21, 2026)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67]" />
-                  <span>Number of votes: <strong>14 members have voted</strong> (88% quota)</span>
+                  <span>{t('worker.community.numberOfVotes', 'Number of votes:')} <strong>{t('worker.community.membersVoted', '14 members have voted')}</strong> (88% {t('worker.community.quota', 'quota')})</span>
                 </div>
               </div>
 
               <div className="pt-2 flex items-center justify-between">
-                <span className="text-[11px] text-[#77736B]">Status: {hasVoted ? '✓ You have voted' : 'Open for your ballot'}</span>
+                <span className="text-[11px] text-[#77736B]">
+                  {t('worker.community.status', 'Status')}: {hasVoted ? t('worker.community.youHaveVoted', '✓ You have voted') : t('worker.community.openForBallot', 'Open for your ballot')}
+                </span>
                 <button
                   type="button"
                   onClick={() => setShowVotingModal(true)}
                   className="px-4 py-2 bg-[#292824] hover:bg-[#3d3a35] text-[#FAF7F2] text-xs font-bold rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs"
                 >
-                  <span>Open Voting Dashboard</span>
+                  <span>{t('worker.community.openVotingDashboard', 'Open Voting Dashboard')}</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -184,11 +192,11 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
             {/* Upcoming Vote Preview */}
             <div className="p-3.5 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl flex items-center justify-between text-xs">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold uppercase text-[#77736B]">Upcoming Ballot</span>
-                <p className="font-semibold text-[#292824]">Cooperative Tool Bank Budget Allocation (₹1.5 Lakh Equipment Grant)</p>
-                <span className="text-[11px] text-[#77736B]">Opens Sep 25 · Co-sponsored by Green Residency Society</span>
+                <span className="text-[10px] font-bold uppercase text-[#77736B]">{t('worker.community.upcomingBallot', 'Upcoming Ballot')}</span>
+                <p className="font-semibold text-[#292824]">{t('worker.community.upcomingBallotTitle', 'Cooperative Tool Bank Budget Allocation (₹1.5 Lakh Equipment Grant)')}</p>
+                <span className="text-[11px] text-[#77736B]">{t('worker.community.upcomingBallotSubtitle', 'Opens Sep 25 · Co-sponsored by Green Residency Society')}</span>
               </div>
-              <Badge variant="neutral" size="sm">Scheduled</Badge>
+              <Badge variant="neutral" size="sm">{t('worker.community.scheduled', 'Scheduled')}</Badge>
             </div>
           </div>
 
@@ -202,8 +210,8 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                   <Bell className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#292824]">Cooperative Announcements</h2>
-                  <span className="text-xs text-[#77736B]">Official updates from Federation Board & Society Managers</span>
+                  <h2 className="text-base font-bold text-[#292824]">{t('worker.community.announcementsTitle', 'Cooperative Announcements')}</h2>
+                  <span className="text-xs text-[#77736B]">{t('worker.community.announcementsSubtitle', 'Official updates from Federation Board & Society Managers')}</span>
                 </div>
               </div>
             </div>
@@ -213,25 +221,25 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                 {
                   id: 'ann-1',
                   date: 'Sep 18, 2026',
-                  title: 'Quarterly Cooperative Dividend & Direct Payout Schedule',
-                  content: 'All certified specialists with over 95% attendance will receive their quarterly patronage dividend directly to their registered bank accounts by month-end.',
-                  tag: 'Finance',
+                  title: t('worker.community.ann1Title', 'Quarterly Cooperative Dividend & Direct Payout Schedule'),
+                  content: t('worker.community.ann1Content', 'All certified specialists with over 95% attendance will receive their quarterly patronage dividend directly to their registered bank accounts by month-end.'),
+                  tag: t('worker.community.financeTag', 'Finance'),
                   tagColor: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]',
                 },
                 {
                   id: 'ann-2',
                   date: 'Sep 15, 2026',
-                  title: 'Annual General Assembly & Trade Safety Workshop',
-                  content: 'The 2026 Annual Worker Assembly will take place at the Baner Hub Community Hall on Saturday, Sep 26 at 5:00 PM. High-visibility gear will be distributed.',
-                  tag: 'Meeting',
+                  title: t('worker.community.ann2Title', 'Annual General Assembly & Trade Safety Workshop'),
+                  content: t('worker.community.ann2Content', 'The 2026 Annual Worker Assembly will take place at the Baner Hub Community Hall on Saturday, Sep 26 at 5:00 PM. High-visibility gear will be distributed.'),
+                  tag: t('worker.community.meetingTag', 'Meeting'),
                   tagColor: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]',
                 },
                 {
                   id: 'ann-3',
                   date: 'Sep 12, 2026',
-                  title: 'Emergency Medical Safety Net Expansion',
-                  content: 'Emergency relief grant limits increased from ₹15,000 to ₹25,000 for unexpected medical hospitalization or catastrophic tool loss.',
-                  tag: 'Relief',
+                  title: t('worker.community.ann3Title', 'Emergency Medical Safety Net Expansion'),
+                  content: t('worker.community.ann3Content', 'Emergency relief grant limits increased from ₹15,000 to ₹25,000 for unexpected medical hospitalization or catastrophic tool loss.'),
+                  tag: t('worker.community.reliefTag', 'Relief'),
                   tagColor: 'bg-[#EFEBF4] text-[#3D314C] border-[#DFD8E8]',
                 },
               ].map((item) => (
@@ -259,8 +267,8 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                   <GraduationCap className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#292824]">Training & Upskilling Updates</h2>
-                  <span className="text-xs text-[#77736B]">Skill enhancement programs funded by the Cooperative Fund</span>
+                  <h2 className="text-base font-bold text-[#292824]">{t('worker.community.trainingTitle', 'Training & Upskilling Updates')}</h2>
+                  <span className="text-xs text-[#77736B]">{t('worker.community.trainingSubtitle', 'Skill enhancement programs funded by the Cooperative Fund')}</span>
                 </div>
               </div>
             </div>
@@ -268,32 +276,32 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 {
-                  title: 'Advanced Heat Pump & HVAC Inverter Diagnostics',
-                  level: 'Tier 2 Certified',
+                  title: t('worker.community.train1Title', 'Advanced Heat Pump & HVAC Inverter Diagnostics'),
+                  level: t('worker.community.train1Level', 'Tier 2 Certified'),
                   date: 'Oct 2, 2026',
-                  slots: '4 slots remaining',
-                  badge: 'Technical',
+                  slots: t('worker.community.slotsRemaining', { count: 4, defaultValue: '4 slots remaining' }),
+                  badge: t('worker.community.technicalBadge', 'Technical'),
                 },
                 {
-                  title: 'Solar Micro-Inverter Installation & Safety',
-                  level: 'Green Energy Specialist',
+                  title: t('worker.community.train2Title', 'Solar Micro-Inverter Installation & Safety'),
+                  level: t('worker.community.train2Level', 'Green Energy Specialist'),
                   date: 'Oct 10, 2026',
-                  slots: '6 slots remaining',
-                  badge: 'High Demand',
+                  slots: t('worker.community.slotsRemaining', { count: 6, defaultValue: '6 slots remaining' }),
+                  badge: t('worker.community.highDemandBadge', 'High Demand'),
                 },
                 {
-                  title: 'PEX Pipe & Modern Compression Fitting Mastery',
-                  level: 'Plumbing Guild',
+                  title: t('worker.community.train3Title', 'PEX Pipe & Modern Compression Fitting Mastery'),
+                  level: t('worker.community.train3Level', 'Plumbing Guild'),
                   date: 'Oct 15, 2026',
-                  slots: '2 slots remaining',
-                  badge: 'Practical Lab',
+                  slots: t('worker.community.slotsRemaining', { count: 2, defaultValue: '2 slots remaining' }),
+                  badge: t('worker.community.practicalLabBadge', 'Practical Lab'),
                 },
                 {
-                  title: 'Customer Conflict Resolution & Digital Billing',
-                  level: 'Service Excellence',
+                  title: t('worker.community.train4Title', 'Customer Conflict Resolution & Digital Billing'),
+                  level: t('worker.community.train4Level', 'Service Excellence'),
                   date: 'Oct 22, 2026',
-                  slots: 'Open Registration',
-                  badge: 'Soft Skills',
+                  slots: t('worker.community.openRegistration', 'Open Registration'),
+                  badge: t('worker.community.softSkillsBadge', 'Soft Skills'),
                 },
               ].map((training) => (
                 <div
@@ -308,20 +316,23 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                       <span className="text-[10px] text-[#80432E] font-bold">{training.slots}</span>
                     </div>
                     <h4 className="text-xs sm:text-sm font-bold text-[#292824] pt-1">{training.title}</h4>
-                    <p className="text-[11px] text-[#77736B]">{training.level} · Date: {training.date}</p>
+                    <p className="text-[11px] text-[#77736B]">{training.level} · {t('common.date', 'Date')}: {training.date}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() =>
                       showToast({
-                        title: 'Registration Submitted! 🎓',
-                        message: `You are enrolled in "${training.title}". Confirmation sent to your phone.`,
+                        title: t('worker.community.registrationSubmitted', 'Registration Submitted! 🎓'),
+                        message: t('worker.community.enrolledMsg', {
+                          title: training.title,
+                          defaultValue: `You are enrolled in "${training.title}". Confirmation sent to your phone.`,
+                        }),
                         type: 'success',
                       })
                     }
                     className="w-full py-1.5 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl transition-colors cursor-pointer"
                   >
-                    Enroll (Free for Members)
+                    {t('worker.community.enrollFree', 'Enroll (Free for Members)')}
                   </button>
                 </div>
               ))}
@@ -338,41 +349,41 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                   <Info className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#292824]">Community Information & Mutual Aid</h2>
-                  <span className="text-xs text-[#77736B]">Society contacts and cooperative solidarity benefits</span>
+                  <h2 className="text-base font-bold text-[#292824]">{t('worker.community.mutualAidTitle', 'Community Information & Mutual Aid')}</h2>
+                  <span className="text-xs text-[#77736B]">{t('worker.community.mutualAidSubtitle', 'Society contacts and cooperative solidarity benefits')}</span>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div className="p-3.5 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl space-y-1">
-                <span className="text-[10px] font-bold uppercase text-[#77736B]">Society Hub</span>
+                <span className="text-[10px] font-bold uppercase text-[#77736B]">{t('worker.community.societyHub', 'Society Hub')}</span>
                 <p className="font-bold text-[#292824]">{currentUser.societyName || 'Green Residency'}</p>
-                <p className="text-[11px] text-[#77736B]">Manager: Rajesh Sharma</p>
+                <p className="text-[11px] text-[#77736B]">{t('worker.community.manager', 'Manager')}: Rajesh Sharma</p>
                 <p className="text-[11px] text-[#537895] font-mono">+91 98220 12345</p>
               </div>
 
               <div className="p-3.5 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl space-y-1">
-                <span className="text-[10px] font-bold uppercase text-[#77736B]">Cooperative Bank</span>
-                <p className="font-bold text-[#292824]">Baner Trade Federation</p>
-                <p className="text-[11px] text-[#77736B]">Direct 70% automated split</p>
-                <p className="text-[11px] text-[#6E8B67] font-semibold">T+1 Settlement Guaranteed</p>
+                <span className="text-[10px] font-bold uppercase text-[#77736B]">{t('worker.community.coopBank', 'Cooperative Bank')}</span>
+                <p className="font-bold text-[#292824]">{t('worker.community.federationName', 'Baner Trade Federation')}</p>
+                <p className="text-[11px] text-[#77736B]">{t('worker.community.splitText', 'Direct 70% automated split')}</p>
+                <p className="text-[11px] text-[#6E8B67] font-semibold">{t('worker.community.settlementGuaranteed', 'T+1 Settlement Guaranteed')}</p>
               </div>
 
               <div className="p-3.5 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl space-y-1">
-                <span className="text-[10px] font-bold uppercase text-[#77736B]">Solidarity Safety Net</span>
-                <p className="font-bold text-[#292824]">Relief Aid Grant</p>
-                <p className="text-[11px] text-[#77736B]">Accident & Tool Insurance</p>
+                <span className="text-[10px] font-bold uppercase text-[#77736B]">{t('worker.community.solidaritySafetyNet', 'Solidarity Safety Net')}</span>
+                <p className="font-bold text-[#292824]">{t('worker.community.reliefAidGrant', 'Relief Aid Grant')}</p>
+                <p className="text-[11px] text-[#77736B]">{t('worker.community.accidentToolInsurance', 'Accident & Tool Insurance')}</p>
                 {onOpenEmergencyAid ? (
                   <button
                     type="button"
                     onClick={onOpenEmergencyAid}
                     className="text-[11px] font-bold text-[#80432E] hover:underline block cursor-pointer"
                   >
-                    Apply for Relief Aid →
+                    {t('worker.community.applyReliefAid', 'Apply for Relief Aid →')}
                   </button>
                 ) : (
-                  <span className="text-[11px] text-[#80432E] font-semibold">Active Member Covered</span>
+                  <span className="text-[11px] text-[#80432E] font-semibold">{t('worker.community.activeMemberCovered', 'Active Member Covered')}</span>
                 )}
               </div>
             </div>
@@ -386,7 +397,7 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
           {/* Channels list */}
           <div className="space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-[#77736B] block">
-              Professional Trade Guilds
+              {t('worker.community.professionalTradeGuilds', 'Professional Trade Guilds')}
             </span>
             <div className="space-y-1.5">
               {workerChannels.map((channel) => {
@@ -426,15 +437,15 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                 </div>
                 <p className="text-xs text-[#77736B] mt-0.5">{selectedChannel?.description}</p>
               </div>
-              <Badge variant="verified" size="sm">Cooperative Verified</Badge>
+              <Badge variant="verified" size="sm">{t('worker.community.coopVerified', 'Cooperative Verified')}</Badge>
             </div>
 
             <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
               {channelMessages.length === 0 ? (
                 <div className="text-center py-16 text-[#77736B]">
                   <MessageSquare className="w-8 h-8 text-[#9A958B] mx-auto mb-2 opacity-50" />
-                  <p className="text-sm font-medium">No messages yet in #{selectedChannel?.name}.</p>
-                  <p className="text-xs text-[#9A958B] mt-1">Start the technical exchange with your fellow trade peers below.</p>
+                  <p className="text-sm font-medium">{t('worker.community.noMessages', { channel: selectedChannel?.name, defaultValue: `No messages yet in #${selectedChannel?.name}.` })}</p>
+                  <p className="text-xs text-[#9A958B] mt-1">{t('worker.community.startExchange', 'Start the technical exchange with your fellow trade peers below.')}</p>
                 </div>
               ) : (
                 channelMessages.map((msg) => (
@@ -466,7 +477,7 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
                 type="text"
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
-                placeholder={`Share advice or questions in #${selectedChannel?.name}...`}
+                placeholder={t('worker.community.messagePlaceholder', { channel: selectedChannel?.name, defaultValue: `Share advice or questions in #${selectedChannel?.name}...` })}
                 className="flex-1 px-4 py-2.5 bg-white border border-[#E8E2D5] rounded-xl text-xs text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#6E8B67]"
               />
               <button
@@ -484,41 +495,41 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
       <Modal
         isOpen={showVotingModal}
         onClose={() => setShowVotingModal(false)}
-        title="Worker Voting Dashboard"
-        subtitle="Ballot #2026-09: Monthly Work Schedule & Rotation Policy"
+        title={t('worker.community.votingDashboardTitle', 'Worker Voting Dashboard')}
+        subtitle={t('worker.community.votingDashboardSubtitle', 'Ballot #2026-09: Monthly Work Schedule & Rotation Policy')}
         maxWidth="lg"
       >
         <div className="space-y-4">
           <div className="p-3.5 bg-[#E4EDF4] border border-[#B8CBDD] rounded-xl flex items-start gap-2.5 text-xs text-[#263D50]">
             <AlertCircle className="w-4 h-4 text-[#324F66] shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Cooperative Democratic Mandate (Person 5 Integration)</p>
+              <p className="font-bold">{t('worker.community.mandateTitle', 'Cooperative Democratic Mandate (Person 5 Integration)')}</p>
               <p className="text-[11px] text-[#537895] mt-0.5">
-                Every verified specialist receives one equal vote. Results are tallied transparently and enforced automatically by the allocation engine.
+                {t('worker.community.mandateDesc', 'Every verified specialist receives one equal vote. Results are tallied transparently and enforced automatically by the allocation engine.')}
               </p>
             </div>
           </div>
 
           <div className="p-4 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl space-y-2">
-            <h4 className="text-sm font-bold text-[#292824]">Resolution Summary</h4>
+            <h4 className="text-sm font-bold text-[#292824]">{t('worker.community.resolutionSummary', 'Resolution Summary')}</h4>
             <p className="text-xs text-[#524E47] leading-relaxed">
-              Shall the cooperative adopt Policy Directive 4.2 to implement rotation capping at a maximum of 4 consecutive emergency calls per technician per week, routing excess volume to junior certified apprentices?
+              {t('worker.community.resolutionText', 'Shall the cooperative adopt Policy Directive 4.2 to implement rotation capping at a maximum of 4 consecutive emergency calls per technician per week, routing excess volume to junior certified apprentices?')}
             </p>
             <div className="flex items-center gap-4 text-xs text-[#77736B] pt-2 border-t border-[#E8E2D5]">
-              <span>Deadline: <strong>Sep 21, 2026</strong></span>
-              <span>Total eligible voters: <strong>16 members</strong></span>
-              <span>Current turnout: <strong>88%</strong></span>
+              <span>{t('worker.community.deadline', 'Deadline')}: <strong>Sep 21, 2026</strong></span>
+              <span>{t('worker.community.eligibleVoters', 'Total eligible voters')}: <strong>16 {t('worker.community.members', 'members')}</strong></span>
+              <span>{t('worker.community.turnout', 'Current turnout')}: <strong>88%</strong></span>
             </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-[#77736B] block">
-              Cast Your Vote:
+              {t('worker.community.castYourVote', 'Cast Your Vote:')}
             </label>
             {[
-              { id: 'approve', label: 'In Favor (Approve Directive 4.2)', desc: 'Supports rotation capping and fair load distribution' },
-              { id: 'reject', label: 'Oppose (Keep Current Policy)', desc: 'Allow technicians to self-claim unlimited emergency assignments' },
-              { id: 'abstain', label: 'Abstain', desc: 'Neutral on this policy amendment' },
+              { id: 'approve', label: t('worker.community.voteApproveLabel', 'In Favor (Approve Directive 4.2)'), desc: t('worker.community.voteApproveDesc', 'Supports rotation capping and fair load distribution') },
+              { id: 'reject', label: t('worker.community.voteRejectLabel', 'Oppose (Keep Current Policy)'), desc: t('worker.community.voteRejectDesc', 'Allow technicians to self-claim unlimited emergency assignments') },
+              { id: 'abstain', label: t('worker.community.voteAbstainLabel', 'Abstain'), desc: t('worker.community.voteAbstainDesc', 'Neutral on this policy amendment') },
             ].map((opt) => (
               <label
                 key={opt.id}
@@ -546,7 +557,7 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E8E2D5]">
             <Button variant="subtle" size="sm" onClick={() => setShowVotingModal(false)}>
-              Close
+              {t('common.close', 'Close')}
             </Button>
             <Button
               variant="primary"
@@ -557,7 +568,7 @@ export const WorkerCommunityPage: React.FC<WorkerCommunityPageProps> = ({ onOpen
               }}
               disabled={!selectedVoteOption}
             >
-              Submit Ballot
+              {t('worker.community.submitBallot', 'Submit Ballot')}
             </Button>
           </div>
         </div>

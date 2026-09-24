@@ -47,36 +47,36 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#292824]/40 backdrop-blur-sm transition-opacity animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-fade-in">
       {/* Click outside to close */}
       <div className="fixed inset-0" onClick={onClose} />
 
       {/* Sheet / Dialog Surface */}
       <div
-        className={`relative z-10 w-full ${maxWidthClasses[maxWidth]} bg-[#FCF9F3] rounded-t-3xl sm:rounded-2xl shadow-float border border-[#E8E2D5] max-h-[92dvh] sm:max-h-[85vh] flex flex-col overflow-hidden animate-fade-in`}
+        className={`relative z-10 w-full ${maxWidthClasses[maxWidth]} bg-white rounded-t-3xl sm:rounded-2xl shadow-xl border border-slate-200 max-h-[92dvh] sm:max-h-[85vh] flex flex-col overflow-hidden animate-fade-in`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile handle indicator */}
-        <div className="w-12 h-1.5 bg-[#D8D3C8] rounded-full mx-auto mt-3 sm:hidden shrink-0" />
+        <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-3 sm:hidden shrink-0" />
 
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="px-6 py-4.5 border-b border-[#E8E2D5] flex items-center justify-between shrink-0">
+          <div className="px-6 py-4.5 border-b border-slate-200 flex items-center justify-between shrink-0">
             <div>
               {title && (
-                <h3 className="text-lg sm:text-xl font-semibold text-[#292824] tracking-tight">
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">
                   {title}
                 </h3>
               )}
               {subtitle && (
-                <p className="text-xs sm:text-sm text-[#77736B] mt-0.5">{subtitle}</p>
+                <p className="text-xs sm:text-sm text-slate-600 mt-0.5">{subtitle}</p>
               )}
             </div>
 
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="w-9 h-9 rounded-full bg-[#F3EEE4] hover:bg-[#EBE4D6] text-[#77736B] hover:text-[#292824] flex items-center justify-center transition-colors -mr-2 cursor-pointer"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-colors -mr-2 cursor-pointer"
                 aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   BarChart2,
@@ -73,25 +74,26 @@ export const WorkerPaymentContainer: React.FC<WorkerPaymentContainerProps> = ({
   workerId = 'w_rahul',
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [activeView, setActiveView] = useState<PaymentView>('dashboard');
 
   const views: { id: PaymentView; label: string; sublabel: string; icon: React.ReactNode }[] = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
-      sublabel: "Today's overview",
+      label: t('worker.paymentUi.dashboardNav', 'Dashboard'),
+      sublabel: t('worker.paymentUi.dashboardSub', "Today's overview"),
       icon: <LayoutDashboard className="w-4 h-4" />,
     },
     {
       id: 'breakdown',
-      label: 'Analytics',
-      sublabel: 'Weekly & monthly',
+      label: t('worker.paymentUi.analyticsNav', 'Analytics'),
+      sublabel: t('worker.paymentUi.analyticsSub', 'Weekly & monthly'),
       icon: <BarChart2 className="w-4 h-4" />,
     },
     {
       id: 'history',
-      label: 'Payments',
-      sublabel: 'History & filters',
+      label: t('worker.paymentUi.paymentsNav', 'Payments'),
+      sublabel: t('worker.paymentUi.paymentsSub', 'History & filters'),
       icon: <History className="w-4 h-4" />,
     },
   ];
@@ -108,7 +110,7 @@ export const WorkerPaymentContainer: React.FC<WorkerPaymentContainerProps> = ({
             type="button"
             onClick={onClose}
             className="w-8 h-8 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] flex items-center justify-center hover:bg-[#F3EEE4] transition-colors cursor-pointer shrink-0"
-            aria-label="Back"
+            aria-label={t('common.back', 'Back')}
           >
             <ChevronLeft className="w-4 h-4 text-[#77736B]" />
           </button>
@@ -119,10 +121,10 @@ export const WorkerPaymentContainer: React.FC<WorkerPaymentContainerProps> = ({
           </span>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#292824] leading-tight">
-              My Earnings
+              {t('worker.earnings.myEarnings', 'My Earnings')}
             </h1>
             <p className="text-xs text-[#77736B] mt-0.5">
-              Cooperative Worker · 70% Revenue Share
+              {t('worker.earnings.earningsSubtitle', 'Cooperative Worker · 70% Revenue Share')}
             </p>
           </div>
         </div>
@@ -149,7 +151,7 @@ export const WorkerPaymentContainer: React.FC<WorkerPaymentContainerProps> = ({
 
       {/* ── Breadcrumb pill (mobile only) ────────────────────────────── */}
       <div className="flex items-center gap-1.5 sm:hidden">
-        <span className="text-[11px] text-[#9A958B]">Earnings</span>
+        <span className="text-[11px] text-[#9A958B]">{t('nav.earnings', 'Earnings')}</span>
         <span className="text-[11px] text-[#BCB7AD]">/</span>
         <span className="text-[11px] font-semibold text-[#292824]">{currentView.label}</span>
       </div>

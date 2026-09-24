@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { INITIAL_SERVICES } from '../../store/initialData';
 import { ServiceCategory } from '../../types';
 import { Card } from '../../components/common/Card';
@@ -11,6 +12,7 @@ interface ServicesPageProps {
 }
 
 export const ServicesPage: React.FC<ServicesPageProps> = ({ onSelectService }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -42,13 +44,15 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onSelectService }) =
       {/* Header */}
       <div className="max-w-3xl">
         <Badge variant="coop" className="mb-2">
-          Verified Service Catalog
+          {t('servicesPage.verifiedCatalog', { defaultValue: 'Verified Service Catalog' })}
         </Badge>
         <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-[#292824] leading-tight">
-          Household & Community Services
+          {t('servicesPage.title', { defaultValue: 'Household & Community Services' })}
         </h1>
         <p className="text-[#524E47] mt-2 text-sm sm:text-base font-normal">
-          All services are performed by verified cooperative members adhering to standardized community rates and transparent splits.
+          {t('servicesPage.subtitle', {
+            defaultValue: 'All services are performed by verified cooperative members adhering to standardized community rates and transparent splits.',
+          })}
         </p>
       </div>
 
@@ -58,7 +62,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onSelectService }) =
           <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search for repair, installation, cleaning..."
+            placeholder={t('servicesPage.searchPlaceholder', { defaultValue: 'Search for repair, installation, cleaning...' })}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-transparent shadow-subtle placeholder:text-slate-400"
@@ -69,25 +73,25 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onSelectService }) =
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors cursor-pointer ${
               selectedCategory === null
                 ? 'bg-teal-700 text-white shadow-xs'
                 : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
             }`}
           >
-            All Services ({INITIAL_SERVICES.length})
+            {t('servicesPage.allServices', { defaultValue: 'All Services ({{count}})', count: INITIAL_SERVICES.length })}
           </button>
           {INITIAL_SERVICES.map((s) => (
             <button
               key={s.id}
               onClick={() => setSelectedCategory(s.id === selectedCategory ? null : s.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors cursor-pointer ${
                 selectedCategory === s.id
                   ? 'bg-teal-700 text-white shadow-xs'
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
-              {s.name}
+              {t(`services.${s.name.toLowerCase().replace(/[\s/&-]+/g, '_')}.name`, { defaultValue: s.name })}
             </button>
           ))}
         </div>
@@ -103,27 +107,27 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onSelectService }) =
                   {getServiceIcon(service.iconName)}
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-[#77736B] block">Coop Base Rate</span>
+                  <span className="text-xs text-[#77736B] block">{t('servicesPage.coopBaseRate', { defaultValue: 'Coop Base Rate' })}</span>
                   <span className="text-base font-bold font-mono text-[#292824]">₹{service.basePrice}</span>
                 </div>
               </div>
 
               <h3 className="text-lg font-bold text-[#292824] tracking-tight mb-1">
-                {service.name}
+                {t(`services.${service.name.toLowerCase().replace(/[\s/&-]+/g, '_')}.name`, { defaultValue: service.name })}
               </h3>
               <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-                {service.description}
+                {t(`services.${service.name.toLowerCase().replace(/[\s/&-]+/g, '_')}.desc`, { defaultValue: service.description })}
               </p>
 
               <div className="space-y-1.5 border-t border-slate-100 pt-3">
                 <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                  Common Requests:
+                  {t('servicesPage.commonRequests', { defaultValue: 'Common Requests:' })}
                 </span>
                 {service.problems.slice(0, 4).map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => onSelectService(service.name, p)}
-                    className="w-full text-left text-xs text-slate-700 hover:text-teal-800 hover:bg-slate-50 px-2 py-1 rounded flex items-center justify-between group transition-colors"
+                    className="w-full text-left text-xs text-slate-700 hover:text-teal-800 hover:bg-slate-50 px-2 py-1 rounded flex items-center justify-between group transition-colors cursor-pointer"
                   >
                     <span className="truncate">{p}</span>
                     <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-teal-700 group-hover:translate-x-0.5 transition-all shrink-0" />
@@ -140,7 +144,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onSelectService }) =
                 onClick={() => onSelectService(service.name)}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                Request {service.name}
+                {t('servicesPage.requestService', { defaultValue: 'Request {{name}}', name: service.name })}
               </Button>
             </div>
           </Card>

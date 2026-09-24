@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { MapPin, ChevronDown, Sparkles } from 'lucide-react';
 
@@ -13,6 +14,7 @@ export const LocationBadge: React.FC<LocationBadgeProps> = ({
   className = '',
   variant = 'pill',
 }) => {
+  const { t } = useTranslation();
   const { currentAddress, isLoadingAddress, isDetectingGPS } = useGeolocation();
 
   const localityText =
@@ -28,7 +30,7 @@ export const LocationBadge: React.FC<LocationBadgeProps> = ({
       >
         <MapPin className="w-3.5 h-3.5 text-[#6E8B67] group-hover:scale-110 transition-transform" />
         <span className="truncate max-w-[130px] sm:max-w-[180px]">
-          {isDetectingGPS ? 'Detecting...' : localityText}
+          {isDetectingGPS ? t('location.detecting', { defaultValue: 'Detecting...' }) : localityText}
         </span>
         <ChevronDown className="w-3 h-3 text-[#77736B]" />
       </button>
@@ -47,15 +49,15 @@ export const LocationBadge: React.FC<LocationBadgeProps> = ({
           </div>
           <div>
             <span className="text-[10px] uppercase font-extrabold tracking-wider text-[#77736B] block">
-              Service Delivery Location
+              {t('location.serviceDeliveryLocation', { defaultValue: 'Service Delivery Location' })}
             </span>
             <strong className="text-xs text-[#292824] font-bold block truncate max-w-[200px] sm:max-w-xs">
-              {isLoadingAddress ? 'Updating address...' : currentAddress.formattedAddress}
+              {isLoadingAddress ? t('location.updatingAddress', { defaultValue: 'Updating address...' }) : currentAddress.formattedAddress}
             </strong>
           </div>
         </div>
         <span className="text-xs font-bold text-[#6E8B67] hover:underline shrink-0">
-          Change
+          {t('common.change', { defaultValue: 'Change' })}
         </span>
       </div>
     );
@@ -72,11 +74,11 @@ export const LocationBadge: React.FC<LocationBadgeProps> = ({
       </div>
       <div className="text-left">
         <span className="text-[9px] uppercase tracking-wider font-extrabold text-[#77736B] block leading-tight">
-          Delivering to
+          {t('location.deliveringTo', { defaultValue: 'Delivering to' })}
         </span>
         <div className="flex items-center gap-1 text-xs font-extrabold text-[#292824] leading-tight">
           <span className="truncate max-w-[110px] sm:max-w-[160px]">
-            {isDetectingGPS ? 'Detecting GPS...' : localityText}
+            {isDetectingGPS ? t('location.detectingGPS', { defaultValue: 'Detecting GPS...' }) : localityText}
           </span>
           <ChevronDown className="w-3 h-3 text-[#77736B] group-hover:translate-y-0.5 transition-transform" />
         </div>

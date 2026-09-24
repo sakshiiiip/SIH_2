@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { X, CheckCheck, Bell, AlertTriangle, ShieldAlert, Info, CheckCircle2 } from 'lucide-react';
 
@@ -13,6 +14,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   onClose,
   onSelectBooking,
 }) => {
+  const { t } = useTranslation();
   const { notifications, markNotificationAsRead } = useCooperativeStore();
 
   if (!isOpen) return null;
@@ -29,7 +31,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
         <div className="p-4 border-b border-[#E8E2D5] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bell className="w-5 h-5 text-[#6E8B67]" />
-            <h3 className="font-semibold text-[#292824] text-base">Notifications</h3>
+            <h3 className="font-semibold text-[#292824] text-base">{t('notificationsDrawer.title', 'Notifications')}</h3>
             <span className="text-xs bg-[#F3EEE4] text-[#524E47] px-2 py-0.5 rounded-full font-medium">
               {notifications.length}
             </span>
@@ -47,7 +49,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
           {notifications.length === 0 ? (
             <div className="text-center py-12 text-[#9A958B]">
               <Bell className="w-10 h-10 mx-auto stroke-1 text-[#D8D3C8] mb-2" />
-              <p className="text-sm">No new notifications</p>
+              <p className="text-sm">{t('notificationsDrawer.noNotifications', 'No new notifications')}</p>
             </div>
           ) : (
             notifications.map((n) => {
@@ -88,7 +90,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                       </p>
                       {n.relatedBookingId && (
                         <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-[#445D3E]">
-                          <span>View Job Details</span>
+                          <span>{t('notificationsDrawer.viewJobDetails', 'View Job Details')}</span>
                           <span>→</span>
                         </div>
                       )}
@@ -102,13 +104,13 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
 
         {/* Footer */}
         <div className="p-3 border-t border-[#E8E2D5] bg-[#F3EEE4] flex items-center justify-between text-xs text-[#77736B]">
-          <span>Real-time platform activity</span>
+          <span>{t('notificationsDrawer.realtimeActivity', 'Real-time platform activity')}</span>
           <button
             onClick={() => notifications.forEach((n) => markNotificationAsRead(n.id))}
             className="text-[#445D3E] hover:text-[#2A3927] font-medium flex items-center gap-1 cursor-pointer"
           >
             <CheckCheck className="w-3.5 h-3.5" />
-            <span>Mark all read</span>
+            <span>{t('notificationsDrawer.markAllRead', 'Mark all read')}</span>
           </button>
         </div>
       </div>

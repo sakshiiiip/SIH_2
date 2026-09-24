@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Booking } from '../../types';
 import { Badge } from '../../components/common/Badge';
@@ -26,6 +27,7 @@ interface WorkerJobDetailsProps {
 }
 
 export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBack }) => {
+  const { t } = useTranslation();
   const { bookings, updateBookingState, verifyOTPAndStartJob, showToast } = useCooperativeStore();
   
   // Real booking
@@ -36,15 +38,12 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
   const [sosJob, setSosJob] = useState<Booking | null>(null);
 
   if (!job) {
-    // If not in store, we fallback to mock display (assuming it's a mock job)
-    // For simplicity, we just show a generic "Not Found or Mock Data" for mock details here
-    // In a real app, we'd fetch it from the same mock source if needed, or pass it via props.
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
-        <h2 className="text-lg font-bold text-[#292824]">Job Details</h2>
-        <p className="text-sm text-[#77736B] mt-2 mb-6">This is a mock job from data file. (Store booking not found)</p>
+        <h2 className="text-lg font-bold text-[#292824]">{t('common.details', 'Job Details')}</h2>
+        <p className="text-sm text-[#77736B] mt-2 mb-6">{t('common.noData', 'Job details not found.')}</p>
         <Button variant="outline" onClick={onBack} leftIcon={<ChevronLeft className="w-4 h-4" />}>
-          Back to Jobs
+          {t('common.back', 'Back')}
         </Button>
       </div>
     );
@@ -54,15 +53,15 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
 
   const handleOtpVerify = () => {
     if (!otpInput.trim()) {
-      setOtpError('Please enter the 4-digit arrival OTP');
+      setOtpError(t('worker.jobs.otpErrorRequired', 'Please enter the 4-digit arrival OTP'));
       return;
     }
     const success = verifyOTPAndStartJob(job.id, otpInput.trim());
     if (success) {
       setOtpError('');
-      showToast({ title: 'OTP Verified', message: 'Job started successfully!', type: 'success' });
+      showToast({ title: t('common.success', 'OTP Verified'), message: 'Job started successfully!', type: 'success' });
     } else {
-      setOtpError('Invalid OTP code. Ask customer for flat OTP.');
+      setOtpError(t('worker.jobs.otpErrorInvalid', 'Invalid OTP code. Ask customer for flat OTP.'));
     }
   };
 
@@ -100,7 +99,7 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
               <div className="flex items-center gap-3 mt-2 text-sm text-[#524E47]">
                 <span className="flex items-center gap-1.5">
                   <CalendarClock className="w-4 h-4 text-[#537895]" />
-                  {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Today'}
+                  {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : t('worker.earnings.today', 'Today')}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Badge variant={job.urgencyTier === 'EMERGENCY' ? 'emergency' : job.urgencyTier === 'URGENT' ? 'urgent' : 'neutral'} size="sm">
@@ -113,16 +112,16 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
             {/* Earnings Box */}
             <div className="p-3 bg-[#EEF3EC] border border-[#CFDDD0] rounded-xl text-right sm:text-left shrink-0">
               <span className="text-[10px] font-bold uppercase text-[#527048] flex items-center gap-1 justify-end sm:justify-start">
-                <DollarSign className="w-3.5 h-3.5" /> Est. Earnings
+                <DollarSign className="w-3.5 h-3.5" /> {t('worker.dashboard.estimatedNet', 'Est. Earnings')}
               </span>
               <span className="text-2xl font-bold font-mono text-[#2A3927] block">₹{job.pricing.workerShare}</span>
-              <span className="text-[10px] text-[#527048]">(70% coop share)</span>
+              <span className="text-[10px] text-[#527048]">({t('worker.dashboard.sharePercent', '70% share')})</span>
             </div>
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B]">Problem Description</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B]">{t('wizard.problemLabel', 'Problem Description')}</h3>
             <p className="text-sm text-[#292824] bg-white p-3 border border-[#E8E2D5] rounded-xl leading-relaxed">
               {job.details || 'No additional details provided by customer.'}
             </p>
@@ -131,7 +130,7 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
           {/* Customer & Location */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B]">Customer Details</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B]">{t('worker.jobExec.customerDestination', 'Customer Details')}</h3>
               <div className="flex items-center gap-3 p-3 bg-white border border-[#E8E2D5] rounded-xl">
                 <div className="w-10 h-10 rounded-full bg-[#E4EDF4] flex items-center justify-center text-[#2B4C68] font-bold">
                   {job.customerName.charAt(0)}
@@ -146,7 +145,7 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B]">Location</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B]">{t('common.address', 'Location')}</h3>
               <div className="flex items-start gap-2 p-3 bg-white border border-[#E8E2D5] rounded-xl h-[66px]">
                 <MapPin className="w-4 h-4 text-[#80432E] shrink-0 mt-0.5" />
                 <span className="text-sm text-[#292824] leading-snug">{job.customerAddress}</span>
@@ -166,7 +165,7 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
               onClick={() => alert(`Calling Customer ${job.customerName}: ${job.customerPhone}`)}
               leftIcon={<Phone className="w-4 h-4" />}
             >
-              Call
+              {t('worker.jobs.callCustomer', 'Call')}
             </Button>
             {isActive && (
               <Button
@@ -175,7 +174,7 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
                 onClick={() => setSosJob(job)}
                 leftIcon={<AlertTriangle className="w-4 h-4" />}
               >
-                SOS
+                {t('worker.jobs.sos', 'SOS')}
               </Button>
             )}
           </div>
@@ -184,19 +183,19 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             {job.state === 'PENDING_WORKER_ACCEPTANCE' && (
               <Button variant="primary" onClick={() => updateBookingState(job.id, 'CONFIRMED')} className="w-full sm:w-auto">
-                Accept Job
+                {t('worker.jobs.acceptJob', 'Accept Job')}
               </Button>
             )}
 
             {job.state === 'CONFIRMED' && (
               <Button variant="primary" onClick={() => updateBookingState(job.id, 'TRAVELLING')} leftIcon={<Navigation className="w-4 h-4" />} className="w-full sm:w-auto">
-                Start Travel
+                {t('worker.jobs.startTravel', 'Start Travel')}
               </Button>
             )}
 
             {job.state === 'TRAVELLING' && (
               <Button variant="primary" onClick={() => updateBookingState(job.id, 'ARRIVED')} leftIcon={<MapPin className="w-4 h-4" />} className="w-full sm:w-auto">
-                I Have Arrived
+                {t('worker.jobs.iHaveArrived', 'I Have Arrived')}
               </Button>
             )}
 
@@ -205,13 +204,13 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
                 <input
                   type="text"
                   maxLength={4}
-                  placeholder="4-digit OTP"
+                  placeholder={t('worker.jobExec.otpPlaceholder', '4-digit OTP')}
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value)}
                   className="w-28 px-3 py-2 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm font-mono font-bold text-center focus:outline-none focus:ring-2 focus:ring-[#6E8B67]"
                 />
                 <Button variant="primary" onClick={handleOtpVerify} leftIcon={<KeyRound className="w-4 h-4" />} className="flex-1 sm:flex-none">
-                  Verify OTP
+                  {t('worker.jobs.verifyStart', 'Verify OTP')}
                 </Button>
               </div>
             )}
@@ -219,17 +218,17 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
             {job.state === 'IN_PROGRESS' && (
               <>
                 <Button variant="outline" onClick={() => alert('Job verification photos can be captured and reviewed during active job execution.')} leftIcon={<Camera className="w-4 h-4" />} className="w-full sm:w-auto">
-                  Verify Work
+                  {t('worker.jobs.jobVerification', 'Verify Work')}
                 </Button>
                 <Button variant="primary" onClick={() => updateBookingState(job.id, 'COMPLETED')} leftIcon={<CheckCircle2 className="w-4 h-4" />} className="w-full sm:w-auto">
-                  Mark Complete
+                  {t('worker.stepLabels.4', 'Mark Complete')}
                 </Button>
               </>
             )}
 
             {['COMPLETED', 'PAID', 'RATED'].includes(job.state) && (
               <Badge variant="completed" size="md">
-                Job Successfully Closed
+                {t('worker.jobs.jobClosed', 'Job Successfully Closed')}
               </Badge>
             )}
           </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Booking } from '../../types';
 import { Card } from '../../components/common/Card';
@@ -43,6 +44,7 @@ interface WorkerJobsPageProps {
 }
 
 export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails }) => {
+  const { t } = useTranslation();
   const { currentUser, bookings, workers, updateBookingState, verifyOTPAndStartJob, acceptJob } = useCooperativeStore();
   const [activeTab, setActiveTab] = useState<JobTab>('upcoming');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
@@ -113,44 +115,44 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
   const handleOtpVerify = (job: Booking) => {
     const entered = otpInputs[job.id] || '';
     if (!entered.trim()) {
-      setOtpErrors({ ...otpErrors, [job.id]: 'Please enter the 4-digit arrival OTP' });
+      setOtpErrors({ ...otpErrors, [job.id]: t('worker.jobs.otpErrorRequired', 'Please enter the 4-digit arrival OTP') });
       return;
     }
     const success = verifyOTPAndStartJob(job.id, entered.trim());
     if (success) {
       setOtpErrors({ ...otpErrors, [job.id]: '' });
     } else {
-      setOtpErrors({ ...otpErrors, [job.id]: 'Invalid OTP code. Ask customer for flat OTP.' });
+      setOtpErrors({ ...otpErrors, [job.id]: t('worker.jobs.otpErrorInvalid', 'Invalid OTP code. Ask customer for flat OTP.') });
     }
   };
 
   const TABS: { id: JobTab; label: string; count: number }[] = [
-    { id: 'upcoming',    label: 'Upcoming',    count: storeUpcoming.length + filteredMockUpcoming.length },
-    { id: 'in_progress', label: 'In Progress', count: storeInProgress.length + (showMockInProgress ? 1 : 0) },
-    { id: 'completed',   label: 'Completed',   count: storeCompleted.length + filteredMockCompleted.length },
-    { id: 'cancelled',   label: 'Cancelled',   count: filteredMockCancelled.length },
-    { id: 'history',     label: 'Job History & Filter', count: storeHistory.length + filteredMockCompleted.length + filteredMockCancelled.length },
+    { id: 'upcoming',    label: t('worker.jobs.tabUpcoming', 'Upcoming'),    count: storeUpcoming.length + filteredMockUpcoming.length },
+    { id: 'in_progress', label: t('worker.jobs.tabInProgress', 'In Progress'), count: storeInProgress.length + (showMockInProgress ? 1 : 0) },
+    { id: 'completed',   label: t('worker.jobs.tabCompleted', 'Completed'),   count: storeCompleted.length + filteredMockCompleted.length },
+    { id: 'cancelled',   label: t('worker.jobs.tabCancelled', 'Cancelled'),   count: filteredMockCancelled.length },
+    { id: 'history',     label: t('worker.jobs.tabHistory', 'Job History & Filter'), count: storeHistory.length + filteredMockCompleted.length + filteredMockCancelled.length },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292824] tracking-tight flex items-center gap-2">
-            <Briefcase className="w-6 h-6 text-[#537895]" />
-            My Jobs
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+            <Briefcase className="w-6 h-6 text-emerald-700" />
+            {t('worker.jobs.title', 'My Jobs')}
           </h1>
-          <p className="text-xs text-[#77736B] mt-1">Manage your assigned service jobs</p>
+          <p className="text-xs text-slate-500 mt-1">{t('worker.jobs.subtitle', 'Manage your assigned service jobs')}</p>
         </div>
         <Badge variant="urgent" size="md">
-          <HardHat className="w-4 h-4 mr-1 text-[#324F66]" />
-          Worker Desk
+          <HardHat className="w-4 h-4 mr-1 text-slate-700" />
+          {t('worker.jobs.workerDesk', 'Worker Desk')}
         </Badge>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-[#E8E2D5]">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-slate-200">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -158,14 +160,14 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
               activeTab === tab.id
-                ? 'bg-[#292824] text-[#FAF7F2] shadow-xs'
-                : 'text-[#77736B] hover:text-[#292824] hover:bg-[#F3EEE4]'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             {tab.label}
             {tab.count > 0 && (
               <span className={`ml-1.5 px-1.5 py-0.5 rounded-full font-mono text-[10px] ${
-                activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-[#F3EEE4] text-[#77736B]'
+                activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
               }`}>
                 {tab.count}
               </span>
@@ -180,7 +182,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
       {activeTab === 'upcoming' && (
         <div className="space-y-4">
           {storeUpcoming.length === 0 && filteredMockUpcoming.length === 0 ? (
-            <EmptyState icon={<Clock />} message="No upcoming jobs" sub="New accepted or assigned jobs for your trade will appear here." />
+            <EmptyState icon={<Clock />} message={t('worker.jobs.noUpcomingTitle', 'No upcoming jobs')} sub={t('worker.jobs.noUpcomingSub', 'New accepted or assigned jobs for your trade will appear here.')} />
           ) : (
             <>
               {/* Store-sourced upcoming jobs */}
@@ -243,7 +245,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
             />
           )}
           {storeInProgress.length === 0 && !showMockInProgress && (
-            <EmptyState icon={<Briefcase />} message="No active jobs in progress" sub="Jobs will appear here once you start travel or work." />
+            <EmptyState icon={<Briefcase />} message={t('worker.jobs.noInProgressTitle', 'No active jobs in progress')} sub={t('worker.jobs.noInProgressSub', 'Jobs will appear here once you start travel or work.')} />
           )}
           {storeInProgress.map((job) => (
             <Card key={job.id} className="p-5 border-[#DFD8E8] bg-[#FCF9F3] shadow-card space-y-4">
@@ -266,7 +268,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                     onClick={() => setSosJob(job)}
                     leftIcon={<AlertOctagon className="w-3.5 h-3.5 text-[#C93B2B]" />}
                   >
-                    SOS
+                    {t('worker.jobs.sos', 'SOS')}
                   </Button>
                 </div>
               </div>
@@ -280,7 +282,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
               <div className="border-t border-[#E8E2D5] pt-3 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
                 <Button variant="outline" size="sm" leftIcon={<Phone className="w-3.5 h-3.5" />}
                   onClick={() => alert(`Calling ${job.customerName}: ${job.customerPhone}`)}>
-                  Call Customer
+                  {t('worker.jobs.callCustomer', 'Call Customer')}
                 </Button>
 
                 {/* OTP / State progression */}
@@ -288,13 +290,13 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                   {job.state === 'CONFIRMED' && (
                     <Button variant="primary" size="sm" onClick={() => updateBookingState(job.id, 'TRAVELLING')}
                       leftIcon={<Navigation className="w-3.5 h-3.5" />}>
-                      Start Travel
+                      {t('worker.jobs.startTravel', 'Start Travel')}
                     </Button>
                   )}
                   {job.state === 'TRAVELLING' && (
                     <Button variant="primary" size="sm" onClick={() => updateBookingState(job.id, 'ARRIVED')}
                       leftIcon={<MapPin className="w-3.5 h-3.5" />}>
-                      I Have Arrived
+                      {t('worker.jobs.iHaveArrived', 'I Have Arrived')}
                     </Button>
                   )}
                   {job.state === 'ARRIVED' && (
@@ -307,7 +309,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                       />
                       <Button variant="primary" size="sm" onClick={() => handleOtpVerify(job)}
                         leftIcon={<KeyRound className="w-3.5 h-3.5" />}>
-                        Verify & Start
+                        {t('worker.jobs.verifyStart', 'Verify & Start')}
                       </Button>
                     </div>
                   )}
@@ -319,7 +321,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                         leftIcon={<Camera className="w-3.5 h-3.5" />}
                         onClick={() => setExecutionBooking(job)}
                       >
-                        Job Verification
+                        {t('worker.jobs.jobVerification', 'Job Verification')}
                       </Button>
                       <Button
                         variant="primary"
@@ -327,14 +329,14 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                         onClick={() => setExecutionBooking(job)}
                         leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
                       >
-                        Execution Wizard
+                        {t('worker.jobs.executionWizard', 'Execution Wizard')}
                       </Button>
                     </>
                   )}
                   {job.state === 'AWAITING_VERIFICATION' && (
                     <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200 flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
-                      Awaiting Manager Verification
+                      {t('worker.jobs.awaitingVerification', 'Awaiting Manager Verification')}
                     </span>
                   )}
                 </div>
@@ -353,7 +355,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
       {activeTab === 'completed' && (
         <div className="space-y-4">
           {storeCompleted.length === 0 && filteredMockCompleted.length === 0 ? (
-            <EmptyState icon={<CheckCircle2 />} message="No completed jobs yet" sub="Completed jobs will appear here." />
+            <EmptyState icon={<CheckCircle2 />} message={t('worker.jobs.noCompletedTitle', 'No completed jobs yet')} sub={t('worker.jobs.noCompletedSub', 'Completed jobs will appear here.')} />
           ) : (
             <>
               {storeCompleted.map((job) => (
@@ -394,7 +396,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
       {activeTab === 'cancelled' && (
         <div className="space-y-4">
           {filteredMockCancelled.length === 0 ? (
-            <EmptyState icon={<XCircle />} message="No cancelled jobs" sub="Cancelled jobs will appear here." />
+            <EmptyState icon={<XCircle />} message={t('worker.jobs.noCancelledTitle', 'No cancelled jobs')} sub={t('worker.jobs.noCancelledSub', 'Cancelled jobs will appear here.')} />
           ) : (
             filteredMockCancelled.map((job) => (
               <Card key={job.jobId} className="p-5 border-[#E8E2D5] bg-[#FCF9F3] shadow-card space-y-3 opacity-80">
@@ -424,7 +426,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                 {job.cancellationReason && (
                   <div className="p-2.5 bg-[#F3EEE4] border border-[#E8E2D5] rounded-xl">
                     <p className="text-xs text-[#524E47]">
-                      <strong className="text-[#292824]">Reason:</strong> {job.cancellationReason}
+                      <strong className="text-[#292824]">{t('worker.jobs.reasonLabel', 'Reason:')}</strong> {job.cancellationReason}
                     </p>
                   </div>
                 )}
@@ -443,13 +445,13 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
           <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-[#E8E2D5]">
             <span className="text-xs text-[#77736B] font-semibold flex items-center gap-1 mr-1">
               <Filter className="w-3.5 h-3.5" />
-              Filter By:
+              {t('worker.jobs.filterBy', 'Filter By:')}
             </span>
             {[
-              { id: 'all', label: 'All History' },
-              { id: 'finished', label: 'Finished' },
-              { id: 'revisited', label: 'Revisited' },
-              { id: 'cancelled', label: 'Cancelled' },
+              { id: 'all', label: t('worker.jobs.filterAll', 'All History') },
+              { id: 'finished', label: t('worker.jobs.filterFinished', 'Finished') },
+              { id: 'revisited', label: t('worker.jobs.filterRevisited', 'Revisited') },
+              { id: 'cancelled', label: t('worker.jobs.filterCancelled', 'Cancelled') },
             ].map((f) => (
               <button
                 key={f.id}
@@ -479,8 +481,8 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
               return (
                 <EmptyState
                   icon={<RotateCcw />}
-                  message="No matching history records"
-                  sub="Jobs that are finished, revisited, or cancelled will appear here."
+                  message={t('worker.jobs.noHistoryTitle', 'No matching history records')}
+                  sub={t('worker.jobs.noHistorySub', 'Jobs that are finished, revisited, or cancelled will appear here.')}
                 />
               );
             }
@@ -521,7 +523,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                           </div>
                           <h3 className="text-sm font-bold text-[#292824]">{job.problemType}</h3>
                           <p className="text-xs text-[#77736B] mt-0.5">
-                            Customer: <strong className="text-[#292824]">{job.customerName}</strong> · {job.societyName}
+                            {t('worker.jobs.customerLabel', 'Customer:')} <strong className="text-[#292824]">{job.customerName}</strong> · {job.societyName}
                           </p>
                         </div>
                         <div className="text-right">
@@ -533,7 +535,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                             ₹{job.pricing.workerShare}
                           </span>
                           <span className="text-[10px] text-[#77736B]">
-                            {isCancelled ? 'Cancelled' : 'Worker Share'}
+                            {isCancelled ? t('worker.jobs.cancelledLabel', 'Cancelled') : t('worker.jobs.workerShare', 'Worker Share')}
                           </span>
                         </div>
                       </div>
@@ -543,7 +545,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                         <div className="p-3 bg-white rounded-xl border border-slate-100 flex items-center gap-3">
                           <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
                             <ImageIcon className="w-3.5 h-3.5 text-[#6E8B67]" />
-                            Photo Proof:
+                            {t('worker.jobs.photoProof', 'Photo Proof:')}
                           </span>
                           <div className="flex items-center gap-2">
                             {job.beforeImage && (
@@ -554,7 +556,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                                   className="w-12 h-12 object-cover rounded-lg border border-slate-200"
                                 />
                                 <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] text-center rounded-b-lg">
-                                  Before
+                                  {t('worker.jobs.before', 'Before')}
                                 </span>
                               </div>
                             )}
@@ -566,7 +568,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                                   className="w-12 h-12 object-cover rounded-lg border border-[#6E8B67]"
                                 />
                                 <span className="absolute bottom-0 inset-x-0 bg-[#445D3E] text-white text-[8px] text-center rounded-b-lg">
-                                  After ✓
+                                  {t('worker.jobs.after', 'After ✓')}
                                 </span>
                               </div>
                             )}
@@ -577,11 +579,11 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                       {/* Revisit detail note */}
                       {job.revisitDetails && (
                         <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
-                          <strong className="block font-bold">Revisit Details:</strong>
+                          <strong className="block font-bold">{t('worker.jobs.revisitDetails', 'Revisit Details:')}</strong>
                           <span>Reason: "{job.revisitDetails.reason}"</span>
                           {job.revisitDetails.scheduledDate && (
                             <span className="block mt-0.5 text-amber-800 font-semibold">
-                              Scheduled Date: {job.revisitDetails.scheduledDate}
+                              {t('worker.jobs.scheduledDate', 'Scheduled Date:')} {job.revisitDetails.scheduledDate}
                             </span>
                           )}
                         </div>
@@ -590,15 +592,15 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                       {/* Cancellation note */}
                       {job.cancellationDetails && (
                         <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900">
-                          <strong className="block font-bold">Cancellation Info:</strong>
-                          <span>Cancelled by {job.cancellationDetails.cancelledBy}: "{job.cancellationDetails.reason}"</span>
+                          <strong className="block font-bold">{t('worker.jobs.cancellationInfo', 'Cancellation Info:')}</strong>
+                          <span>{t('worker.jobs.cancelledBy', { name: job.cancellationDetails.cancelledBy, defaultValue: `Cancelled by ${job.cancellationDetails.cancelledBy}:` })} "{job.cancellationDetails.reason}"</span>
                         </div>
                       )}
 
                       <div className="flex items-center justify-between text-xs text-[#77736B] pt-1 border-t border-[#E8E2D5]">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
-                          Updated: {job.updatedAt?.split('T')[0] || 'Recently'}
+                          {t('worker.jobs.updated', 'Updated:')} {job.updatedAt?.split('T')[0] || t('worker.jobs.recently', 'Recently')}
                         </span>
                         {job.rating && (
                           <span className="flex items-center gap-1 text-amber-600 font-bold">
@@ -654,6 +656,7 @@ function UpcomingJobCard({
   address: string; date: string; time: string; earnings: number;
   status: string; onAcceptJob?: () => void; onStartJob?: () => void; onViewDetails?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Card className="p-5 border-[#B8CBDD] bg-[#F4F8FC] shadow-card space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -669,7 +672,7 @@ function UpcomingJobCard({
         </div>
         <div className="text-right">
           <span className="text-sm font-bold font-mono text-[#445D3E] block">₹{earnings}</span>
-          <span className="text-[10px] text-[#77736B]">est. earnings</span>
+          <span className="text-[10px] text-[#77736B]">{t('worker.jobs.estEarnings', 'est. earnings')}</span>
         </div>
       </div>
       <div className="flex items-center gap-3 text-xs text-[#524E47] flex-wrap">
@@ -688,7 +691,7 @@ function UpcomingJobCard({
           onClick={onViewDetails}
           className="flex items-center gap-1 px-3 py-2 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl cursor-pointer transition-colors"
         >
-          View Details <ChevronRight className="w-3.5 h-3.5" />
+          {t('worker.jobs.viewDetails', 'View Details')} <ChevronRight className="w-3.5 h-3.5" />
         </button>
         {onAcceptJob && (
           <button
@@ -697,7 +700,7 @@ function UpcomingJobCard({
             className="px-4 py-2 bg-[#445D3E] hover:bg-[#33462F] text-white text-xs font-bold rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Accept Job
+            {t('worker.jobs.acceptJob', 'Accept Job')}
           </button>
         )}
         {onStartJob && (
@@ -706,7 +709,7 @@ function UpcomingJobCard({
             onClick={onStartJob}
             className="px-4 py-2 bg-[#537895] hover:bg-[#41637E] text-white text-xs font-bold rounded-xl cursor-pointer transition-colors"
           >
-            Start Job
+            {t('worker.jobs.startJob', 'Start Job')}
           </button>
         )}
       </div>
@@ -715,6 +718,7 @@ function UpcomingJobCard({
 }
 
 function InProgressJobCard({ job, onSOS }: { job: WorkerJobRequest; onSOS: () => void }) {
+  const { t } = useTranslation();
   return (
     <Card className="p-5 border-2 border-[#DFD8E8] bg-[#F9F7FC] shadow-card space-y-4">
       <div className="flex items-start justify-between gap-2">
@@ -727,7 +731,7 @@ function InProgressJobCard({ job, onSOS }: { job: WorkerJobRequest; onSOS: () =>
             <span className="text-[10px] font-mono text-[#9A958B]">#{job.jobId}</span>
           </div>
           <h3 className="text-base font-bold text-[#292824]">{job.problemType}</h3>
-          <p className="text-xs text-[#77736B] mt-1">Customer: <strong className="text-[#292824]">{job.customer.name}</strong></p>
+          <p className="text-xs text-[#77736B] mt-1">{t('worker.jobs.customerLabel', 'Customer:')} <strong className="text-[#292824]">{job.customer.name}</strong></p>
         </div>
         <div className="text-right">
           <span className="text-lg font-bold font-mono text-[#445D3E] block">₹{job.estimatedEarnings}</span>
@@ -737,7 +741,7 @@ function InProgressJobCard({ job, onSOS }: { job: WorkerJobRequest; onSOS: () =>
             className="mt-1 flex items-center gap-1 px-2 py-1 bg-[#FAEBEB] border border-[#F4D7D7] text-[#C93B2B] text-[10px] font-bold rounded-lg cursor-pointer hover:bg-[#F6DDD4] animate-pulse"
           >
             <AlertOctagon className="w-3 h-3" />
-            SOS
+            {t('worker.jobs.sos', 'SOS')}
           </button>
         </div>
       </div>
@@ -758,7 +762,7 @@ function InProgressJobCard({ job, onSOS }: { job: WorkerJobRequest; onSOS: () =>
           className="flex items-center gap-1.5 px-3 py-2 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl cursor-pointer"
         >
           <Phone className="w-3.5 h-3.5" />
-          Call Customer
+          {t('worker.jobs.callCustomer', 'Call Customer')}
         </button>
         <button
           type="button"
@@ -766,12 +770,11 @@ function InProgressJobCard({ job, onSOS }: { job: WorkerJobRequest; onSOS: () =>
           className="flex items-center gap-1.5 px-3 py-2 bg-[#E4EDF4] hover:bg-[#D5E5F0] border border-[#B8CBDD] text-[#2B4C68] text-xs font-bold rounded-xl cursor-pointer"
         >
           <Camera className="w-3.5 h-3.5" />
-          Job Verification
+          {t('worker.jobs.jobVerification', 'Job Verification')}
         </button>
         <div className="flex items-center gap-1.5 px-3 py-2 bg-[#EEF3EC] border border-[#CFDDD0] rounded-xl">
           <DollarSign className="w-3.5 h-3.5 text-[#6E8B67]" />
-          {/* Person 3 integration point — payment status */}
-          <span className="text-xs text-[#364A32]">Payment pending · ₹{job.estimatedEarnings}</span>
+          <span className="text-xs text-[#364A32]">{t('worker.jobs.paymentPending', { amount: job.estimatedEarnings, defaultValue: `Payment pending · ₹${job.estimatedEarnings}` })}</span>
         </div>
       </div>
     </Card>
@@ -786,6 +789,7 @@ function CompletedJobCard({
   date: string; earnings: number; paymentStatus: 'paid' | 'pending';
   rating?: number; ratingComment?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <Card className="p-5 border-[#CFDDD0] bg-[#F6FAF5] shadow-card space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -802,13 +806,12 @@ function CompletedJobCard({
         </div>
         <div className="text-right space-y-1">
           <span className="text-base font-bold font-mono text-[#445D3E] block">₹{earnings}</span>
-          {/* Person 3 integration point — payment status */}
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
             paymentStatus === 'paid'
               ? 'bg-[#E6ECE4] text-[#364A32]'
               : 'bg-[#FAEDE8] text-[#80432E]'
           }`}>
-            {paymentStatus === 'paid' ? '✓ Paid' : 'Pending'}
+            {paymentStatus === 'paid' ? t('worker.jobs.paidBadge', '✓ Paid') : t('worker.jobs.pendingBadge', 'Pending')}
           </span>
         </div>
       </div>
@@ -822,9 +825,9 @@ function CompletedJobCard({
       )}
       <div className="flex items-center gap-2 text-xs text-[#77736B] pt-1 border-t border-[#E8E2D5]">
         <Clock className="w-3.5 h-3.5" />
-        <span>Completed: {date}</span>
+        <span>{t('worker.jobs.completedLabel', 'Completed:')} {date}</span>
         <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67] ml-auto" />
-        <span className="text-[#6E8B67] font-semibold">Job Closed</span>
+        <span className="text-[#6E8B67] font-semibold">{t('worker.jobs.jobClosed', 'Job Closed')}</span>
       </div>
     </Card>
   );

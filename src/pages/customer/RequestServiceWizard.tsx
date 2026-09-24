@@ -3,6 +3,7 @@ import { useCooperativeStore } from '../../store/cooperativeStore';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { LocationPickerModal } from '../../components/common/LocationPickerModal';
 import { INITIAL_SERVICES } from '../../store/initialData';
+import { useTranslation } from 'react-i18next';
 import { UrgencyTier } from '../../types';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
@@ -176,10 +177,12 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
     }, 450);
   };
 
+  const { t } = useTranslation();
+
   const stepMeta = [
-    { title: 'What do you need?', subtitle: 'Select service & issue type' },
-    { title: 'Tell us more', subtitle: 'Details, photos & location' },
-    { title: 'Confirm Request', subtitle: 'Urgency & transparent pricing' },
+    { title: t('wizard.step1', '1. Select Category'), subtitle: 'Select service & issue type' },
+    { title: t('wizard.step2', '2. Describe Issue'), subtitle: 'Details, photos & location' },
+    { title: t('wizard.step4', '4. Fair Pricing & Confirmation'), subtitle: 'Urgency & transparent pricing' },
   ];
 
   return (
@@ -547,23 +550,23 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
         )}
 
         {/* Modal Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-[#E8E2D5]">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-200">
           {step > 1 ? (
             <button
               type="button"
               onClick={handleBack}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#524E47] bg-[#F3EEE4] hover:bg-[#E8E2D5] transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <ChevronLeft className="w-4 h-4" />
-              <span>Back</span>
+              <span>{t('common.back', 'Back')}</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#77736B] hover:text-[#292824] transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </button>
           )}
 
@@ -571,9 +574,9 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#6E8B67] hover:bg-[#587352] transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 active:scale-[0.98] transition-all flex items-center gap-1.5 shadow-sm hover:shadow cursor-pointer"
             >
-              <span>Next</span>
+              <span>{t('common.next', 'Next')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
@@ -581,13 +584,13 @@ export const RequestServiceWizard: React.FC<RequestServiceWizardProps> = ({
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-[#6E8B67] hover:bg-[#587352] transition-colors flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center gap-2 shadow-sm hover:shadow cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Confirm Request</span>
+                  <span>{t('wizard.confirmBooking', 'Confirm Request')}</span>
                   <Check className="w-4 h-4" />
                 </>
               )}

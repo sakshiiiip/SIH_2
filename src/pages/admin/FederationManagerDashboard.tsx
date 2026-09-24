@@ -72,7 +72,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
 
   const [matchingWeights, setMatchingWeights] = useState(config.matchingWeights);
   const [activeSubTab, setActiveSubTab] = useState<
-    'overview' | 'manager_activity' | 'worker_verification' | 'worker_directory' | 'societies' | 'accreditation' | 'job_verification' | 'tool_bank' | 'coop_fund' | 'matching'
+    'overview' | 'map' | 'manager_activity' | 'worker_verification' | 'worker_directory' | 'societies' | 'accreditation' | 'job_verification' | 'tool_bank' | 'coop_fund' | 'matching'
   >('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [selectedSocietyForDrilldown, setSelectedSocietyForDrilldown] = useState<SocietyData | null>(null);
@@ -398,11 +398,11 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-7 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-7 animate-fade-in">
       {/* ========================================================================= */}
       {/* 1. HEADER: FEDERATION ADMIN OVERVIEW */}
       {/* ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E2D5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#EFEBF4] border border-[#DFD8E8] flex items-center justify-center text-[#504161] shadow-xs">
             <Network className="w-6 h-6" />

@@ -26,7 +26,7 @@ export const AdminAnalytics: React.FC = () => {
   const communityParticipation = '32%';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 animate-fade-in">
       {/* Header */}
       <div className="max-w-3xl">
         <Badge variant="coop" className="mb-2">
@@ -42,54 +42,54 @@ export const AdminAnalytics: React.FC = () => {
 
       {/* METRIC GRIDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5">
-          <div className="flex items-center justify-between text-[#77736B] mb-1">
+        <Card className="p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-semibold uppercase tracking-wider">Avg Match Latency</span>
-            <Clock className="w-4 h-4 text-[#6E8B67]" />
+            <Clock className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-[#292824]">
+          <div className="text-2xl sm:text-3xl font-bold font-mono text-slate-900">
             {avgMatchTime}
           </div>
-          <span className="text-[11px] text-[#445D3E] font-medium mt-1 block">
+          <span className="text-[11px] text-emerald-700 font-medium mt-1 block">
             AI Multi-factor scoring
           </span>
         </Card>
 
-        <Card className="p-5">
-          <div className="flex items-center justify-between text-[#77736B] mb-1">
+        <Card className="p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-semibold uppercase tracking-wider">Emergency Response</span>
-            <ShieldAlert className="w-4 h-4 text-[#C93B2B]" />
+            <ShieldAlert className="w-4 h-4 text-rose-600" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-[#C93B2B]">
+          <div className="text-2xl sm:text-3xl font-bold font-mono text-rose-600">
             {emergencyResponseTime}
           </div>
-          <span className="text-[11px] text-[#77736B] mt-1 block">
+          <span className="text-[11px] text-slate-500 mt-1 block">
             Priority dispatch median
           </span>
         </Card>
 
-        <Card className="p-5">
-          <div className="flex items-center justify-between text-[#77736B] mb-1">
+        <Card className="p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-semibold uppercase tracking-wider">Worker Utilization</span>
-            <Activity className="w-4 h-4 text-[#537895]" />
+            <Activity className="w-4 h-4 text-sky-600" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-[#292824]">
+          <div className="text-2xl sm:text-3xl font-bold font-mono text-slate-900">
             {workerUtilization}
           </div>
-          <span className="text-[11px] text-[#445D3E] font-medium mt-1 block">
+          <span className="text-[11px] text-emerald-700 font-medium mt-1 block">
             Optimal work-life balance
           </span>
         </Card>
 
-        <Card className="p-5">
-          <div className="flex items-center justify-between text-[#77736B] mb-1">
+        <Card className="p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-xs font-semibold uppercase tracking-wider">Satisfaction Rating</span>
-            <Star className="w-4 h-4 text-[#B37055] fill-[#B37055]" />
+            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-[#292824]">
+          <div className="text-2xl sm:text-3xl font-bold font-mono text-slate-900">
             {avgRating} ★
           </div>
-          <span className="text-[11px] text-[#77736B] mt-1 block">
+          <span className="text-[11px] text-slate-500 mt-1 block">
             Across 230+ customer ratings
           </span>
         </Card>
@@ -98,13 +98,13 @@ export const AdminAnalytics: React.FC = () => {
       {/* VISUAL REPORT CHARTS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Workload Distribution Fairness Chart */}
-        <Card className="p-6 space-y-4">
+        <Card className="p-6 space-y-4 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-[#292824] text-base">
+              <h3 className="font-bold text-slate-900 text-base">
                 Worker Workload Distribution (Fairness Index)
               </h3>
-              <p className="text-xs text-[#77736B]">
+              <p className="text-xs text-slate-500">
                 Comparing active jobs allocated across workers to verify workload balancing
               </p>
             </div>
@@ -115,12 +115,12 @@ export const AdminAnalytics: React.FC = () => {
             {workers.slice(0, 5).map((w) => (
               <div key={w.id} className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-[#292824]">{w.name} ({w.skills[0]})</span>
-                  <span className="text-[#77736B] font-mono">{w.currentWorkload}% capacity</span>
+                  <span className="font-semibold text-slate-900">{w.name} ({w.skills[0]})</span>
+                  <span className="text-slate-500 font-mono">{w.currentWorkload}% capacity</span>
                 </div>
-                <div className="w-full bg-[#E8E2D5] h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-[#6E8B67] h-full rounded-full transition-all"
+                    className="bg-emerald-600 h-full rounded-full transition-all"
                     style={{ width: `${w.currentWorkload}%` }}
                   />
                 </div>
@@ -130,12 +130,12 @@ export const AdminAnalytics: React.FC = () => {
         </Card>
 
         {/* Demand by Service Category */}
-        <Card className="p-6 space-y-4">
+        <Card className="p-6 space-y-4 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
           <div>
-            <h3 className="font-bold text-[#292824] text-base">
+            <h3 className="font-bold text-slate-900 text-base">
               Monthly Service Volume by Category
             </h3>
-            <p className="text-xs text-[#77736B]">
+            <p className="text-xs text-slate-500">
               Community residential demand across the Baner / Aundh cluster
             </p>
           </div>
@@ -150,12 +150,12 @@ export const AdminAnalytics: React.FC = () => {
             ].map((item, idx) => (
               <div key={idx} className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-[#292824]">{item.cat}</span>
-                  <span className="text-[#77736B] font-mono">{item.count} ({item.percent}%)</span>
+                  <span className="font-semibold text-slate-900">{item.cat}</span>
+                  <span className="text-slate-500 font-mono">{item.count} ({item.percent}%)</span>
                 </div>
-                <div className="w-full bg-[#E8E2D5] h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-[#537895] h-full rounded-full transition-all"
+                    className="bg-sky-600 h-full rounded-full transition-all"
                     style={{ width: `${item.percent}%` }}
                   />
                 </div>

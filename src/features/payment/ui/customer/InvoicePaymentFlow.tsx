@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   CreditCard,
   Smartphone,
@@ -527,13 +528,6 @@ interface PaymentMethodOption {
   popular?: boolean;
 }
 
-const PAYMENT_METHODS: PaymentMethodOption[] = [
-  { id: 'UPI',                label: 'UPI',                   sub: 'Google Pay, PhonePe, BHIM, Paytm', icon: <Smartphone className="w-5 h-5" />, popular: true },
-  { id: 'CARD',               label: 'Credit / Debit Card',  sub: 'Visa, Mastercard, RuPay',           icon: <CreditCard className="w-5 h-5" /> },
-  { id: 'NET_BANKING',        label: 'Net Banking',           sub: 'All major Indian banks',            icon: <Building   className="w-5 h-5" /> },
-  { id: 'COOPERATIVE_WALLET', label: 'Cooperative Wallet',    sub: 'Your society wallet balance',       icon: <Wallet     className="w-5 h-5" /> },
-];
-
 // ─── page-level step enum ─────────────────────────────────────────────────────
 type PayStep = 'invoice' | 'method' | 'confirm' | 'success' | 'failed';
 
@@ -558,6 +552,15 @@ export const InvoicePaymentFlow: React.FC<InvoicePaymentFlowProps> = ({
   onBack,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
+
+  const paymentMethods: PaymentMethodOption[] = [
+    { id: 'UPI',                label: t('payment.upi', 'UPI'),                   sub: t('payment.upiSub', 'Google Pay, PhonePe, BHIM, Paytm'), icon: <Smartphone className="w-5 h-5" />, popular: true },
+    { id: 'CARD',               label: t('payment.card', 'Credit / Debit Card'),  sub: t('payment.cardSub', 'Visa, Mastercard, RuPay'),           icon: <CreditCard className="w-5 h-5" /> },
+    { id: 'NET_BANKING',        label: t('payment.netBanking', 'Net Banking'),    sub: t('payment.netBankingSub', 'All major Indian banks'),    icon: <Building   className="w-5 h-5" /> },
+    { id: 'COOPERATIVE_WALLET', label: t('payment.wallet', 'Cooperative Wallet'), sub: t('payment.walletSub', 'Your society wallet balance'), icon: <Wallet     className="w-5 h-5" /> },
+  ];
+
   const [step, setStep] = useState<PayStep>('invoice');
   const [invoice, setInvoice] = useState<ParticipantInvoice | null>(null);
   const [paymentRecord, setPaymentRecord] = useState<ParticipantPaymentRecord | null>(null);
@@ -654,7 +657,7 @@ export const InvoicePaymentFlow: React.FC<InvoicePaymentFlowProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-[#77736B]">Method</span>
-              <span className="font-semibold text-[#292824]">{paidMethodLabel || PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.label}</span>
+              <span className="font-semibold text-[#292824]">{paidMethodLabel || paymentMethods.find((m) => m.id === selectedMethod)?.label}</span>
             </div>
           </div>
           {/* Dashed divider */}
@@ -729,7 +732,11 @@ export const InvoicePaymentFlow: React.FC<InvoicePaymentFlowProps> = ({
           </button>
           <div>
             <h2 className="text-lg font-bold text-[#292824]">
-              {step === 'invoice' ? 'Your Invoice' : step === 'method' ? 'Payment Method' : 'Review & Confirm'}
+              {step === 'invoice'
+                ? t('payment.yourInvoice', 'Your Invoice')
+                : step === 'method'
+                ? t('payment.paymentMethod', 'Payment Method')
+                : t('payment.reviewConfirm', 'Review & Confirm')}
             </h2>
             <p className="text-xs text-[#77736B] font-mono">{invoice.invoiceNumber}</p>
           </div>
@@ -738,7 +745,11 @@ export const InvoicePaymentFlow: React.FC<InvoicePaymentFlowProps> = ({
         {/* ── Step indicator ──────────────────────────────────────── */}
         <div className="flex items-center gap-2">
           {(['invoice', 'method', 'confirm'] as const).map((s, i) => {
-            const labels = { invoice: 'Invoice', method: 'Method', confirm: 'Confirm' };
+            const labels = {
+              invoice: t('payment.stepInvoice', 'Invoice'),
+              method: t('payment.stepMethod', 'Method'),
+              confirm: t('payment.stepConfirm', 'Confirm'),
+            };
             const stepOrder = ['invoice', 'method', 'confirm'];
             const done = stepOrder.indexOf(step) > i;
             const active = step === s;
@@ -837,7 +848,7 @@ export const InvoicePaymentFlow: React.FC<InvoicePaymentFlowProps> = ({
         {step === 'method' && (
           <>
             <div className="space-y-2.5">
-              {PAYMENT_METHODS.map((m) => (
+              {paymentMethods.map((m) => (
                 <button key={m.id} type="button" onClick={() => setSelectedMethod(m.id)}
                   className={`w-full flex items-center gap-3.5 p-4 rounded-2xl border text-left transition-all cursor-pointer ${selectedMethod === m.id ? 'border-[#6E8B67] bg-[#E6ECE4] shadow-card' : 'border-[#E8E2D5] bg-[#FCF9F3] hover:bg-[#F3EEE4] hover:border-[#D8CFBE]'}`}>
                   <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selectedMethod === m.id ? 'bg-[#6E8B67] text-white' : 'bg-[#F3EEE4] text-[#77736B]'}`}>
@@ -846,7 +857,7 @@ export const InvoicePaymentFlow: React.FC<InvoicePaymentFlowProps> = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className={`text-sm font-bold ${selectedMethod === m.id ? 'text-[#364A32]' : 'text-[#292824]'}`}>{m.label}</p>
-                      {m.popular && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FAEDE8] text-[#80432E] border border-[#F4DCD3]">Popular</span>}
+                      {m.popular && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FAEDE8] text-[#80432E] border border-[#F4DCD3]">{t('payment.popular', 'Popular')}</span>}
                     </div>
                     <p className="text-[11px] text-[#9A958B] mt-0.5">{m.sub}</p>
                   </div>
@@ -894,7 +905,7 @@ export const InvoicePaymentFlow: React.FC<InvoicePaymentFlowProps> = ({
                 </div>
                 <div>
                   <p className="text-[#A8B9A3]">Method</p>
-                  <p className="font-semibold">{PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.label}</p>
+                  <p className="font-semibold">{paymentMethods.find((m) => m.id === selectedMethod)?.label}</p>
                 </div>
               </div>
             </div>

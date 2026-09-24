@@ -22,14 +22,14 @@ export const Card: React.FC<CardProps> = ({
   } = useCardMotion({ maxTilt: 1.5, perspective: 1200 });
 
   const variantStyles = {
-    default: 'bg-[#FCF9F3] border border-[#E8E2D5] shadow-subtle',
-    elevated: 'bg-[#FCF9F3] border border-[#E0D9CB] shadow-card',
-    outline: 'bg-transparent border border-[#E8E2D5]',
-    subtle: 'bg-[#F3EEE4] border border-[#E8E2D5]/70',
+    default: 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm',
+    elevated: 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md',
+    outline: 'bg-transparent border border-slate-200 dark:border-slate-700',
+    subtle: 'bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60',
   };
 
   const interactiveStyles = interactive
-    ? 'hover:border-[#D8CFBE] shadow-subtle hover:shadow-card active:scale-[0.99] cursor-pointer will-change-transform'
+    ? 'hover:border-primary-400 dark:hover:border-primary-500 shadow-sm hover:shadow-md active:scale-[0.99] cursor-pointer will-change-transform'
     : '';
 
   if (interactive) {
@@ -39,9 +39,9 @@ export const Card: React.FC<CardProps> = ({
         onPointerMove={onPointerMove}
         onPointerEnter={onPointerEnter}
         onPointerLeave={onPointerLeave}
-        className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-6 ${variantStyles[variant]} ${interactiveStyles} ${className}`}
+        className={`relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 ${variantStyles[variant]} ${interactiveStyles} ${className}`}
         style={{
-          transition: 'border-color 180ms ease, box-shadow 220ms ease',
+          transition: 'border-color 180ms ease, box-shadow 220ms ease, transform 150ms ease',
         }}
         {...props}
       >
@@ -51,7 +51,7 @@ export const Card: React.FC<CardProps> = ({
           className="pointer-events-none absolute inset-0 rounded-[inherit] transition-opacity duration-300 opacity-0 will-change-transform"
           style={{
             background:
-              'radial-gradient(280px circle at var(--glow-x, 100px) var(--glow-y, 80px), rgba(168, 185, 163, 0.12), transparent 70%)',
+              'radial-gradient(280px circle at var(--glow-x, 100px) var(--glow-y, 80px), rgba(99, 102, 241, 0.08), transparent 70%)',
           }}
         />
         <div className="relative z-10">{children}</div>
@@ -61,7 +61,7 @@ export const Card: React.FC<CardProps> = ({
 
   return (
     <div
-      className={`rounded-2xl sm:rounded-3xl p-5 sm:p-6 ${variantStyles[variant]} ${className}`}
+      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 ${variantStyles[variant]} ${className}`}
       {...props}
     >
       {children}

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import {
   useSupportStore,
@@ -44,6 +45,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
   onBack,
   initialCategory = 'Booking',
 }) => {
+  const { t } = useTranslation();
   const { currentUser, bookings, showToast } = useCooperativeStore();
   const {
     tickets,
@@ -205,28 +207,28 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
   // Quick Starter Prompts by Category
   const PROMPT_CHIPS: Record<SupportCategory, string[]> = {
     Booking: [
-      'Worker has not arrived yet',
-      'Need to reschedule my booking time',
-      'Want to add additional task to job',
-      'Cancel this booking without penalty',
+      t('support.promptBooking1', { defaultValue: 'Worker has not arrived yet' }),
+      t('support.promptBooking2', { defaultValue: 'Need to reschedule my booking time' }),
+      t('support.promptBooking3', { defaultValue: 'Want to add additional task to job' }),
+      t('support.promptBooking4', { defaultValue: 'Cancel this booking without penalty' }),
     ],
     Payment: [
-      'Dispute charges on recent invoice',
-      'Payment deducted twice via UPI',
-      'Need an official tax receipt',
-      'Release escrow payout confirmation',
+      t('support.promptPayment1', { defaultValue: 'Dispute charges on recent invoice' }),
+      t('support.promptPayment2', { defaultValue: 'Payment deducted twice via UPI' }),
+      t('support.promptPayment3', { defaultValue: 'Need an official tax receipt' }),
+      t('support.promptPayment4', { defaultValue: 'Release escrow payout confirmation' }),
     ],
     Safety: [
-      'Urgent safety / emergency report',
-      'Property damage during service',
-      'Verify worker ID card & background',
-      'Request society manager inspection',
+      t('support.promptSafety1', { defaultValue: 'Urgent safety / emergency report' }),
+      t('support.promptSafety2', { defaultValue: 'Property damage during service' }),
+      t('support.promptSafety3', { defaultValue: 'Verify worker ID card & background' }),
+      t('support.promptSafety4', { defaultValue: 'Request society manager inspection' }),
     ],
     Account: [
-      'Update society / flat address',
-      'Cooperative membership card query',
-      'Change registered phone number',
-      'View my service history report',
+      t('support.promptAccount1', { defaultValue: 'Update society / flat address' }),
+      t('support.promptAccount2', { defaultValue: 'Cooperative membership card query' }),
+      t('support.promptAccount3', { defaultValue: 'Change registered phone number' }),
+      t('support.promptAccount4', { defaultValue: 'View my service history report' }),
     ],
   };
 
@@ -241,7 +243,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                 type="button"
                 onClick={onBack}
                 className="p-1.5 rounded-xl hover:bg-[#F3EEE4] text-[#524E47] transition-colors cursor-pointer"
-                title="Go Back"
+                title={t('common.back', { defaultValue: 'Go Back' })}
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -252,14 +254,14 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292824] tracking-tight flex items-center gap-2">
-                  Direct Human Support
+                  {t('support.directHumanSupport', { defaultValue: 'Direct Human Support' })}
                   <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#E6ECE4] text-[#364A32] border border-[#CFDDD0] hidden sm:inline-flex items-center gap-1">
                     <UserCheck className="w-3 h-3" />
-                    Zero AI / Bot Loops
+                    {t('support.zeroAiLoops', { defaultValue: 'Zero AI / Bot Loops' })}
                   </span>
                 </h1>
                 <p className="text-xs sm:text-sm text-[#77736B]">
-                  Connect directly with dedicated cooperative officers for instant, personalized resolution.
+                  {t('support.supportSubtitle', { defaultValue: 'Connect directly with dedicated cooperative officers for instant, personalized resolution.' })}
                 </p>
               </div>
             </div>
@@ -273,8 +275,8 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#445D3E]" />
           </span>
           <div className="text-left">
-            <span className="text-xs font-bold text-[#292824] block leading-tight">4 Human Officers Online</span>
-            <span className="text-[10px] text-[#6E8B67] font-semibold">Avg reply under 2 mins</span>
+            <span className="text-xs font-bold text-[#292824] block leading-tight">{t('support.officersOnline', { defaultValue: '4 Human Officers Online' })}</span>
+            <span className="text-[10px] text-[#6E8B67] font-semibold">{t('support.avgReplyTime', { defaultValue: 'Avg reply under 2 mins' })}</span>
           </div>
         </div>
       </div>
@@ -284,11 +286,11 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 text-xs font-bold text-[#292824] uppercase tracking-wider">
             <ShieldCheck className="w-4 h-4 text-[#445D3E]" />
-            <span>Auto-Attached Account Context</span>
+            <span>{t('support.autoAttachedContext', { defaultValue: 'Auto-Attached Account Context' })}</span>
           </div>
           <span className="text-[11px] text-[#77736B] flex items-center gap-1 bg-[#F3EEE4] px-2.5 py-1 rounded-lg">
             <Info className="w-3.5 h-3.5 text-[#537895]" />
-            Your support agent automatically receives these verified IDs
+            {t('support.contextNotice', { defaultValue: 'Your support agent automatically receives these verified IDs' })}
           </span>
         </div>
 
@@ -299,12 +301,12 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
               <Calendar className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-[#77736B] block">Active Booking</span>
+              <span className="text-[10px] uppercase font-bold text-[#77736B] block">{t('support.activeBooking', { defaultValue: 'Active Booking' })}</span>
               <span className="text-xs font-bold text-[#292824] truncate block">
                 #{contextData.activeBookingId} · {contextData.serviceCategory}
               </span>
               <span className="text-[10px] text-[#537895] font-semibold">
-                Status: {contextData.bookingState?.replace(/_/g, ' ')}
+                {t('common.status', { defaultValue: 'Status' })}: {contextData.bookingState?.replace(/_/g, ' ')}
               </span>
             </div>
           </div>
@@ -315,12 +317,12 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
               <CreditCard className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-[#77736B] block">Recent Ledger Txn</span>
+              <span className="text-[10px] uppercase font-bold text-[#77736B] block">{t('support.recentLedgerTxn', { defaultValue: 'Recent Ledger Txn' })}</span>
               <span className="text-xs font-bold text-[#292824] truncate block">
                 #{contextData.recentTransactionId} (₹{contextData.transactionAmount})
               </span>
               <span className="text-[10px] text-[#445D3E] font-semibold">
-                Escrow Protected & Verified
+                {t('support.escrowProtected', { defaultValue: 'Escrow Protected & Verified' })}
               </span>
             </div>
           </div>
@@ -331,7 +333,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
               <Building2 className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-[#77736B] block">Member Verification</span>
+              <span className="text-[10px] uppercase font-bold text-[#77736B] block">{t('support.memberVerification', { defaultValue: 'Member Verification' })}</span>
               <span className="text-xs font-bold text-[#292824] truncate block">
                 {contextData.societyName}
               </span>
@@ -355,7 +357,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
           }`}
         >
           <MessageSquare className="w-4 h-4" />
-          Live In-App Chat
+          {t('support.liveInAppChat', { defaultValue: 'Live In-App Chat' })}
           {activeTicket && activeTicket.status !== 'RESOLVED' && (
             <span className="w-2 h-2 rounded-full bg-[#6E8B67] animate-pulse" />
           )}
@@ -371,7 +373,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
           }`}
         >
           <PhoneCall className="w-4 h-4" />
-          One-Tap Callback Request
+          {t('support.callbackRequest', { defaultValue: 'One-Tap Callback Request' })}
         </button>
 
         <button
@@ -384,14 +386,14 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
           }`}
         >
           <ExternalLink className="w-4 h-4 text-[#25D366]" />
-          WhatsApp Support Redirect
+          {t('support.whatsappSupport', { defaultValue: 'WhatsApp Support Redirect' })}
         </button>
       </div>
 
       {/* ── Category Filter Pills ── */}
       <div className="space-y-1.5">
         <label className="text-[11px] uppercase font-bold text-[#77736B] tracking-wider block">
-          Select Issue Category
+          {t('support.selectCategory', { defaultValue: 'Select Issue Category' })}
         </label>
         <div className="flex items-center gap-2 flex-wrap">
           {(['Booking', 'Payment', 'Safety', 'Account'] as SupportCategory[]).map((cat) => (
@@ -409,7 +411,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
               {cat === 'Payment' && '💳 '}
               {cat === 'Safety' && '🛡️ '}
               {cat === 'Account' && '👤 '}
-              {cat} Support
+              {t(`support.cat_${cat.toLowerCase()}`, { defaultValue: `${cat} Support` })}
             </button>
           ))}
         </div>
@@ -448,7 +450,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                       </span>
                     </div>
                     <span className="text-[11px] text-[#C2B6A0] block">
-                      {activeTicket?.assignedAgent?.role || 'Senior Customer Advocate'} · ⭐ 4.98
+                      {activeTicket?.assignedAgent?.role || t('support.seniorAdvocate', { defaultValue: 'Senior Customer Advocate' })} · ⭐ 4.98
                     </span>
                   </div>
                 </div>
@@ -461,14 +463,14 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                       onClick={() => {
                         resolveTicket(activeTicket.ticketId, 'Customer resolved conversation');
                         showToast({
-                          title: 'Ticket Resolved',
-                          message: 'Issue closed successfully.',
+                          title: t('support.ticketResolvedTitle', { defaultValue: 'Ticket Resolved' }),
+                          message: t('support.ticketResolvedMsg', { defaultValue: 'Issue closed successfully.' }),
                           type: 'success',
                         });
                       }}
                       className="text-white hover:bg-white/10 text-xs border border-white/20"
                     >
-                      Mark Resolved
+                      {t('support.markResolved', { defaultValue: 'Mark Resolved' })}
                     </Button>
                   )}
                   {activeTicket && (
@@ -489,18 +491,17 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                     </div>
                     <div className="max-w-md space-y-1">
                       <h3 className="text-base font-bold text-[#292824]">
-                        Start Live Conversation with a Support Specialist
+                        {t('support.startLiveConversation', { defaultValue: 'Start Live Conversation with a Support Specialist' })}
                       </h3>
                       <p className="text-xs text-[#77736B]">
-                        Click any common topic below or type your message. All booking and payment details will be
-                        automatically provided to your specialist.
+                        {t('support.startLiveDesc', { defaultValue: 'Click any common topic below or type your message. All booking and payment details will be automatically provided to your specialist.' })}
                       </p>
                     </div>
 
                     {/* Quick Starters */}
                     <div className="w-full max-w-md space-y-1.5 text-left">
                       <span className="text-[11px] uppercase font-bold text-[#77736B] block">
-                        Quick Starters for {selectedCategory}
+                        {t('support.quickStartersFor', { defaultValue: 'Quick Starters for {{category}}', category: selectedCategory })}
                       </span>
                       {PROMPT_CHIPS[selectedCategory].map((prompt) => (
                         <button
@@ -562,14 +563,14 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                   <div className="flex items-center justify-between p-2 bg-[#E6ECE4] rounded-xl text-xs text-[#364A32] font-semibold">
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-[#445D3E]" />
-                      This support ticket has been resolved.
+                      {t('support.ticketResolvedBanner', { defaultValue: 'This support ticket has been resolved.' })}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleStartLiveChat(selectedCategory)}
                       className="px-2.5 py-1 bg-[#445D3E] text-white rounded-lg hover:bg-[#364A32] transition-colors cursor-pointer"
                     >
-                      Start New Chat
+                      {t('support.startNewChat', { defaultValue: 'Start New Chat' })}
                     </button>
                   </div>
                 ) : (
@@ -586,8 +587,8 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                       onChange={(e) => setChatInputText(e.target.value)}
                       placeholder={
                         activeTicket
-                          ? `Reply to ${activeTicket.assignedAgent?.name || 'Support'}...`
-                          : `Type message to connect with human agent...`
+                          ? t('support.replyToAgent', { defaultValue: 'Reply to {{name}}...', name: activeTicket.assignedAgent?.name || 'Support' })
+                          : t('support.typeMessageToConnect', { defaultValue: 'Type message to connect with human agent...' })
                       }
                       className="flex-1 px-3.5 py-2.5 bg-white border border-[#E8E2D5] rounded-xl text-xs sm:text-sm text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#445D3E]"
                     />
@@ -597,7 +598,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                       className="px-4 py-2.5 bg-[#445D3E] hover:bg-[#364A32] disabled:opacity-50 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      <span>Send</span>
+                      <span>{t('common.send', { defaultValue: 'Send' })}</span>
                     </button>
                   </form>
                 )}
@@ -611,7 +612,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
             <Card className="p-4 bg-[#FCF9F3] border-[#E8E2D5] space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B] flex items-center gap-1.5">
                 <UserCheck className="w-4 h-4 text-[#445D3E]" />
-                Support Officer on Duty
+                {t('support.officerOnDuty', { defaultValue: 'Support Officer on Duty' })}
               </h3>
               <div className="flex items-start gap-3">
                 <img
@@ -630,19 +631,19 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                       'Priya Sharma'}
                   </h4>
                   <span className="text-xs text-[#537895] block">
-                    {activeTicket?.assignedAgent?.role || 'Senior Customer Advocate'}
+                    {activeTicket?.assignedAgent?.role || t('support.seniorAdvocate', { defaultValue: 'Senior Customer Advocate' })}
                   </span>
                   <div className="flex items-center gap-1 mt-1 text-[11px] text-[#77736B]">
                     <Star className="w-3 h-3 text-[#B37055] fill-[#B37055]" />
                     <span className="font-bold text-[#292824]">4.98</span>
-                    <span>· 1,400+ issues resolved</span>
+                    <span>· {t('support.issuesResolvedCount', { defaultValue: '1,400+ issues resolved' })}</span>
                   </div>
                 </div>
               </div>
 
               <div className="pt-2 border-t border-[#E8E2D5] text-[11px] text-[#77736B] space-y-1">
-                <p>✓ Authorized to approve direct refunds & rescheduling</p>
-                <p>✓ Direct contact with your Society Cooperative Manager</p>
+                <p>{t('support.benefitRefunds', { defaultValue: '✓ Authorized to approve direct refunds & rescheduling' })}</p>
+                <p>{t('support.benefitManagerContact', { defaultValue: '✓ Direct contact with your Society Cooperative Manager' })}</p>
               </div>
             </Card>
 
@@ -651,45 +652,45 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B] flex items-center gap-1.5">
                   <FileText className="w-4 h-4 text-[#537895]" />
-                  My Support Tickets ({userTickets.length})
+                  {t('support.mySupportTickets', { defaultValue: 'My Support Tickets ({{count}})', count: userTickets.length })}
                 </h3>
               </div>
 
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                 {userTickets.length === 0 ? (
-                  <p className="text-xs text-[#77736B] text-center py-4">No tickets recorded yet.</p>
+                  <p className="text-xs text-[#77736B] text-center py-4">{t('support.noTicketsRecorded', { defaultValue: 'No tickets recorded yet.' })}</p>
                 ) : (
-                  userTickets.map((t) => (
+                  userTickets.map((tItem) => (
                     <div
-                      key={t.ticketId}
+                      key={tItem.ticketId}
                       onClick={() => {
-                        setActiveTicketId(t.ticketId);
-                        setSelectedChannel(t.channel);
+                        setActiveTicketId(tItem.ticketId);
+                        setSelectedChannel(tItem.channel);
                       }}
                       className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-colors ${
-                        activeTicket?.ticketId === t.ticketId
+                        activeTicket?.ticketId === tItem.ticketId
                           ? 'border-[#445D3E] bg-[#E6ECE4]'
                           : 'border-[#E8E2D5] bg-[#FAF7F2] hover:bg-[#F3EEE4]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono font-bold text-[#292824]">#{t.ticketId}</span>
+                        <span className="font-mono font-bold text-[#292824]">#{tItem.ticketId}</span>
                         <span
                           className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
-                            t.status === 'RESOLVED'
+                            tItem.status === 'RESOLVED'
                               ? 'bg-[#CFDDD0] text-[#2A3927]'
                               : 'bg-[#E4EDF4] text-[#1C2C3A]'
                           }`}
                         >
-                          {t.status}
+                          {tItem.status}
                         </span>
                       </div>
                       <span className="text-[11px] text-[#524E47] block truncate font-medium">
-                        {t.subject}
+                        {tItem.subject}
                       </span>
                       <div className="flex items-center justify-between text-[10px] text-[#77736B] mt-1">
-                        <span>Channel: {t.channel}</span>
-                        <span>{new Date(t.createdAt).toLocaleDateString()}</span>
+                        <span>{t('support.channelLabel', { defaultValue: 'Channel:' })} {tItem.channel}</span>
+                        <span>{new Date(tItem.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   ))
@@ -709,9 +710,9 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                 <PhoneCall className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-[#292824]">Request Immediate or Scheduled Callback</h2>
+                <h2 className="text-lg font-bold text-[#292824]">{t('support.requestCallbackTitle', { defaultValue: 'Request Immediate or Scheduled Callback' })}</h2>
                 <p className="text-xs text-[#77736B]">
-                  Skip holding on the phone line. A specialized support officer will call you directly.
+                  {t('support.requestCallbackSubtitle', { defaultValue: 'Skip holding on the phone line. A specialized support officer will call you directly.' })}
                 </p>
               </div>
             </div>
@@ -723,12 +724,17 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-base font-bold text-[#292824]">Callback Successfully Queued!</h3>
+                  <h3 className="text-base font-bold text-[#292824]">{t('support.callbackQueuedTitle', { defaultValue: 'Callback Successfully Queued!' })}</h3>
                   <p className="text-xs text-[#364A32]">
-                    Reference Ticket: <span className="font-mono font-bold">#{callbackSuccessTicketId}</span>
+                    {t('support.refTicket', { defaultValue: 'Reference Ticket: ' })}<span className="font-mono font-bold">#{callbackSuccessTicketId}</span>
                   </p>
                   <p className="text-xs text-[#524E47]">
-                    Officer <strong>{HUMAN_SUPPORT_AGENTS.find((a) => a.specialization === selectedCategory)?.name || 'Priya Sharma'}</strong> will call you at <strong>{callbackPhone}</strong> during <strong>{callbackSlot}</strong>.
+                    {t('support.callbackQueuedDetail', {
+                      defaultValue: 'Officer {{officer}} will call you at {{phone}} during {{slot}}.',
+                      officer: HUMAN_SUPPORT_AGENTS.find((a) => a.specialization === selectedCategory)?.name || 'Priya Sharma',
+                      phone: callbackPhone,
+                      slot: callbackSlot,
+                    })}
                   </p>
                 </div>
                 <Button
@@ -740,7 +746,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                   }}
                   className="mx-auto"
                 >
-                  Schedule Another Callback
+                  {t('support.scheduleAnotherCallback', { defaultValue: 'Schedule Another Callback' })}
                 </Button>
               </div>
             ) : (
@@ -749,7 +755,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                 {/* Contact Phone */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-[#292824] block">
-                    Your Phone Number for Callback
+                    {t('support.phoneForCallback', { defaultValue: 'Your Phone Number for Callback' })}
                   </label>
                   <div className="relative">
                     <Phone className="w-4 h-4 text-[#77736B] absolute left-3.5 top-3" />
@@ -767,14 +773,14 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                 {/* Convenient Time Slot Selection */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-[#292824] block">
-                    Choose Convenient Time Slot
+                    {t('support.chooseTimeSlot', { defaultValue: 'Choose Convenient Time Slot' })}
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {[
-                      'Within 15 minutes (Urgent)',
-                      'Today 3:00 PM – 4:00 PM',
-                      'Today 6:00 PM – 7:00 PM',
-                      'Tomorrow Morning (10 AM – 11 AM)',
+                      t('support.slot15Min', { defaultValue: 'Within 15 minutes (Urgent)' }),
+                      t('support.slotToday3to4', { defaultValue: 'Today 3:00 PM – 4:00 PM' }),
+                      t('support.slotToday6to7', { defaultValue: 'Today 6:00 PM – 7:00 PM' }),
+                      t('support.slotTomorrowMorning', { defaultValue: 'Tomorrow Morning (10 AM – 11 AM)' }),
                     ].map((slot) => (
                       <button
                         key={slot}
@@ -799,13 +805,13 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                 {/* Brief Issue Notes */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-[#292824] block">
-                    Brief Notes / What should we know? (Optional)
+                    {t('support.briefNotesOptional', { defaultValue: 'Brief Notes / What should we know? (Optional)' })}
                   </label>
                   <textarea
                     rows={3}
                     value={callbackNotes}
                     onChange={(e) => setCallbackNotes(e.target.value)}
-                    placeholder="e.g. Need to adjust the technician arrival time and discuss pricing breakdown..."
+                    placeholder={t('support.notesPlaceholder', { defaultValue: 'e.g. Need to adjust the technician arrival time and discuss pricing breakdown...' })}
                     className="w-full p-3 bg-white border border-[#E8E2D5] rounded-xl text-xs sm:text-sm text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#445D3E]"
                   />
                 </div>
@@ -814,8 +820,11 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                 <div className="p-3 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl text-xs text-[#524E47] flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-[#445D3E] shrink-0" />
                   <span>
-                    Booking <strong>#{contextData.activeBookingId}</strong> and Recent Txn{' '}
-                    <strong>#{contextData.recentTransactionId}</strong> will be on the agent's screen when calling.
+                    {t('support.attachedAlert', {
+                      defaultValue: 'Booking #{{booking}} and Recent Txn #{{txn}} will be on the agent\'s screen when calling.',
+                      booking: contextData.activeBookingId,
+                      txn: contextData.recentTransactionId,
+                    })}
                   </span>
                 </div>
 
@@ -826,7 +835,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                   leftIcon={<PhoneCall className="w-4 h-4" />}
                   className="w-full justify-center py-3"
                 >
-                  Confirm Callback Request
+                  {t('support.confirmCallbackRequest', { defaultValue: 'Confirm Callback Request' })}
                 </Button>
               </form>
             )}
@@ -843,9 +852,9 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
                 <ExternalLink className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-[#292824]">WhatsApp Business Direct Support</h2>
+                <h2 className="text-lg font-bold text-[#292824]">{t('support.whatsappSupportTitle', { defaultValue: 'WhatsApp Business Direct Support' })}</h2>
                 <p className="text-xs text-[#77736B]">
-                  Chat with our verified cooperative support desk right from WhatsApp with pre-filled context.
+                  {t('support.whatsappSupportSubtitle', { defaultValue: 'Chat with our verified cooperative support desk right from WhatsApp with pre-filled context.' })}
                 </p>
               </div>
             </div>
@@ -853,13 +862,13 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
             {/* Optional Custom Note */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#292824] block">
-                Add Issue Summary for WhatsApp Desk (Optional)
+                {t('support.addIssueSummaryOptional', { defaultValue: 'Add Issue Summary for WhatsApp Desk (Optional)' })}
               </label>
               <textarea
                 rows={2}
                 value={whatsappNote}
                 onChange={(e) => setWhatsappNote(e.target.value)}
-                placeholder="e.g. Please confirm if my plumber has accepted the updated flat address..."
+                placeholder={t('support.whatsappPlaceholder', { defaultValue: 'e.g. Please confirm if my plumber has accepted the updated flat address...' })}
                 className="w-full p-3 bg-white border border-[#E8E2D5] rounded-xl text-xs sm:text-sm text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#25D366]"
               />
             </div>
@@ -868,7 +877,7 @@ export const HumanSupportPage: React.FC<HumanSupportPageProps> = ({
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#292824] block flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-[#25D366]" />
-                Auto-Formatted Message Preview:
+                {t('support.autoFormattedPreview', { defaultValue: 'Auto-Formatted Message Preview:' })}
               </label>
               <div className="p-4 bg-[#E8F8EE]/50 border border-[#C5ECD2] rounded-xl font-mono text-xs text-[#1E5631] whitespace-pre-wrap leading-relaxed">
                 {`*Cooperative Platform Human Support Request*
@@ -889,11 +898,11 @@ _Bypassing bot. Requesting human agent connection._`}
               className="w-full py-3.5 px-4 bg-[#25D366] hover:bg-[#20BA5A] active:scale-[0.99] text-white font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
             >
               <ExternalLink className="w-4 h-4" />
-              <span>Launch WhatsApp Chat Now</span>
+              <span>{t('support.launchWhatsApp', { defaultValue: 'Launch WhatsApp Chat Now' })}</span>
             </button>
 
             <p className="text-[11px] text-center text-[#77736B]">
-              Verified WhatsApp Business Account · Mon – Sun (7:00 AM – 11:00 PM IST)
+              {t('support.verifiedWhatsAppHours', { defaultValue: 'Verified WhatsApp Business Account · Mon – Sun (7:00 AM – 11:00 PM IST)' })}
             </p>
           </Card>
         </div>

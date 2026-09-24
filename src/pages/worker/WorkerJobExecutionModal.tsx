@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Booking } from '../../types';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { useGeolocation } from '../../hooks/useGeolocation';
@@ -40,14 +41,6 @@ import {
 const BREAK_DURATIONS = [15, 30, 45] as const;
 type BreakDuration = typeof BREAK_DURATIONS[number];
 
-const BREAK_REASONS = [
-  { label: 'Lunch Break', icon: <Coffee className="w-3.5 h-3.5" /> },
-  { label: 'Sourcing Materials', icon: <Wrench className="w-3.5 h-3.5" /> },
-  { label: 'Sourcing Parts', icon: <Wrench className="w-3.5 h-3.5" /> },
-  { label: 'Prayer Break', icon: <Star className="w-3.5 h-3.5" /> },
-  { label: 'Personal Break', icon: <Coffee className="w-3.5 h-3.5" /> },
-] as const;
-
 // ─── Break picker modal ───────────────────────────────────────────────────────
 
 interface BreakPickerProps {
@@ -56,9 +49,18 @@ interface BreakPickerProps {
 }
 
 function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
+  const { t } = useTranslation();
   const [duration, setDuration] = useState<BreakDuration>(15);
   const [reason, setReason] = useState<string>('');
   const [customReason, setCustomReason] = useState('');
+
+  const BREAK_REASONS = [
+    { label: t('worker.breakPicker.reasonLunch', 'Lunch Break'), key: 'lunch', icon: <Coffee className="w-3.5 h-3.5" /> },
+    { label: t('worker.breakPicker.reasonMaterials', 'Sourcing Materials'), key: 'materials', icon: <Wrench className="w-3.5 h-3.5" /> },
+    { label: t('worker.breakPicker.reasonParts', 'Sourcing Parts'), key: 'parts', icon: <Wrench className="w-3.5 h-3.5" /> },
+    { label: t('worker.breakPicker.reasonPrayer', 'Prayer Break'), key: 'prayer', icon: <Star className="w-3.5 h-3.5" /> },
+    { label: t('worker.breakPicker.reasonPersonal', 'Personal Break'), key: 'personal', icon: <Coffee className="w-3.5 h-3.5" /> },
+  ] as const;
 
   const finalReason =
     reason === '__custom__' ? customReason.trim() || undefined : reason || undefined;
@@ -74,8 +76,8 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
               <Coffee className="w-4 h-4 text-amber-700" />
             </span>
             <div>
-              <p className="text-sm font-bold text-[#292824]">Take a Break</p>
-              <p className="text-[11px] text-[#77736B]">Customer will be notified automatically</p>
+              <p className="text-sm font-bold text-[#292824]">{t('worker.breakPicker.title', 'Take a Break')}</p>
+              <p className="text-[11px] text-[#77736B]">{t('worker.breakPicker.subtitle', 'Customer will be notified automatically')}</p>
             </div>
           </div>
           <button
@@ -91,7 +93,7 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
           {/* Duration selection */}
           <div>
             <p className="text-[11px] font-bold text-[#77736B] uppercase tracking-wider mb-2">
-              Break Duration
+              {t('worker.breakPicker.breakDurationLabel', 'Break Duration')}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {BREAK_DURATIONS.map((d) => (
@@ -105,7 +107,7 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
                       : 'border-[#E8E2D5] bg-white text-[#292824] hover:bg-[#F8F5EE]'
                   }`}
                 >
-                  {d} min
+                  {t('worker.breakPicker.durationBtn', { d, defaultValue: `${d} min` })}
                 </button>
               ))}
             </div>
@@ -114,12 +116,12 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
           {/* Reason selection */}
           <div>
             <p className="text-[11px] font-bold text-[#77736B] uppercase tracking-wider mb-2">
-              Reason (optional)
+              {t('worker.breakPicker.reasonLabel', 'Reason (optional)')}
             </p>
             <div className="space-y-1.5">
               {BREAK_REASONS.map((r) => (
                 <button
-                  key={r.label}
+                  key={r.key}
                   type="button"
                   onClick={() => setReason(reason === r.label ? '' : r.label)}
                   className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm font-medium text-left transition-all cursor-pointer ${
@@ -148,13 +150,13 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
                     reason === '__custom__' ? 'text-amber-600' : 'text-[#77736B]'
                   }`}
                 />
-                Other…
+                {t('worker.breakPicker.reasonOther', 'Other…')}
               </button>
               {reason === '__custom__' && (
                 <input
                   type="text"
                   autoFocus
-                  placeholder="Describe reason…"
+                  placeholder={t('worker.breakPicker.customReasonPlaceholder', 'Describe reason…')}
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
                   className="w-full px-3.5 py-2.5 border border-amber-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 bg-amber-50/50"
@@ -170,7 +172,7 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
             className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
           >
             <Coffee className="w-4 h-4" />
-            Start {duration}-Minute Break
+            {t('worker.breakPicker.confirmBtn', { duration, defaultValue: `Start ${duration}-Minute Break` })}
           </button>
         </div>
       </div>
@@ -183,13 +185,6 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
 // Step indices for IN_PROGRESS micro-wizard
 type WizardStep = 1 | 2 | 3 | 4;
 
-const STEP_LABELS: Record<WizardStep, string> = {
-  1: 'Before Photo',
-  2: 'Start Work',
-  3: 'After Photo',
-  4: 'Mark Complete',
-};
-
 const readFileAsDataURL = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -201,6 +196,14 @@ const readFileAsDataURL = (file: File): Promise<string> =>
 // ─── Wizard step progress indicator ───────────────────────────────────────────
 
 function StepProgress({ wizardStep }: { wizardStep: WizardStep }) {
+  const { t } = useTranslation();
+  const stepLabels: Record<WizardStep, string> = {
+    1: t('worker.stepLabels.1', 'Before Photo'),
+    2: t('worker.stepLabels.2', 'Start Work'),
+    3: t('worker.stepLabels.3', 'After Photo'),
+    4: t('worker.stepLabels.4', 'Mark Complete'),
+  };
+
   return (
     <div className="flex items-center justify-center gap-0 mb-5">
       {([1, 2, 3, 4] as WizardStep[]).map((step, idx) => (
@@ -222,7 +225,7 @@ function StepProgress({ wizardStep }: { wizardStep: WizardStep }) {
                 wizardStep === step ? 'text-[#445D3E]' : 'text-[#77736B]'
               }`}
             >
-              {STEP_LABELS[step]}
+              {stepLabels[step]}
             </span>
           </div>
           {idx < 3 && (
@@ -239,12 +242,6 @@ function StepProgress({ wizardStep }: { wizardStep: WizardStep }) {
 }
 
 // ─── Photo upload tile ────────────────────────────────────────────────────────
-/**
- * A single hidden <input type="file" capture="environment"> lets the browser
- * offer both "Camera" and "Gallery" natively on Android / iOS.
- * Defined at module level (not inside the modal) so it isn't re-mounted on
- * every parent render.
- */
 interface PhotoUploadTileProps {
   label: string;
   photo: string | null;
@@ -253,6 +250,8 @@ interface PhotoUploadTileProps {
 }
 
 function PhotoUploadTile({ label, photo, inputRef, onPhotoSelected }: PhotoUploadTileProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-3">
       {/* Hidden file input */}
@@ -276,7 +275,7 @@ function PhotoUploadTile({ label, photo, inputRef, onPhotoSelected }: PhotoUploa
             <img src={photo} alt={`${label} preview`} className="w-full h-48 object-cover" />
             <div className="absolute top-2 left-2 bg-[#445D3E] text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-md">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{label} Recorded</span>
+              <span>{t('worker.photoTile.recorded', { label, defaultValue: `${label} Recorded` })}</span>
             </div>
             <button
               type="button"
@@ -284,7 +283,7 @@ function PhotoUploadTile({ label, photo, inputRef, onPhotoSelected }: PhotoUploa
               className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm text-[#292824] rounded-xl text-xs font-bold shadow-md hover:bg-white active:scale-95 transition-all cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5 text-[#445D3E]" />
-              Retake / Change
+              {t('worker.photoTile.retakeChange', 'Retake / Change')}
             </button>
           </div>
         ) : (
@@ -298,7 +297,7 @@ function PhotoUploadTile({ label, photo, inputRef, onPhotoSelected }: PhotoUploa
             <div>
               <span className="text-xs font-bold text-[#292824] block">{label}</span>
               <span className="text-[11px] text-[#77736B]">
-                Tap to capture with camera or select from device gallery
+                {t('worker.photoTile.tapToCapture', 'Tap to capture with camera or select from device gallery')}
               </span>
             </div>
           </div>
@@ -314,12 +313,12 @@ function PhotoUploadTile({ label, photo, inputRef, onPhotoSelected }: PhotoUploa
         {photo ? (
           <>
             <RefreshCw className="w-4 h-4" />
-            <span>Retake / Change {label}</span>
+            <span>{t('worker.photoTile.retakeChangeLabel', { label, defaultValue: `Retake / Change ${label}` })}</span>
           </>
         ) : (
           <>
             <Camera className="w-4 h-4" />
-            <span>Take / Upload {label}</span>
+            <span>{t('worker.photoTile.takeUploadLabel', { label, defaultValue: `Take / Upload ${label}` })}</span>
           </>
         )}
       </button>
@@ -340,6 +339,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
   onClose,
   booking,
 }) => {
+  const { t } = useTranslation();
   const {
     updateBookingState,
     verifyBookingOTP,
@@ -420,12 +420,12 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
   const handleVerifyOtpAndStart = () => {
     setOtpError('');
     if (!enteredOtp || enteredOtp.trim().length !== 4) {
-      setOtpError('Please enter the 4-digit code provided by the customer.');
+      setOtpError(t('worker.jobExec.otpErrorEmpty', 'Please enter the 4-digit code provided by the customer.'));
       return;
     }
     const success = verifyBookingOTP(bookingId, enteredOtp);
     if (!success) {
-      setOtpError('Incorrect OTP. Please ask the customer to confirm the code shown on their app.');
+      setOtpError(t('worker.jobExec.otpErrorIncorrect', 'Incorrect OTP. Please ask the customer to confirm the code shown on their app.'));
     } else {
       setEnteredOtp('');
       setWizardStep(1); // reset wizard when entering IN_PROGRESS
@@ -479,10 +479,10 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="Job Execution Center"
+        title={t('worker.jobExec.modalTitle', 'Job Execution Center')}
         subtitle={
           <span>
-            Booking <span className="font-mono font-bold">#{booking.id}</span> ·{' '}
+            {t('worker.jobExec.bookingSubtitle', 'Booking')} <span className="font-mono font-bold">#{booking.id}</span> ·{' '}
             {booking.serviceCategory}
           </span>
         }
@@ -495,7 +495,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-[#77736B] uppercase tracking-wider">
-                    Customer &amp; Destination
+                    {t('worker.jobExec.customerDestination', 'Customer & Destination')}
                   </span>
                   {dynamicDistanceKm !== null && (
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EAF2E8] text-[#445D3E] border border-[#CFDDD0] flex items-center gap-1">
@@ -515,7 +515,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                 </p>
                 {destLat && destLng && (
                   <span className="text-[10px] font-mono text-[#77736B] block">
-                    GPS Pin: {destLat.toFixed(4)}, {destLng.toFixed(4)}
+                    {t('worker.jobExec.gpsPin', 'GPS Pin:')} {destLat.toFixed(4)}, {destLng.toFixed(4)}
                   </span>
                 )}
               </div>
@@ -527,16 +527,16 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                 leftIcon={<Navigation className="w-3.5 h-3.5 text-[#6E8B67]" />}
                 rightIcon={<ExternalLink className="w-3 h-3 text-[#9A958B]" />}
               >
-                Navigate (Google Maps)
+                {t('worker.jobExec.navigateGoogleMaps', 'Navigate (Google Maps)')}
               </Button>
             </div>
 
             <div className="border-t border-[#E8E2D5] pt-2 flex items-center justify-between text-xs">
               <span className="text-[#524E47]">
-                <strong>Requirement:</strong> {booking.problemType}
+                <strong>{t('worker.jobExec.requirement', 'Requirement:')}</strong> {booking.problemType}
               </span>
               <span className="text-[#445D3E] font-bold">
-                Worker Payout: <span className="font-mono">₹{booking.pricing.workerShare}</span>
+                {t('worker.jobExec.workerPayout', 'Worker Payout:')} <span className="font-mono">₹{booking.pricing.workerShare}</span>
               </span>
             </div>
           </Card>
@@ -545,7 +545,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
           <div className="border border-slate-200 rounded-2xl p-5 bg-white space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Execution Stage: {booking.state}
+                {t('worker.jobExec.executionStage', 'Execution Stage:')} {booking.state}
               </span>
               <Badge variant={isOnBreak ? 'urgent' : 'coop'}>{booking.state}</Badge>
             </div>
@@ -554,8 +554,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
             {booking.state === 'CONFIRMED' && (
               <div className="space-y-3">
                 <p className="text-sm text-slate-600">
-                  You have accepted this job. Tap below when you begin travelling to notify the
-                  resident.
+                  {t('worker.jobExec.confirmedDesc', 'You have accepted this job. Tap below when you begin travelling to notify the resident.')}
                 </p>
                 <Button
                   variant="primary"
@@ -564,7 +563,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                   onClick={handleStartTravelling}
                   leftIcon={<Navigation className="w-5 h-5" />}
                 >
-                  Start Travelling to Customer
+                  {t('worker.jobExec.startTravelling', 'Start Travelling to Customer')}
                 </Button>
               </div>
             )}
@@ -576,17 +575,16 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                   <div className="flex items-center justify-between text-xs text-amber-900 font-bold">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                      En Route to Customer Residence
+                      {t('worker.jobExec.enRoute', 'En Route to Customer Residence')}
                     </span>
                     {dynamicETA && (
                       <span className="text-amber-800 font-mono text-[11px]">
-                        ETA: {dynamicETA.formatted}
+                        {t('worker.jobExec.eta', 'ETA:')} {dynamicETA.formatted}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-amber-700 leading-relaxed">
-                    Customer has been notified that you are en route. Live GPS telemetry is being
-                    transmitted for resident safety.
+                    {t('worker.jobExec.enRouteNotice', 'Customer has been notified that you are en route. Live GPS telemetry is being transmitted for resident safety.')}
                   </p>
                   <div className="pt-1">
                     <button
@@ -595,7 +593,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                       className="w-full py-2 bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                     >
                       <Navigation className="w-3.5 h-3.5 text-amber-700" />
-                      <span>Open Live Turn-by-Turn GPS Navigation</span>
+                      <span>{t('worker.jobExec.openGpsNav', 'Open Live Turn-by-Turn GPS Navigation')}</span>
                       <ExternalLink className="w-3 h-3 text-amber-600 ml-0.5" />
                     </button>
                   </div>
@@ -608,7 +606,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                   onClick={handleConfirmArrival}
                   leftIcon={<MapPin className="w-5 h-5" />}
                 >
-                  Confirm Arrival At Society / Doorstep
+                  {t('worker.jobExec.confirmArrival', 'Confirm Arrival At Society / Doorstep')}
                 </Button>
               </div>
             )}
@@ -619,29 +617,28 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                 <div className="p-4 bg-teal-50 border border-teal-200 rounded-2xl space-y-2">
                   <div className="flex items-center gap-2 text-teal-900 font-bold text-sm">
                     <KeyRound className="w-4 h-4 text-teal-700" />
-                    <span>Customer 4-Digit Arrival Code</span>
+                    <span>{t('worker.jobExec.arrivedOtpTitle', 'Customer 4-Digit Arrival Code')}</span>
                   </div>
                   <p className="text-xs text-teal-700">
-                    Ask the customer for the 4-digit code shown on their Cooperative mobile screen
-                    to verify identity and unlock job execution.
+                    {t('worker.jobExec.arrivedOtpDesc', 'Ask the customer for the 4-digit code shown on their Cooperative mobile screen to verify identity and unlock job execution.')}
                   </p>
                 </div>
 
                 <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    Enter 4-Digit Customer Code:
+                    {t('worker.jobExec.enterOtpLabel', 'Enter 4-Digit Customer Code:')}
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       maxLength={4}
-                      placeholder="e.g. 4829"
+                      placeholder={t('worker.jobExec.otpPlaceholder', 'e.g. 4829')}
                       value={enteredOtp}
                       onChange={(e) => setEnteredOtp(e.target.value)}
                       className="flex-1 p-3.5 border border-slate-200 rounded-xl text-center text-xl font-mono font-bold tracking-widest focus:ring-2 focus:ring-teal-700 focus:outline-none"
                     />
                     <Button variant="primary" size="md" onClick={handleVerifyOtpAndStart}>
-                      Verify &amp; Begin Work
+                      {t('worker.jobExec.verifyBeginWork', 'Verify & Begin Work')}
                     </Button>
                   </div>
                   {otpError && (
@@ -661,7 +658,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                 <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-2 text-emerald-800 text-xs font-semibold">
                     <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                    <span>Work Underway (OTP Verified)</span>
+                    <span>{t('worker.jobExec.workUnderway', 'Work Underway (OTP Verified)')}</span>
                   </div>
                   <button
                     type="button"
@@ -669,7 +666,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-800 text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-[0.97]"
                   >
                     <Coffee className="w-3.5 h-3.5" />
-                    Take a Break
+                    {t('worker.jobExec.takeABreak', 'Take a Break')}
                   </button>
                 </div>
 
@@ -680,13 +677,12 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                 {wizardStep === 1 && (
                   <div className="space-y-4 animate-fade-in">
                     <div className="p-3 bg-[#F3EEE4] border border-[#E8E2D5] rounded-xl text-xs text-[#524E47]">
-                      <strong className="text-[#292824]">Step 1 of 4 — Before Photo</strong>
+                      <strong className="text-[#292824]">{t('worker.jobExec.step1Header', 'Step 1 of 4 — Before Photo')}</strong>
                       <br />
-                      Capture the work area <em>before</em> starting any repairs. This protects both
-                      you and the customer.
+                      {t('worker.jobExec.step1Desc', 'Capture the work area before starting any repairs. This protects both you and the customer.')}
                     </div>
                     <PhotoUploadTile
-                      label="Before Photo"
+                      label={t('worker.stepLabels.1', 'Before Photo')}
                       photo={beforePhoto}
                       inputRef={beforeInputRef}
                       onPhotoSelected={handleBeforePhotoSelected}
@@ -700,8 +696,8 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
                       {beforePhoto
-                        ? 'Before Photo Captured — Continue'
-                        : 'Capture Before Photo to Proceed'}
+                        ? t('worker.jobExec.step1ContinueBtn', 'Before Photo Captured — Continue')
+                        : t('worker.jobExec.step1ProceedBtn', 'Capture Before Photo to Proceed')}
                     </Button>
                   </div>
                 )}
@@ -710,26 +706,25 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                 {wizardStep === 2 && (
                   <div className="space-y-4 animate-fade-in">
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-800">
-                      <strong>Step 2 of 4 — Begin Work</strong>
+                      <strong>{t('worker.jobExec.step2Header', 'Step 2 of 4 — Begin Work')}</strong>
                       <br />
-                      Before photo recorded. You're ready to begin the repair. Tap below to
-                      officially start.
+                      {t('worker.jobExec.step2Desc', "Before photo recorded. You're ready to begin the repair. Tap below to officially start.")}
                     </div>
                     {beforePhoto && (
                       <div className="relative rounded-xl overflow-hidden border border-[#E8E2D5]">
                         <img src={beforePhoto} alt="Before" className="w-full h-28 object-cover" />
                         <div className="absolute top-2 left-2 bg-[#6E8B67] text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
-                          ✓ Before
+                          {t('worker.jobExec.step2BeforeLabel', '✓ Before')}
                         </div>
                       </div>
                     )}
                     <div>
                       <label className="text-xs font-semibold text-slate-700 block mb-1">
-                        Work Notes &amp; Parts Replaced (optional):
+                        {t('worker.jobExec.step2NotesLabel', 'Work Notes & Parts Replaced (optional):')}
                       </label>
                       <textarea
                         rows={2}
-                        placeholder="e.g. Replaced faulty silicone seal on hot water inlet. Pressure checked."
+                        placeholder={t('worker.jobExec.step2NotesPlaceholder', 'e.g. Replaced faulty silicone seal on hot water inlet. Pressure checked.')}
                         value={workNotes}
                         onChange={(e) => setWorkNotes(e.target.value)}
                         className="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 resize-none"
@@ -742,7 +737,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                       onClick={() => setWizardStep(3)}
                       leftIcon={<Clock className="w-4 h-4" />}
                     >
-                      Start Work Now
+                      {t('worker.jobExec.step2StartBtn', 'Start Work Now')}
                     </Button>
                   </div>
                 )}
@@ -751,10 +746,9 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                 {wizardStep === 3 && (
                   <div className="space-y-4 animate-fade-in">
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-                      <strong>Step 3 of 4 — After Photo</strong>
+                      <strong>{t('worker.jobExec.step3Header', 'Step 3 of 4 — After Photo')}</strong>
                       <br />
-                      Capture the completed repair. This serves as proof of work quality for
-                      verification.
+                      {t('worker.jobExec.step3Desc', 'Capture the completed repair. This serves as proof of work quality for verification.')}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {beforePhoto && (
@@ -765,7 +759,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                             className="w-full h-24 object-cover"
                           />
                           <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            Before
+                            {t('worker.jobExec.step3BeforeLabel', 'Before')}
                           </div>
                         </div>
                       )}
@@ -773,20 +767,20 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                         <div className="relative rounded-xl overflow-hidden border border-[#6E8B67]">
                           <img src={afterPhoto} alt="After" className="w-full h-24 object-cover" />
                           <div className="absolute bottom-1 left-1 bg-[#6E8B67] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            After ✓
+                            {t('worker.jobExec.step3AfterLabel', 'After ✓')}
                           </div>
                         </div>
                       ) : (
                         <div className="relative rounded-xl overflow-hidden border-2 border-dashed border-[#D8D3C8] bg-[#F3EEE4] flex items-center justify-center h-24">
                           <div className="text-center text-[#77736B]">
                             <ImageIcon className="w-5 h-5 mx-auto mb-1" />
-                            <span className="text-[9px] font-semibold">After</span>
+                            <span className="text-[9px] font-semibold">{t('worker.jobExec.step3AfterPlaceholder', 'After')}</span>
                           </div>
                         </div>
                       )}
                     </div>
                     <PhotoUploadTile
-                      label="After Photo"
+                      label={t('worker.stepLabels.3', 'After Photo')}
                       photo={afterPhoto}
                       inputRef={afterInputRef}
                       onPhotoSelected={handleAfterPhotoSelected}
@@ -800,8 +794,8 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                       rightIcon={<ArrowRight className="w-4 h-4" />}
                     >
                       {afterPhoto
-                        ? 'After Photo Captured — Continue'
-                        : 'Capture After Photo to Proceed'}
+                        ? t('worker.jobExec.step3ContinueBtn', 'After Photo Captured — Continue')
+                        : t('worker.jobExec.step3ProceedBtn', 'Capture After Photo to Proceed')}
                     </Button>
                   </div>
                 )}
@@ -810,10 +804,9 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                 {wizardStep === 4 && (
                   <div className="space-y-4 animate-fade-in">
                     <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800">
-                      <strong>Step 4 of 4 — Mark as Completed</strong>
+                      <strong>{t('worker.jobExec.step4Header', 'Step 4 of 4 — Mark as Completed')}</strong>
                       <br />
-                      Both photos captured. Review and submit the job. It will enter the manager
-                      verification queue.
+                      {t('worker.jobExec.step4Desc', 'Both photos captured. Review and submit the job. It will enter the manager verification queue.')}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -825,7 +818,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                             className="w-full h-32 object-cover"
                           />
                           <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            Before
+                            {t('worker.jobExec.step4BeforeLabel', 'Before')}
                           </div>
                         </div>
                       )}
@@ -833,7 +826,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                         <div className="relative rounded-xl overflow-hidden border border-[#6E8B67]">
                           <img src={afterPhoto} alt="After" className="w-full h-32 object-cover" />
                           <div className="absolute bottom-1 left-1 bg-[#6E8B67] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            After ✓
+                            {t('worker.jobExec.step4AfterLabel', 'After ✓')}
                           </div>
                         </div>
                       )}
@@ -841,7 +834,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
 
                     {workNotes && (
                       <div className="p-3 bg-[#F3EEE4] border border-[#E8E2D5] rounded-xl text-xs text-[#524E47]">
-                        <strong className="text-[#292824]">Notes: </strong>
+                        <strong className="text-[#292824]">{t('worker.jobExec.step4NotesLabel', 'Notes:')} </strong>
                         {workNotes}
                       </div>
                     )}
@@ -854,10 +847,10 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                       isLoading={isSubmitting}
                       leftIcon={<Sparkles className="w-5 h-5" />}
                     >
-                      Submit Quality Proof
+                      {t('worker.jobExec.step4SubmitBtn', 'Submit Quality Proof')}
                     </Button>
                     <p className="text-center text-[10px] text-[#77736B]">
-                      Job will enter the manager verification queue. Customer will be notified.
+                      {t('worker.jobExec.step4Notice', 'Job will enter the manager verification queue. Customer will be notified.')}
                     </p>
                   </div>
                 )}
@@ -873,14 +866,14 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                       <Coffee className="w-5 h-5 text-amber-700" />
                     </span>
                     <div>
-                      <p className="text-sm font-bold text-amber-900">You're on a Break</p>
+                      <p className="text-sm font-bold text-amber-900">{t('worker.jobExec.onBreakTitle', "You're on a Break")}</p>
                       <p className="text-[11px] text-amber-700">
-                        Customer has been notified · Job paused
+                        {t('worker.jobExec.onBreakSubtitle', 'Customer has been notified · Job paused')}
                       </p>
                     </div>
                     <span className="ml-auto flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      PAUSED
+                      {t('worker.jobExec.onBreakPaused', 'PAUSED')}
                     </span>
                   </div>
 
@@ -888,7 +881,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-white/70 rounded-lg p-2 text-center border border-amber-200">
                         <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">
-                          Duration
+                          {t('worker.jobExec.onBreakDuration', 'Duration')}
                         </p>
                         <p className="font-bold text-amber-900 mt-0.5">
                           {booking.breakDetails.estimatedDurationMins} min
@@ -897,7 +890,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                       {booking.breakDetails.reason && (
                         <div className="bg-white/70 rounded-lg p-2 text-center border border-amber-200">
                           <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">
-                            Reason
+                            {t('worker.jobExec.onBreakReason', 'Reason')}
                           </p>
                           <p className="font-bold text-amber-900 mt-0.5 truncate">
                             {booking.breakDetails.reason}
@@ -914,11 +907,11 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                   className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] shadow-xs"
                 >
                   <Play className="w-5 h-5" />
-                  Resume Work
+                  {t('worker.jobExec.resumeWork', 'Resume Work')}
                 </button>
 
                 <p className="text-center text-[11px] text-slate-500">
-                  Resuming will notify the customer that work has restarted.
+                  {t('worker.jobExec.resumeNotice', 'Resuming will notify the customer that work has restarted.')}
                 </p>
               </div>
             )}
@@ -927,10 +920,9 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
             {booking.state === 'AWAITING_VERIFICATION' && (
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl text-center space-y-2">
                 <Upload className="w-10 h-10 text-blue-500 mx-auto" />
-                <h4 className="font-bold text-blue-900 text-base">Awaiting Manager Verification</h4>
+                <h4 className="font-bold text-blue-900 text-base">{t('worker.jobExec.awaitingTitle', 'Awaiting Manager Verification')}</h4>
                 <p className="text-xs text-blue-700">
-                  Job submitted. The society manager will review your before/after photos and
-                  approve the job. You'll be notified once it's cleared.
+                  {t('worker.jobExec.awaitingDesc', "Job submitted. The society manager will review your before/after photos and approve the job. You'll be notified once it's cleared.")}
                 </p>
               </div>
             )}
@@ -939,10 +931,9 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
             {['COMPLETED', 'PAID', 'RATED'].includes(booking.state) && (
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                <h4 className="font-bold text-emerald-950 text-base">Job Successfully Completed!</h4>
+                <h4 className="font-bold text-emerald-950 text-base">{t('worker.jobExec.completedTitle', 'Job Successfully Completed!')}</h4>
                 <p className="text-xs text-emerald-700">
-                  Settlement of ₹{booking.pricing.workerShare} is routed to your cooperative
-                  account.
+                  {t('worker.jobExec.completedSettlement', { amount: booking.pricing.workerShare, defaultValue: `Settlement of ₹${booking.pricing.workerShare} is routed to your cooperative account.` })}
                 </p>
               </div>
             )}

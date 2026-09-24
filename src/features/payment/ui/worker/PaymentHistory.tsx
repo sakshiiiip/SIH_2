@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Clock,
   CheckCircle2,
@@ -57,29 +58,30 @@ const fmtRelDate = (iso: string) => {
 // ─── Status chip ─────────────────────────────────────────────────────────────
 
 function StatusChip({ status }: { status: EarningsDisbursementStatus }) {
+  const { t } = useTranslation();
   const map: Record<EarningsDisbursementStatus, { label: string; cls: string; dot: string }> = {
     PENDING: {
-      label: 'Awaiting Payout',
+      label: t('worker.earningsDashboard.awaitingPayout', 'Awaiting Payout'),
       cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]',
       dot: 'bg-[#B37055] animate-pulse',
     },
     PROCESSING: {
-      label: 'Processing',
+      label: t('worker.earningsDashboard.processing', 'Processing'),
       cls: 'bg-[#E4EDF4] text-[#324F66] border-[#B8CBDD]',
       dot: 'bg-[#537895] animate-pulse',
     },
     COMPLETED: {
-      label: 'Credited',
+      label: t('worker.earningsDashboard.credited', 'Credited'),
       cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]',
       dot: 'bg-[#6E8B67]',
     },
     FAILED: {
-      label: 'Failed',
+      label: t('worker.earningsDashboard.failed', 'Failed'),
       cls: 'bg-[#FAEBEB] text-[#632727] border-[#F4D7D7]',
       dot: 'bg-[#B86B6B]',
     },
     ON_HOLD: {
-      label: 'On Hold',
+      label: t('worker.earningsDashboard.onHold', 'On Hold'),
       cls: 'bg-[#EFEBF4] text-[#3D314C] border-[#DFD8E8]',
       dot: 'bg-[#7A6A8E]',
     },
@@ -125,6 +127,7 @@ function EmptyState({ icon: Icon, title, sub }: { icon: React.FC<{ className?: s
 // ─── Pending payments tab ─────────────────────────────────────────────────────
 
 function PendingTab({ workerId }: { workerId: string }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<PendingPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,9 +137,9 @@ function PendingTab({ workerId }: { workerId: string }) {
     workerEarningsService
       .getPendingPayments(workerId)
       .then(setItems)
-      .catch(() => setError('Could not load pending payments.'))
+      .catch(() => setError(t('worker.earningsDashboard.loadErrorPending', 'Could not load pending payments.')))
       .finally(() => setLoading(false));
-  }, [workerId]);
+  }, [workerId, t]);
 
   if (loading) return (
     <div className="space-y-2 animate-pulse">
@@ -151,7 +154,11 @@ function PendingTab({ workerId }: { workerId: string }) {
   );
 
   if (items.length === 0) return (
-    <EmptyState icon={Clock} title="No pending payments" sub="All your earnings have been disbursed." />
+    <EmptyState
+      icon={Clock}
+      title={t('worker.earningsDashboard.noPendingPayments', 'No pending payments')}
+      sub={t('worker.earningsDashboard.allEarningsDisbursed', 'All your earnings have been disbursed.')}
+    />
   );
 
   const onHold = items.filter((p) => p.status === 'ON_HOLD');
@@ -162,7 +169,7 @@ function PendingTab({ workerId }: { workerId: string }) {
       {active.length > 0 && (
         <section>
           <h3 className="text-[11px] font-bold text-[#364A32] uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-[#6E8B67]" /> Awaiting Disbursement
+            <Clock className="w-3.5 h-3.5 text-[#6E8B67]" /> {t('worker.earningsDashboard.awaitingDisbursement', 'Awaiting Disbursement')}
           </h3>
           <div className="space-y-2">
             {active.map((p) => (
@@ -171,18 +178,18 @@ function PendingTab({ workerId }: { workerId: string }) {
                   <div className="flex-1 min-w-0 space-y-1">
                     <p className="text-sm font-semibold text-[#292824] leading-snug">{p.bookingDescription}</p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#77736B]">
-                      <span>Completed: <span className="font-mono text-[#292824]">{fmtDate(p.jobCompletedAt)}</span></span>
+                      <span>{t('worker.earningsDashboard.completed', 'Completed')}: <span className="font-mono text-[#292824]">{fmtDate(p.jobCompletedAt)}</span></span>
                       <span className="w-px h-3 bg-[#E8E2D5]" />
-                      <span>Expected release: <span className="font-mono font-semibold text-[#292824]">{fmtDate(p.expectedDisbursementDate)}</span></span>
+                      <span>{t('worker.earningsDashboard.expectedRelease', 'Expected release')}: <span className="font-mono font-semibold text-[#292824]">{fmtDate(p.expectedDisbursementDate)}</span></span>
                     </div>
                     {p.bookingId && (
-                      <p className="text-[11px] text-[#9A958B] font-mono">Ref: {p.bookingId}</p>
+                      <p className="text-[11px] text-[#9A958B] font-mono">{t('worker.earningsDashboard.ref', 'Ref')}: {p.bookingId}</p>
                     )}
                   </div>
                   <div className="text-right shrink-0 space-y-1.5">
                     <p className="text-base font-bold font-mono text-[#292824]">₹{fmt(p.expectedNetAmount)}</p>
                     {p.expectedDeductions > 0 && (
-                      <p className="text-[11px] text-[#9A958B] font-mono">gross ₹{fmt(p.grossAmount)}</p>
+                      <p className="text-[11px] text-[#9A958B] font-mono">{t('worker.earningsDashboard.gross', 'gross')} ₹{fmt(p.grossAmount)}</p>
                     )}
                     <StatusChip status={p.status} />
                   </div>
@@ -196,7 +203,7 @@ function PendingTab({ workerId }: { workerId: string }) {
       {onHold.length > 0 && (
         <section>
           <h3 className="text-[11px] font-bold text-[#504161] uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5 text-[#7A6A8E]" /> Held Payments
+            <Lock className="w-3.5 h-3.5 text-[#7A6A8E]" /> {t('worker.earningsDashboard.heldPayments', 'Held Payments')}
           </h3>
           <div className="space-y-2">
             {onHold.map((p) => (
@@ -228,6 +235,7 @@ function PendingTab({ workerId }: { workerId: string }) {
 // ─── Completed payments tab ───────────────────────────────────────────────────
 
 function CompletedTab({ workerId }: { workerId: string }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<CompletedPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -237,9 +245,9 @@ function CompletedTab({ workerId }: { workerId: string }) {
     workerEarningsService
       .getCompletedPayments(workerId)
       .then(setItems)
-      .catch(() => setError('Could not load completed payments.'))
+      .catch(() => setError(t('worker.earningsDashboard.loadErrorCompleted', 'Could not load completed payments.')))
       .finally(() => setLoading(false));
-  }, [workerId]);
+  }, [workerId, t]);
 
   if (loading) return (
     <div className="space-y-2 animate-pulse">
@@ -254,7 +262,11 @@ function CompletedTab({ workerId }: { workerId: string }) {
   );
 
   if (items.length === 0) return (
-    <EmptyState icon={CheckCircle2} title="No completed payments yet" sub="Paid-out earnings will appear here." />
+    <EmptyState
+      icon={CheckCircle2}
+      title={t('worker.earningsDashboard.noCompletedPayments', 'No completed payments yet')}
+      sub={t('worker.earningsDashboard.paidOutHint', 'Paid-out earnings will appear here.')}
+    />
   );
 
   const totalCredited = items.reduce((s, p) => s + p.netAmountDisbursed, 0);
@@ -264,7 +276,7 @@ function CompletedTab({ workerId }: { workerId: string }) {
       {/* Summary bar */}
       <div className="flex items-center justify-between p-3 bg-[#E6ECE4] border border-[#CFDDD0] rounded-2xl">
         <span className="text-xs font-semibold text-[#364A32]">
-          {items.length} payment{items.length !== 1 ? 's' : ''} · Total Credited
+          {items.length} {t('worker.earningsDashboard.payments', 'payments')} · {t('worker.earningsDashboard.totalCredited', 'Total Credited')}
         </span>
         <span className="text-sm font-bold font-mono text-[#2A3927]">₹{fmt(totalCredited)}</span>
       </div>
@@ -301,7 +313,7 @@ function CompletedTab({ workerId }: { workerId: string }) {
                 </p>
                 {p.deductionsApplied > 0 && (
                   <p className="text-[11px] text-[#9A958B] font-mono">
-                    -{fmt(p.deductionsApplied)} deducted
+                    -{fmt(p.deductionsApplied)} {t('worker.earningsDashboard.deducted', 'deducted')}
                   </p>
                 )}
               </div>
@@ -335,6 +347,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 ];
 
 function HistoryTab({ workerId }: { workerId: string }) {
+  const { t } = useTranslation();
   const [transactions, setTransactions] = useState<WorkerEarningsTransaction[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalNet, setTotalNet] = useState(0);
@@ -343,6 +356,25 @@ function HistoryTab({ workerId }: { workerId: string }) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 10;
+
+  const typeOptions: { value: string; label: string }[] = [
+    { value: '', label: t('worker.earningsDashboard.allTypes', 'All Types') },
+    { value: 'JOB_PAYMENT', label: t('worker.earningsDashboard.jobPayments', 'Job Payments') },
+    { value: 'GROUP_BOOKING_SHARE', label: t('worker.earningsDashboard.groupBookingShare', 'Group Booking') },
+    { value: 'BONUS', label: t('worker.earningsDashboard.bonus', 'Bonus') },
+    { value: 'DEDUCTION', label: t('worker.earningsDashboard.deductions', 'Deduction') },
+    { value: 'REFUND', label: t('worker.earningsDashboard.refund', 'Refund') },
+    { value: 'ADVANCE', label: t('worker.earningsDashboard.advance', 'Advance') },
+  ];
+
+  const statusOptions: { value: string; label: string }[] = [
+    { value: '', label: t('worker.earningsDashboard.allStatuses', 'All Statuses') },
+    { value: 'PENDING', label: t('worker.earningsDashboard.pending', 'Pending') },
+    { value: 'PROCESSING', label: t('worker.earningsDashboard.processing', 'Processing') },
+    { value: 'COMPLETED', label: t('worker.earningsDashboard.credited', 'Credited') },
+    { value: 'ON_HOLD', label: t('worker.earningsDashboard.onHold', 'On Hold') },
+    { value: 'FAILED', label: t('worker.earningsDashboard.failed', 'Failed') },
+  ];
 
   // filter state
   const [search, setSearch] = useState('');
@@ -378,12 +410,12 @@ function HistoryTab({ workerId }: { workerId: string }) {
         setTotalPages(result.totalPages);
         setTotalNet(result.totalNetInPeriod);
       } catch {
-        setError('Failed to load transaction history.');
+        setError(t('worker.earningsDashboard.loadErrorHistory', 'Failed to load transaction history.'));
       } finally {
         setLoading(false);
       }
     },
-    [workerId, filterType, filterStatus, fromDate, toDate, sortOrder],
+    [workerId, filterType, filterStatus, fromDate, toDate, sortOrder, t],
   );
 
   useEffect(() => {
@@ -416,7 +448,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9A958B]" />
             <input
               type="text"
-              placeholder="Search transactions…"
+              placeholder={t('worker.earningsDashboard.searchTransactions', 'Search transactions…')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] placeholder-[#BCB7AD] focus:outline-none focus:border-[#537895] focus:ring-1 focus:ring-[#537895]/30 transition-all"
@@ -442,7 +474,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
-            <span className="hidden sm:inline">Filters</span>
+            <span className="hidden sm:inline">{t('worker.earningsDashboard.filters', 'Filters')}</span>
             {hasFilters && (
               <span className="w-4 h-4 rounded-full bg-white/20 text-[11px] font-bold flex items-center justify-center">
                 {[filterType, filterStatus, fromDate, toDate].filter(Boolean).length}
@@ -454,7 +486,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
             type="button"
             onClick={() => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}
             className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] text-sm text-[#77736B] hover:border-[#537895] hover:text-[#537895] transition-all cursor-pointer"
-            title={`Sort: ${sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}`}
+            title={sortOrder === 'desc' ? t('worker.earningsDashboard.newestFirst', 'Newest first') : t('worker.earningsDashboard.oldestFirst', 'Oldest first')}
           >
             <ChevronsUpDown className="w-4 h-4" />
           </button>
@@ -465,31 +497,31 @@ function HistoryTab({ workerId }: { workerId: string }) {
           <div className="p-3.5 bg-[#F3EEE4] border border-[#E8E2D5] rounded-2xl space-y-3 animate-fade-in">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
-                <label className="text-[11px] font-semibold text-[#77736B] block mb-1">Type</label>
+                <label className="text-[11px] font-semibold text-[#77736B] block mb-1">{t('worker.earningsDashboard.type', 'Type')}</label>
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                   className="w-full px-3 py-2 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:border-[#537895] cursor-pointer"
                 >
-                  {TYPE_OPTIONS.map((o) => (
+                  {typeOptions.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-[#77736B] block mb-1">Status</label>
+                <label className="text-[11px] font-semibold text-[#77736B] block mb-1">{t('worker.earningsDashboard.status', 'Status')}</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                   className="w-full px-3 py-2 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:border-[#537895] cursor-pointer"
                 >
-                  {STATUS_OPTIONS.map((o) => (
+                  {statusOptions.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-[#77736B] block mb-1">From Date</label>
+                <label className="text-[11px] font-semibold text-[#77736B] block mb-1">{t('worker.earningsDashboard.fromDate', 'From Date')}</label>
                 <input
                   type="date"
                   value={fromDate}
@@ -498,7 +530,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-[#77736B] block mb-1">To Date</label>
+                <label className="text-[11px] font-semibold text-[#77736B] block mb-1">{t('worker.earningsDashboard.toDate', 'To Date')}</label>
                 <input
                   type="date"
                   value={toDate}
@@ -513,7 +545,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
                 onClick={clearFilters}
                 className="flex items-center gap-1.5 text-xs font-bold text-[#B37055] hover:text-[#80432E] transition-colors cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" /> Clear all filters
+                <X className="w-3.5 h-3.5" /> {t('worker.earningsDashboard.clearFilters', 'Clear all filters')}
               </button>
             )}
           </div>
@@ -525,7 +557,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
             {filterType && (
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E4EDF4] text-[#324F66] text-[11px] font-semibold border border-[#B8CBDD]">
                 <Filter className="w-3 h-3" />
-                {TYPE_OPTIONS.find((o) => o.value === filterType)?.label}
+                {typeOptions.find((o) => o.value === filterType)?.label}
                 <button type="button" onClick={() => setFilterType('')} className="cursor-pointer">
                   <X className="w-3 h-3" />
                 </button>
@@ -534,7 +566,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
             {filterStatus && (
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E4EDF4] text-[#324F66] text-[11px] font-semibold border border-[#B8CBDD]">
                 <Filter className="w-3 h-3" />
-                {STATUS_OPTIONS.find((o) => o.value === filterStatus)?.label}
+                {statusOptions.find((o) => o.value === filterStatus)?.label}
                 <button type="button" onClick={() => setFilterStatus('')} className="cursor-pointer">
                   <X className="w-3 h-3" />
                 </button>
@@ -542,7 +574,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
             )}
             {fromDate && (
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E4EDF4] text-[#324F66] text-[11px] font-semibold border border-[#B8CBDD]">
-                From {fromDate}
+                {t('worker.earningsDashboard.from', 'From')} {fromDate}
                 <button type="button" onClick={() => setFromDate('')} className="cursor-pointer">
                   <X className="w-3 h-3" />
                 </button>
@@ -550,7 +582,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
             )}
             {toDate && (
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E4EDF4] text-[#324F66] text-[11px] font-semibold border border-[#B8CBDD]">
-                To {toDate}
+                {t('worker.earningsDashboard.to', 'To')} {toDate}
                 <button type="button" onClick={() => setToDate('')} className="cursor-pointer">
                   <X className="w-3 h-3" />
                 </button>
@@ -563,9 +595,11 @@ function HistoryTab({ workerId }: { workerId: string }) {
       {/* Result meta */}
       {!loading && !error && (
         <div className="flex items-center justify-between text-xs text-[#77736B]">
-          <span>{totalCount} transaction{totalCount !== 1 ? 's' : ''} {search ? `matching "${search}"` : ''}</span>
+          <span>
+            {totalCount} {t('worker.earningsDashboard.transactions', 'transactions')} {search ? `${t('worker.earningsDashboard.matching', 'matching')} "${search}"` : ''}
+          </span>
           <span className="font-mono font-semibold text-[#292824]">
-            Net: ₹{fmt(totalNet)}
+            {t('worker.earningsDashboard.net', 'Net')}: ₹{fmt(totalNet)}
           </span>
         </div>
       )}
@@ -584,8 +618,8 @@ function HistoryTab({ workerId }: { workerId: string }) {
       ) : transactions.length === 0 ? (
         <EmptyState
           icon={List}
-          title="No transactions found"
-          sub="Try adjusting your filters or search term."
+          title={t('worker.earningsDashboard.noTransactions', 'No transactions found')}
+          sub={t('worker.earningsDashboard.adjustFilters', 'Try adjusting your filters or search term.')}
         />
       ) : (
         <div className="divide-y divide-[#F0EDE6] rounded-2xl border border-[#E8E2D5] bg-[#FCF9F3] overflow-hidden">
@@ -640,11 +674,11 @@ function HistoryTab({ workerId }: { workerId: string }) {
             disabled={page === 1}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] text-sm text-[#77736B] hover:border-[#537895] hover:text-[#537895] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            <ChevronLeft className="w-4 h-4" /> Prev
+            <ChevronLeft className="w-4 h-4" /> {t('common.prev', 'Prev')}
           </button>
 
           <span className="text-xs text-[#77736B] font-mono">
-            Page {page} of {totalPages}
+            {t('common.page', 'Page')} {page} {t('common.of', 'of')} {totalPages}
           </span>
 
           <button
@@ -653,7 +687,7 @@ function HistoryTab({ workerId }: { workerId: string }) {
             disabled={page === totalPages}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] text-sm text-[#77736B] hover:border-[#537895] hover:text-[#537895] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            Next <ChevronRight className="w-4 h-4" />
+            {t('common.next', 'Next')} <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       )}
@@ -674,12 +708,13 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
   workerId = 'w_rahul',
   defaultTab = 'pending',
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<PaymentTab>(defaultTab);
 
   const tabs: { id: PaymentTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'pending', label: 'Pending', icon: <Clock className="w-4 h-4" /> },
-    { id: 'completed', label: 'Credited', icon: <CheckCircle2 className="w-4 h-4" /> },
-    { id: 'history', label: 'History', icon: <List className="w-4 h-4" /> },
+    { id: 'pending', label: t('worker.earningsDashboard.pending', 'Pending'), icon: <Clock className="w-4 h-4" /> },
+    { id: 'completed', label: t('worker.earningsDashboard.credited', 'Credited'), icon: <CheckCircle2 className="w-4 h-4" /> },
+    { id: 'history', label: t('worker.earningsDashboard.history', 'History'), icon: <List className="w-4 h-4" /> },
   ];
 
   return (

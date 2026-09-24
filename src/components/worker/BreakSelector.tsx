@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BREAK_OPTIONS } from '../../data/workerMockData';
+import { useTranslation } from 'react-i18next';
 import { Coffee, UtensilsCrossed, Timer, Play, Clock } from 'lucide-react';
 
 interface BreakSelectorProps {
@@ -28,12 +28,21 @@ export const BreakSelector: React.FC<BreakSelectorProps> = ({
   onStartBreak,
   onResumeWork,
   isOnBreak,
-  breakLabel = 'On Break',
+  breakLabel,
   breakEndsAt = null,
 }) => {
+  const { t } = useTranslation();
   const [selectedBreak, setSelectedBreak] = useState<string | null>(null);
   const [customMinutes, setCustomMinutes] = useState<number>(30);
   const [countdown, setCountdown] = useState<string>('');
+
+  const breakOptions = [
+    { id: 'short', label: t('worker.breakShort', 'Short Break'), durationMinutes: 15, icon: '☕' },
+    { id: 'lunch', label: t('worker.breakLunch', 'Lunch Break'), durationMinutes: 45, icon: '🍽️' },
+    { id: 'custom', label: t('worker.breakCustom', 'Custom Break'), durationMinutes: 0, icon: '⏱️' },
+  ];
+
+  const activeLabel = breakLabel || t('common.onBreak', 'On Break');
 
   useEffect(() => {
     if (!breakEndsAt) { setCountdown(''); return; }
@@ -49,20 +58,20 @@ export const BreakSelector: React.FC<BreakSelectorProps> = ({
       <div className="p-4 bg-[#FFF8F3] border-2 border-[#F4DCD3] rounded-2xl space-y-3 animate-fade-in">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#E8A07A] animate-pulse" />
-          <span className="text-sm font-bold text-[#80432E]">🟡 {breakLabel}</span>
-          <span className="ml-auto text-xs text-[#77736B]">Temporarily unavailable for new jobs</span>
+          <span className="text-sm font-bold text-[#80432E]">🟡 {activeLabel}</span>
+          <span className="ml-auto text-xs text-[#77736B]">{t('worker.breakUnavailable', 'Temporarily unavailable for new jobs')}</span>
         </div>
 
         {breakEndsAt && countdown && (
           <div className="flex items-center gap-2 p-3 bg-[#FAEDE8] border border-[#F4DCD3] rounded-xl">
             <Clock className="w-4 h-4 text-[#80432E]" />
-            <span className="text-xs text-[#80432E]">Break ends in</span>
+            <span className="text-xs text-[#80432E]">{t('worker.breakEndsIn', 'Break ends in')}</span>
             <span className="text-lg font-bold font-mono text-[#80432E] ml-auto">{countdown}</span>
           </div>
         )}
 
         <p className="text-xs text-[#77736B]">
-          The cooperative dispatch system will not assign new jobs while you are on break.
+          {t('worker.breakDispatchNotice', 'The cooperative dispatch system will not assign new jobs while you are on break.')}
         </p>
 
         <button
@@ -71,18 +80,20 @@ export const BreakSelector: React.FC<BreakSelectorProps> = ({
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#6E8B67] hover:bg-[#587352] text-white font-bold text-sm rounded-xl shadow-sm transition-colors cursor-pointer"
         >
           <Play className="w-4 h-4" />
-          Resume Work
+          {t('worker.resumeWork', 'Resume Work')}
         </button>
       </div>
     );
   }
 
   // --- BREAK SELECTION VIEW ---
+  const selectedOpt = breakOptions.find((o) => o.id === selectedBreak);
+
   return (
     <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl space-y-3">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B]">Take a Break</h3>
+      <h3 className="text-xs font-bold uppercase tracking-wider text-[#77736B]">{t('worker.breakTitle', 'Take a Break')}</h3>
       <div className="grid grid-cols-3 gap-2">
-        {BREAK_OPTIONS.map((opt) => (
+        {breakOptions.map((opt) => (
           <button
             key={opt.id}
             type="button"
@@ -98,7 +109,7 @@ export const BreakSelector: React.FC<BreakSelectorProps> = ({
             <span className="text-center leading-tight">
               {opt.label}
               {opt.durationMinutes > 0 && (
-                <span className="block text-[10px] font-normal text-[#9A958B]">{opt.durationMinutes} min</span>
+                <span className="block text-[10px] font-normal text-[#9A958B]">{opt.durationMinutes} {t('worker.breakMinutes', 'min')}</span>
               )}
             </span>
           </button>
@@ -107,7 +118,7 @@ export const BreakSelector: React.FC<BreakSelectorProps> = ({
 
       {selectedBreak === 'custom' && (
         <div className="flex items-center gap-2">
-          <label className="text-xs text-[#77736B] shrink-0">Duration (min):</label>
+          <label className="text-xs text-[#77736B] shrink-0">{t('worker.breakDurationLabel', 'Duration (min):')}</label>
           <input
             type="number"
             min={5}
@@ -116,7 +127,7 @@ export const BreakSelector: React.FC<BreakSelectorProps> = ({
             onChange={(e) => setCustomMinutes(Number(e.target.value))}
             className="w-20 px-3 py-1.5 border border-[#E8E2D5] rounded-xl text-sm font-mono text-center focus:outline-none focus:ring-2 focus:ring-[#B37055]"
           />
-          <span className="text-xs text-[#77736B]">minutes</span>
+          <span className="text-xs text-[#77736B]">{t('worker.breakMinutes', 'minutes')}</span>
         </div>
       )}
 
@@ -124,13 +135,12 @@ export const BreakSelector: React.FC<BreakSelectorProps> = ({
         <button
           type="button"
           onClick={() => {
-            const opt = BREAK_OPTIONS.find((o) => o.id === selectedBreak);
-            const duration = selectedBreak === 'custom' ? customMinutes : (opt?.durationMinutes ?? 15);
+            const duration = selectedBreak === 'custom' ? customMinutes : (selectedOpt?.durationMinutes ?? 15);
             onStartBreak(selectedBreak, duration);
           }}
           className="w-full px-4 py-2.5 bg-[#B37055] hover:bg-[#9C583E] text-white font-bold text-sm rounded-xl transition-colors cursor-pointer"
         >
-          Start {BREAK_OPTIONS.find((o) => o.id === selectedBreak)?.label}
+          {t('worker.startBreak', { label: selectedOpt?.label, defaultValue: `Start ${selectedOpt?.label}` })}
         </button>
       )}
     </div>

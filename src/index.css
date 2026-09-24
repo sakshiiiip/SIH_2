@@ -6,15 +6,16 @@
   :root {
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
-    --font-ui: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-ui: "Inter", "Noto Sans Devanagari", "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-display: "Instrument Serif", Georgia, serif;
     --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-devanagari: "Noto Sans Devanagari", "Inter", sans-serif;
   }
 
   html {
     font-family: var(--font-ui);
-    color: #292824;
-    background-color: #F8F4EC;
+    color: #0F172A;
+    background-color: #F8FAFC;
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -29,14 +30,14 @@
   body {
     min-height: 100dvh;
     overflow-x: hidden;
-    background-color: #F8F4EC;
-    color: #292824;
+    background-color: #F8FAFC;
+    color: #0F172A;
     line-height: 1.5;
   }
 
-  /* Accessible focus states with warm sage tone */
+  /* Accessible focus states with emerald tone */
   :focus-visible {
-    outline: 2px solid #6E8B67;
+    outline: 2px solid #047857;
     outline-offset: 2px;
   }
 }
@@ -56,6 +57,21 @@
 
 .font-sans {
   font-family: var(--font-ui);
+}
+
+.font-devanagari {
+  font-family: var(--font-devanagari);
+}
+
+/* Hindi / Devanagari typography optimization */
+html.lang-hi,
+.lang-hi body,
+.lang-hi button,
+.lang-hi input,
+.lang-hi textarea,
+.lang-hi select {
+  font-family: var(--font-devanagari);
+  line-height: 1.6;
 }
 
 .font-mono {

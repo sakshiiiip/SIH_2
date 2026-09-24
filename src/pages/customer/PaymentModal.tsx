@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Booking } from '../../types';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
@@ -20,6 +21,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   booking,
   onPaymentSuccess,
 }) => {
+  const { t } = useTranslation();
   const { config, payBooking } = useCooperativeStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
@@ -55,8 +57,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Transparent Payment"
-      subtitle={<span>Settlement for Booking <span className="font-mono font-bold">#{booking.id}</span></span>}
+      title={t('payment.title', 'Transparent Payment')}
+      subtitle={<span>{t('payment.settlementFor', 'Settlement for Booking')} <span className="font-mono font-bold">#{booking.id}</span></span>}
       maxWidth="md"
     >
       <div className="space-y-6">
@@ -66,7 +68,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="font-bold text-[#292824] text-base">Service Completed ✓</h4>
+            <h4 className="font-bold text-[#292824] text-base">{t('payment.serviceCompleted', 'Service Completed ✓')}</h4>
             <p className="text-xs text-[#524E47]">
               {booking.serviceCategory} — {booking.problemType}
             </p>
@@ -77,9 +79,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         <div className="border border-[#E8E2D5] rounded-2xl p-5 bg-[#FCF9F3] space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D5]">
             <span className="text-xs font-bold text-[#77736B] uppercase tracking-wider">
-              Itemized Allocation
+              {t('payment.itemizedAllocation', 'Itemized Allocation')}
             </span>
-            <span className="text-xs text-[#77736B]">Cooperative Formula</span>
+            <span className="text-xs text-[#77736B]">{t('payment.cooperativeFormula', 'Cooperative Formula')}</span>
           </div>
 
           <div className="space-y-3 text-sm">
@@ -87,7 +89,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#6E8B67]" />
-                <span className="text-[#292824] font-medium">Worker Direct Payout</span>
+                <span className="text-[#292824] font-medium">{t('payment.workerPayout', 'Worker Direct Payout')}</span>
                 <span className="text-xs text-[#77736B] font-mono">({config.workerSharePercent}%)</span>
               </div>
               <span className="font-bold font-mono text-[#292824]">
@@ -100,7 +102,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#B37055]" />
                 <span className="text-[#292824] font-medium">
-                  {booking.societyName} Share
+                  {booking.societyName} {t('payment.societyShareLabel', 'Share')}
                 </span>
                 <span className="text-xs text-[#77736B] font-mono">({config.societySharePercent}%)</span>
               </div>
@@ -114,7 +116,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#537895]" />
                 <span className="text-[#292824] font-medium">
-                  Cooperative Emergency & Tool Fund
+                  {t('payment.coopFundLabel', 'Cooperative Emergency & Tool Fund')}
                 </span>
                 <span className="text-xs text-[#77736B] font-mono">({config.cooperativeFundPercent}%)</span>
               </div>
@@ -126,7 +128,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {/* Total */}
           <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
-            <span className="text-base font-bold text-[#292824]">Total Settlement</span>
+            <span className="text-base font-bold text-[#292824]">{t('payment.totalSettlement', 'Total Settlement')}</span>
             <span className="text-2xl font-bold font-mono text-[#292824]">
               ₹{booking.pricing.total}
             </span>
@@ -137,7 +139,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl flex items-start gap-2.5 text-xs text-slate-600">
           <ShieldCheck className="w-4 h-4 text-teal-700 shrink-0 mt-0.5" />
           <p>
-            Unlike commercial gig apps that extract 30%+ profit, your payment directly supports worker livelihoods, resident society upkeep, and zero-interest emergency tool loans.
+            {t('payment.guaranteeNote', 'Unlike commercial gig apps that extract 30%+ profit, your payment directly supports worker livelihoods, resident society upkeep, and zero-interest emergency tool loans.')}
           </p>
         </div>
 
@@ -151,7 +153,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           className="w-full"
           leftIcon={<CreditCard className="w-5 h-5" />}
         >
-          {isPaid ? 'Payment Confirmed! ✓' : `Pay ₹${booking.pricing.total} via UPI / Card`}
+          {isPaid ? t('payment.paymentConfirmed', 'Payment Confirmed! ✓') : t('payment.payVia', { amount: booking.pricing.total, defaultValue: `Pay ₹${booking.pricing.total} via UPI / Card` })}
         </Button>
       </div>
     </Modal>

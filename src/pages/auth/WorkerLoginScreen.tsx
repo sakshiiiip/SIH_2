@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { workerAuthService, WorkerAuthAccount } from '../../services/workerAuthService';
 import { User, Worker } from '../../types';
@@ -18,6 +19,7 @@ interface WorkerLoginScreenProps {
 }
 
 export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess }) => {
+  const { t } = useTranslation();
   const { workers, showToast } = useCooperativeStore();
 
   // Screen steps: 'login' | 'first_time_password' | 'forgot_password'
@@ -321,11 +323,12 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
         <div className="p-4 bg-[#EEF4FA] border border-[#B8CBDD] rounded-2xl">
           <div className="flex items-center gap-2">
             <Key className="w-4 h-4 text-[#537895]" />
-            <h2 className="text-sm font-bold text-[#324F66]">Set Your New Password</h2>
+            <h2 className="text-sm font-bold text-[#324F66]">{t('workerLogin.firstTimeTitle', { defaultValue: 'Set Your New Password' })}</h2>
           </div>
           <p className="text-xs text-[#537895] mt-1 leading-relaxed">
-            Welcome to the cooperative network, <strong className="text-[#324F66]">{tempWorkerAccount?.name}</strong>.
-            You are signing in with a temporary password. Please establish a permanent password to access your Worker Dashboard.
+            {t('workerLogin.firstTimeWelcome', { defaultValue: 'Welcome to the cooperative network, ' })}
+            <strong className="text-[#324F66]">{tempWorkerAccount?.name}</strong>.
+            {' '}{t('workerLogin.firstTimeDesc', { defaultValue: 'You are signing in with a temporary password. Please establish a permanent password to access your Worker Dashboard.' })}
           </p>
         </div>
 
@@ -333,7 +336,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
           {/* Temporary Password Field */}
           <div>
             <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-              Temporary Password
+              {t('workerLogin.tempPassword', { defaultValue: 'Temporary Password' })}
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -341,14 +344,14 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                 type={showTempPassword ? 'text' : 'password'}
                 value={tempPasswordInput}
                 onChange={(e) => setTempPasswordInput(e.target.value)}
-                placeholder="Enter issued temporary password"
+                placeholder={t('workerLogin.enterTempPassword', { defaultValue: 'Enter issued temporary password' })}
                 className="w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm font-mono text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#537895] shadow-subtle"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowTempPassword(!showTempPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] p-0.5"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] p-0.5 cursor-pointer"
                 aria-label={showTempPassword ? 'Hide password' : 'Show password'}
               >
                 {showTempPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -359,7 +362,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
           {/* New Password Field */}
           <div>
             <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-              New Password
+              {t('workerLogin.newPassword', { defaultValue: 'New Password' })}
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -367,14 +370,14 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Create a strong password (min 6 characters)"
+                placeholder={t('workerLogin.createStrongPassword', { defaultValue: 'Create a strong password (min 6 characters)' })}
                 className="w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#537895] shadow-subtle"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] p-0.5"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] p-0.5 cursor-pointer"
                 aria-label={showNewPassword ? 'Hide password' : 'Show password'}
               >
                 {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -385,7 +388,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
           {/* Confirm New Password Field */}
           <div>
             <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-              Confirm New Password
+              {t('workerLogin.confirmNewPassword', { defaultValue: 'Confirm New Password' })}
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -393,14 +396,14 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your new password"
+                placeholder={t('workerLogin.confirmPasswordPlaceholder', { defaultValue: 'Confirm your new password' })}
                 className="w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#537895] shadow-subtle"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] p-0.5"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] hover:text-[#524E47] p-0.5 cursor-pointer"
                 aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -418,7 +421,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
               className="w-4 h-4 rounded border-[#B8CBDD] text-[#537895] focus:ring-[#537895] cursor-pointer"
             />
             <label htmlFor="first-time-remember" className="text-xs font-semibold text-[#524E47] cursor-pointer">
-              Remember me on this device
+              {t('workerLogin.rememberDevice', { defaultValue: 'Remember me on this device' })}
             </label>
           </div>
 
@@ -431,7 +434,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                <span>Change Password & Continue</span>
+                <span>{t('workerLogin.changePasswordContinue', { defaultValue: 'Change Password & Continue' })}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -442,9 +445,9 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
           <button
             type="button"
             onClick={() => setStep('login')}
-            className="text-xs font-bold text-[#77736B] hover:text-[#292824] transition-colors"
+            className="text-xs font-bold text-[#77736B] hover:text-[#292824] transition-colors cursor-pointer"
           >
-            ← Back to Sign In
+            {t('workerLogin.backToSignIn', { defaultValue: '← Back to Sign In' })}
           </button>
         </div>
       </div>
@@ -458,11 +461,11 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
     return (
       <div className="space-y-5 pt-1 relative z-10 animate-fade-in">
         <div>
-          <h2 className="text-lg font-bold text-[#292824]">Reset Your Password</h2>
+          <h2 className="text-lg font-bold text-[#292824]">{t('workerLogin.resetPasswordTitle', { defaultValue: 'Reset Your Password' })}</h2>
           <p className="text-xs text-[#77736B] mt-0.5">
             {forgotStep === 'request'
-              ? 'Enter your registered Email or Worker ID to receive a verification code.'
-              : `Enter the code sent to ${maskedContact} and set your new password.`}
+              ? t('workerLogin.forgotStepRequestDesc', { defaultValue: 'Enter your registered Email or Worker ID to receive a verification code.' })
+              : t('workerLogin.forgotStepVerifyDesc', { defaultValue: 'Enter the code sent to {{contact}} and set your new password.', contact: maskedContact })}
           </p>
         </div>
 
@@ -470,7 +473,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
           <form onSubmit={handleForgotRequest} className="space-y-4">
             <div>
               <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-                Registered Email or Worker ID
+                {t('workerLogin.registeredEmailOrId', { defaultValue: 'Registered Email or Worker ID' })}
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -478,7 +481,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                   type="text"
                   value={forgotIdentifier}
                   onChange={(e) => setForgotIdentifier(e.target.value)}
-                  placeholder="e.g. worker@example.com or WRK001"
+                  placeholder={t('workerLogin.emailOrIdPlaceholder', { defaultValue: 'e.g. worker@example.com or WRK001' })}
                   className="w-full pl-10 pr-4 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#537895] shadow-subtle"
                   required
                 />
@@ -492,7 +495,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                 className="flex-1 py-3"
                 onClick={() => setStep('login')}
               >
-                Cancel
+                {t('common.cancel', { defaultValue: 'Cancel' })}
               </Button>
               <Button
                 variant="primary"
@@ -500,7 +503,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                 disabled={isLoading}
                 className="flex-1 py-3 bg-[#537895] hover:bg-[#41637E] text-white"
               >
-                {isLoading ? 'Verifying...' : 'Next Step →'}
+                {isLoading ? t('common.verifying', { defaultValue: 'Verifying...' }) : t('common.nextStep', { defaultValue: 'Next Step →' })}
               </Button>
             </div>
           </form>
@@ -508,12 +511,12 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
           <form onSubmit={handleForgotResetSubmit} className="space-y-4">
             {/* Mock notice pill */}
             <div className="p-2.5 bg-[#EEF4FA] border border-[#B8CBDD] rounded-xl text-[11px] text-[#324F66]">
-              Verification code sent to <strong>{maskedContact}</strong>. (Hackathon Demo code: <strong>123456</strong>)
+              {t('workerLogin.verificationSentNotice', { defaultValue: 'Verification code sent to ' })}<strong>{maskedContact}</strong>. ({t('workerLogin.demoCode', { defaultValue: 'Hackathon Demo code: ' })}<strong>123456</strong>)
             </div>
 
             <div>
               <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-                6-Digit Verification Code
+                {t('workerLogin.sixDigitCode', { defaultValue: '6-Digit Verification Code' })}
               </label>
               <input
                 type="text"
@@ -527,7 +530,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
 
             <div>
               <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-                New Password
+                {t('workerLogin.newPassword', { defaultValue: 'New Password' })}
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -535,14 +538,14 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                   type={showForgotNewPassword ? 'text' : 'password'}
                   value={forgotNewPassword}
                   onChange={(e) => setForgotNewPassword(e.target.value)}
-                  placeholder="Enter new password"
+                  placeholder={t('workerLogin.enterNewPassword', { defaultValue: 'Enter new password' })}
                   className="w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#537895]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowForgotNewPassword(!showForgotNewPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B]"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9A958B] cursor-pointer"
                 >
                   {showForgotNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -551,7 +554,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
 
             <div>
               <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-                Confirm New Password
+                {t('workerLogin.confirmNewPassword', { defaultValue: 'Confirm New Password' })}
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -559,7 +562,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                   type={showForgotNewPassword ? 'text' : 'password'}
                   value={forgotConfirmPassword}
                   onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
+                  placeholder={t('workerLogin.confirmNewPassword', { defaultValue: 'Confirm new password' })}
                   className="w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#537895]"
                   required
                 />
@@ -573,7 +576,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                 className="flex-1 py-3"
                 onClick={() => setForgotStep('request')}
               >
-                Back
+                {t('common.back', { defaultValue: 'Back' })}
               </Button>
               <Button
                 variant="primary"
@@ -581,7 +584,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
                 disabled={isLoading}
                 className="flex-1 py-3 bg-[#537895] hover:bg-[#41637E] text-white"
               >
-                {isLoading ? 'Resetting...' : 'Reset & Sign In'}
+                {isLoading ? t('common.resetting', { defaultValue: 'Resetting...' }) : t('workerLogin.resetAndSignIn', { defaultValue: 'Reset & Sign In' })}
               </Button>
             </div>
           </form>
@@ -598,13 +601,13 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
       {/* Header matching requirements */}
       <div className="text-center space-y-1">
         <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E4EDF4] text-[#324F66] border border-[#B8CBDD] inline-block mb-1">
-          Worker Portal
+          {t('workerLogin.portalBadge', 'WORKER PORTAL')}
         </span>
         <h2 className="text-xl sm:text-2xl font-bold font-display text-[#292824] tracking-tight">
-          Welcome back!
+          {t('workerLogin.welcomeBack', 'Welcome back!')}
         </h2>
         <p className="text-xs sm:text-sm text-[#77736B]">
-          Sign in to manage your jobs.
+          {t('workerLogin.manageJobsDesc', 'Sign in to manage your jobs.')}
         </p>
       </div>
 
@@ -612,7 +615,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
         {/* Field 1: Email / Worker ID */}
         <div>
           <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-            Email / Worker ID
+            {t('workerLogin.emailOrWorkerId', 'EMAIL / WORKER ID')}
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 text-[#9A958B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -620,7 +623,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="Enter your registered email or Worker ID"
+              placeholder={t('workerLogin.enterRegisteredEmailOrId', 'Enter your registered email or Worker ID')}
               className="w-full pl-10 pr-4 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm font-medium text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#537895] shadow-subtle transition-all"
               required
             />
@@ -631,7 +634,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-bold text-[#524E47] uppercase tracking-wider">
-              Password
+              {t('workerLogin.password', 'PASSWORD')}
             </label>
           </div>
           <div className="relative">
@@ -640,7 +643,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder={t('workerLogin.enterPassword', 'Enter your password')}
               className="w-full pl-10 pr-10 py-3 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-sm text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#537895] shadow-subtle transition-all"
               required
             />
@@ -669,7 +672,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
               htmlFor="remember-me"
               className="text-xs font-semibold text-[#524E47] cursor-pointer select-none"
             >
-              Remember me
+              {t('workerLogin.rememberMe', 'Remember me')}
             </label>
           </div>
 
@@ -678,7 +681,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
             onClick={() => setStep('forgot_password')}
             className="text-xs font-bold text-[#537895] hover:underline cursor-pointer"
           >
-            Forgot password?
+            {t('workerLogin.forgotPasswordQuestion', 'Forgot password?')}
           </button>
         </div>
 
@@ -692,7 +695,7 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <span>Sign In</span>
+              <span>{t('workerLogin.signIn', 'Sign In')}</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
@@ -702,8 +705,8 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
       {/* Footer text required by prompt */}
       <div className="pt-2 text-center border-t border-[#E8E2D5]">
         <p className="text-xs text-[#77736B]">
-          Don't have an account?{' '}
-          <span className="font-bold text-[#292824]">Contact your Society Manager.</span>
+          {t('workerLogin.noAccount', "Don't have an account?")}{' '}
+          <span className="font-bold text-[#292824]">{t('workerLogin.contactSocietyManager', 'Contact your Society Manager.')}</span>
         </p>
       </div>
 
@@ -712,9 +715,9 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#77736B] flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-[#537895]" />
-            <span>Test / Demo Credentials</span>
+            <span>{t('workerLogin.testDemoCredentials', 'TEST / DEMO CREDENTIALS')}</span>
           </span>
-          <span className="text-[10px] text-[#9A958B]">Click to test</span>
+          <span className="text-[10px] text-[#9A958B]">{t('workerLogin.clickToTest', 'Click to test')}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -725,8 +728,8 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
             className="p-2 text-left bg-white border border-[#E8E2D5] hover:border-[#537895] rounded-lg transition-colors cursor-pointer group"
           >
             <div className="flex items-center justify-between">
-              <strong className="text-[11px] text-[#292824] block">1. First-Time Login</strong>
-              <span className="text-[9px] px-1.5 py-0.2 bg-[#FAEDE8] text-[#80432E] rounded font-bold">Temp Pass</span>
+              <strong className="text-[11px] text-[#292824] block">{t('workerLogin.demo1Title', '1. First-Time Login')}</strong>
+              <span className="text-[9px] px-1.5 py-0.2 bg-[#FAEDE8] text-[#80432E] rounded font-bold">{t('workerLogin.tempPassBadge', 'Temp Pass')}</span>
             </div>
             <span className="text-[10px] text-[#77736B] font-mono block mt-0.5">
               ID: WRK001 · Pass: temp123
@@ -740,8 +743,8 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
             className="p-2 text-left bg-white border border-[#E8E2D5] hover:border-[#537895] rounded-lg transition-colors cursor-pointer group"
           >
             <div className="flex items-center justify-between">
-              <strong className="text-[11px] text-[#292824] block">2. Regular Worker</strong>
-              <span className="text-[9px] px-1.5 py-0.2 bg-[#E6ECE4] text-[#364A32] rounded font-bold">Direct Access</span>
+              <strong className="text-[11px] text-[#292824] block">{t('workerLogin.demo2Title', '2. Regular Worker')}</strong>
+              <span className="text-[9px] px-1.5 py-0.2 bg-[#E6ECE4] text-[#364A32] rounded font-bold">{t('workerLogin.directAccessBadge', 'Direct Access')}</span>
             </div>
             <span className="text-[10px] text-[#77736B] font-mono block mt-0.5">
               ID: WRK002 · Pass: worker123
