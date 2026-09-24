@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { UserRole, User, Worker, SocietyManagerInfo, FederationApplication } from '../../types';
 import { DEMO_USERS } from '../../store/initialData';
@@ -32,6 +33,7 @@ import {
   useMagneticButton,
   useBackgroundParallax,
 } from '../../hooks/useCursorReactive';
+import { LanguageToggle } from '../../components/common/LanguageToggle';
 
 import { WorkerLoginScreen } from './WorkerLoginScreen';
 import { FederationRegistrationPage } from '../admin/FederationRegistrationPage';
@@ -47,6 +49,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
   onBack,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const { login, workers, societyManagers, societies, federations, federationApplications } = useCooperativeStore();
 
   const defaultDemoUser = DEMO_USERS[role] || DEMO_USERS.customer;
@@ -115,75 +118,75 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
     switch (role) {
       case 'platform_admin':
         return {
-          title: 'Platform Central Authority',
-          personaTitle: `${selectedUser.name} (Chief Registrar)`,
-          subtitle: 'Apex Federation Accreditation, Statutory Verification & Central Regulatory Governance',
-          badge: 'Platform Central Authority',
+          title: t('roleLogin.platformAdminTitle', { defaultValue: 'Platform Central Authority' }),
+          personaTitle: `${selectedUser.name} (${t('roleLogin.chiefRegistrar', { defaultValue: 'Chief Registrar' })})`,
+          subtitle: t('roleLogin.platformAdminSubtitle', { defaultValue: 'Apex Federation Accreditation, Statutory Verification & Central Regulatory Governance' }),
+          badge: t('roleLogin.platformAdminBadge', { defaultValue: 'Platform Central Authority' }),
           badgeVariant: 'coop' as const,
           icon: <ShieldCheck className="w-6 h-6 text-purple-400" />,
           accentRgb: '147, 51, 234',
           btnClass: 'bg-[#141413] hover:bg-black text-white shadow-md border border-purple-500/30',
           focusRing: 'focus:ring-purple-600 focus:border-purple-600',
           ambientBg: 'from-purple-900/20 via-transparent to-transparent',
-          buttonLabel: 'Enter Central Authority Desk',
+          buttonLabel: t('roleLogin.enterCentralAuthority', { defaultValue: 'Enter Central Authority Desk' }),
         };
       case 'worker':
         return {
-          title: 'Worker Portal',
+          title: t('roleLogin.workerTitle', { defaultValue: 'Worker Portal' }),
           personaTitle: selectedUser.name,
-          subtitle: 'Access your active jobs, tool bank, and 70% cooperative earnings',
-          badge: 'Worker Portal',
+          subtitle: t('roleLogin.workerSubtitle', { defaultValue: 'Access your active jobs, tool bank, and 70% cooperative earnings' }),
+          badge: t('roleLogin.workerBadge', { defaultValue: 'Worker Portal' }),
           badgeVariant: 'urgent' as const,
           icon: <HardHat className="w-6 h-6 text-[#324F66]" />,
           accentRgb: '184, 203, 221',
           btnClass: 'bg-[#537895] hover:bg-[#41637E] text-white shadow-sm',
           focusRing: 'focus:ring-[#537895] focus:border-[#537895]',
           ambientBg: 'from-[#E4EDF4]/40 via-transparent to-transparent',
-          buttonLabel: `Enter as ${selectedUser.name.split(' ')[0]}`,
+          buttonLabel: t('roleLogin.enterAs', { defaultValue: 'Enter as {{name}}', name: selectedUser.name.split(' ')[0] }),
         };
       case 'society_manager':
         return {
-          title: 'Society Manager Desk',
+          title: t('roleLogin.societyManagerTitle', { defaultValue: 'Society Manager Desk' }),
           personaTitle: `${selectedUser.name} (${selectedUser.societyName})`,
-          subtitle: 'Sign in to cooperative administration, worker roster & 5% maintenance pool',
-          badge: 'Society Manager',
+          subtitle: t('roleLogin.societyManagerSubtitle', { defaultValue: 'Sign in to cooperative administration, worker roster & 5% maintenance pool' }),
+          badge: t('roleLogin.societyManagerBadge', { defaultValue: 'Society Manager' }),
           badgeVariant: 'pending' as const,
           icon: <Building2 className="w-6 h-6 text-[#80432E]" />,
           accentRgb: '233, 197, 181',
           btnClass: 'bg-[#B37055] hover:bg-[#9C583E] text-white shadow-sm',
           focusRing: 'focus:ring-[#B37055] focus:border-[#B37055]',
           ambientBg: 'from-[#FAEDE8]/40 via-transparent to-transparent',
-          buttonLabel: `Enter ${selectedUser.societyName || 'Society'} Desk`,
+          buttonLabel: t('roleLogin.enterSocietyDesk', { defaultValue: 'Enter {{society}} Desk', society: selectedUser.societyName || 'Society' }),
         };
       case 'federation_admin':
       case 'federation_manager':
         return {
-          title: 'Federation Admin Workspace',
+          title: t('roleLogin.federationAdminTitle', { defaultValue: 'Federation Admin Workspace' }),
           personaTitle: `${selectedUser.name} (Maharashtra Federation)`,
-          subtitle: 'Sign in to Maharashtra Federation 8-society governance & relief fund',
-          badge: 'Federation Admin',
+          subtitle: t('roleLogin.federationAdminSubtitle', { defaultValue: 'Sign in to Maharashtra Federation 8-society governance & relief fund' }),
+          badge: t('roleLogin.federationAdminBadge', { defaultValue: 'Federation Admin' }),
           badgeVariant: 'coop' as const,
           icon: <Network className="w-6 h-6 text-[#504161]" />,
           accentRgb: '201, 189, 216',
           btnClass: 'bg-[#7A6A8E] hover:bg-[#655577] text-white shadow-sm',
           focusRing: 'focus:ring-[#7A6A8E] focus:border-[#7A6A8E]',
           ambientBg: 'from-[#EFEBF4]/40 via-transparent to-transparent',
-          buttonLabel: 'Enter Federation Workspace',
+          buttonLabel: t('roleLogin.enterFederationWorkspace', { defaultValue: 'Enter Federation Workspace' }),
         };
       case 'customer':
       default:
         return {
-          title: 'Customer Sign In',
+          title: t('roleLogin.customerTitle', { defaultValue: 'Customer Sign In' }),
           personaTitle: `${selectedUser.name} (${selectedUser.societyName || 'Green Residency'})`,
-          subtitle: 'Sign in to request trusted household & community services',
-          badge: 'Resident Account',
+          subtitle: t('roleLogin.customerSubtitle', { defaultValue: 'Sign in to request trusted household & community services' }),
+          badge: t('roleLogin.customerBadge', { defaultValue: 'Resident Account' }),
           badgeVariant: 'verified' as const,
           icon: <UserIcon className="w-6 h-6 text-[#445D3E]" />,
           accentRgb: '168, 185, 163',
           btnClass: 'bg-[#6E8B67] hover:bg-[#587352] text-white shadow-sm',
           focusRing: 'focus:ring-[#6E8B67] focus:border-[#6E8B67]',
           ambientBg: 'from-[#E6ECE4]/40 via-transparent to-transparent',
-          buttonLabel: 'Continue to Services',
+          buttonLabel: t('roleLogin.continueToServices', { defaultValue: 'Continue to Services' }),
         };
     }
   };
@@ -308,14 +311,17 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
       />
 
       <div className="relative z-10 w-full max-w-2xl space-y-4 my-auto">
-        {/* Back navigation button */}
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#77736B] hover:text-[#292824] transition-colors p-1.5 -ml-1.5 rounded-xl hover:bg-[#F3EEE4] cursor-pointer group"
-        >
-          <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Back to Role Selection</span>
-        </button>
+        {/* Back navigation button and language toggle */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#77736B] hover:text-[#292824] transition-colors p-1.5 -ml-1.5 rounded-xl hover:bg-[#F3EEE4] cursor-pointer group"
+          >
+            <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            <span>{t('roleLogin.backToRoleSelection', { defaultValue: 'Back to Role Selection' })}</span>
+          </button>
+          <LanguageToggle variant="pill" />
+        </div>
 
         {/* Premium Centered Login Card with Subtle 3D Depth & Pointer Light */}
         <div
@@ -375,7 +381,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#80432E] flex items-center gap-1.5">
                       <Building2 className="w-4 h-4 text-[#80432E]" />
-                      <span>Choose Society Manager ({filteredManagerAccounts.length} Societies)</span>
+                      <span>{t('roleLogin.chooseSocietyManager', { defaultValue: 'Choose Society Manager ({{count}} Societies)', count: filteredManagerAccounts.length })}</span>
                     </span>
                   </div>
 
@@ -384,7 +390,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                     <Search className="w-3.5 h-3.5 text-[#9A958B] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      placeholder="Search society (Green Residency, Lakeview...) or manager name..."
+                      placeholder={t('roleLogin.searchSocietyPlaceholder', { defaultValue: 'Search society (Green Residency, Lakeview...) or manager name...' })}
                       value={accountSearch}
                       onChange={(e) => setAccountSearch(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-xs font-medium text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#80432E]"
@@ -406,15 +412,13 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <img
-                              src={m.avatar}
-                              alt={m.name}
-                              className="w-10 h-10 rounded-full object-cover border border-[#E8E2D5] shrink-0"
-                            />
+                            <div className="w-10 h-10 rounded-full bg-[#FAEDE8] border border-[#E8E2D5] flex items-center justify-center text-[#80432E] font-bold text-sm shrink-0">
+                              {(m.name.includes('Priya') ? t('demoUsers.priyaPatel', m.name) : m.name).charAt(0)}
+                            </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1">
                                 <strong className="text-xs font-bold text-[#292824] truncate block">
-                                  {m.name}
+                                  {m.name.includes('Priya') ? t('demoUsers.priyaPatel', m.name) : m.name}
                                 </strong>
                                 {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#B37055] shrink-0" />}
                               </div>
@@ -422,7 +426,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                                 {m.societyName}
                               </div>
                               <div className="text-[10px] text-[#77736B] truncate">
-                                {m.workersCount} Assigned Workers
+                                {t('roleLogin.assignedWorkers', { defaultValue: '{{count}} Assigned Workers', count: m.workersCount })}
                               </div>
                             </div>
                           </div>
@@ -447,7 +451,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                             }}
                             className="px-2.5 py-1 rounded-lg bg-[#B37055] hover:bg-[#9C583E] text-white text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
                           >
-                            Sign In →
+                            {t('roleLogin.signInArrow', { defaultValue: 'Sign In →' })}
                           </button>
                         </div>
                       );
@@ -461,7 +465,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                 <div className="space-y-3 relative z-10">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#364A32] flex items-center gap-1.5">
                     <UserIcon className="w-4 h-4 text-[#445D3E]" />
-                    <span>Demo Resident Accounts</span>
+                    <span>{t('roleLogin.demoResidentAccounts', { defaultValue: 'Demo Resident Accounts' })}</span>
                   </span>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -504,12 +508,12 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               <Clock className="w-6 h-6" />
                             </div>
                             <div>
-                              <Badge variant="warning" size="sm">PENDING VERIFICATION</Badge>
+                              <Badge variant="warning" size="sm">{t('federationAuth.pendingBadge', { defaultValue: 'PENDING VERIFICATION' })}</Badge>
                               <h3 className="text-base font-serif font-bold text-[#141413] mt-0.5">
-                                Registration Pending Platform Verification
+                                {t('federationAuth.pendingHeading', { defaultValue: 'Registration Pending Platform Verification' })}
                               </h3>
                               <p className="text-xs text-[#77736B]">
-                                Application Ref: <strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
+                                {t('federationAuth.applicationRef', { defaultValue: 'Application Ref: ' })}<strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
                               </p>
                             </div>
                           </div>
@@ -517,28 +521,31 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                           <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-950 space-y-1">
                             <div className="font-bold flex items-center gap-1.5">
                               <AlertTriangle className="w-4 h-4 text-amber-700" />
-                              <span>Workspace Access Locked</span>
+                              <span>{t('federationAuth.workspaceLocked', { defaultValue: 'Workspace Access Locked' })}</span>
                             </div>
                             <p className="text-[11px] leading-relaxed text-amber-900">
-                              Your statutory application for <strong>{federationStatusView.app.federationName}</strong> has been transmitted and is currently undergoing audit by the <strong>Platform Central Authority (Dr. Rajeshwar Sengupta, Chief Registrar)</strong>. Workspace access will be unlocked once approved.
+                              {t('federationAuth.pendingMessage', {
+                                defaultValue: 'Your statutory application for {{name}} has been transmitted and is currently undergoing audit by the Platform Central Authority (Dr. Rajeshwar Sengupta, Chief Registrar). Workspace access will be unlocked once approved.',
+                                name: federationStatusView.app.federationName,
+                              })}
                             </p>
                           </div>
 
                           <div className="p-3 bg-[#FCF9F3] rounded-xl border border-[#E8E2D5] text-xs space-y-1.5">
                             <div className="flex justify-between">
-                              <span className="text-[#77736B]">Registration No:</span>
+                              <span className="text-[#77736B]">{t('federationAuth.regNo', { defaultValue: 'Registration No:' })}</span>
                               <span className="font-mono font-bold text-[#141413]">{federationStatusView.app.registrationNumber}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-[#77736B]">Representative:</span>
+                              <span className="text-[#77736B]">{t('federationAuth.representative', { defaultValue: 'Representative:' })}</span>
                               <span className="font-semibold text-[#141413]">{federationStatusView.app.authorizedPersonName} ({federationStatusView.app.authorizedPersonDesignation})</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-[#77736B]">Declared Scope:</span>
-                              <span className="font-semibold text-[#141413]">{federationStatusView.app.societiesCount || federationStatusView.app.declaredSocieties?.length || 1} Societies</span>
+                              <span className="text-[#77736B]">{t('federationAuth.declaredScope', { defaultValue: 'Declared Scope:' })}</span>
+                              <span className="font-semibold text-[#141413]">{federationStatusView.app.societiesCount || federationStatusView.app.declaredSocieties?.length || 1} {t('common.societies', { defaultValue: 'Societies' })}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-[#77736B]">Submitted Date:</span>
+                              <span className="text-[#77736B]">{t('federationAuth.submittedDate', { defaultValue: 'Submitted Date:' })}</span>
                               <span className="text-[#141413]">{federationStatusView.app.submittedAt || 'Recent'}</span>
                             </div>
                           </div>
@@ -549,7 +556,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               onClick={() => setFederationStatusView(null)}
                               className="px-4 py-2 rounded-xl bg-white border border-[#D5D0C7] text-xs font-semibold text-[#141413] hover:bg-[#FAF9F5] cursor-pointer"
                             >
-                              ← Back to Sign In
+                              {t('roleLogin.backToSignIn', { defaultValue: 'Back to Sign In' })}
                             </button>
                             <button
                               type="button"
@@ -561,7 +568,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               className="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
                             >
                               <FileText className="w-3.5 h-3.5" />
-                              <span>View Application Details</span>
+                              <span>{t('federationAuth.viewApplicationDetails', { defaultValue: 'View Application Details' })}</span>
                             </button>
                           </div>
                         </>
@@ -574,24 +581,24 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               <AlertTriangle className="w-6 h-6" />
                             </div>
                             <div>
-                              <Badge variant="warning" size="sm">CHANGES REQUIRED</Badge>
+                              <Badge variant="warning" size="sm">{t('federationAuth.changesRequiredBadge', { defaultValue: 'CHANGES REQUIRED' })}</Badge>
                               <h3 className="text-base font-serif font-bold text-[#141413] mt-0.5">
-                                Platform Admin Requested Corrections
+                                {t('federationAuth.changesRequiredHeading', { defaultValue: 'Platform Admin Requested Corrections' })}
                               </h3>
                               <p className="text-xs text-[#77736B]">
-                                Application Ref: <strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
+                                {t('federationAuth.applicationRef', { defaultValue: 'Application Ref: ' })}<strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
                               </p>
                             </div>
                           </div>
 
                           <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-950 space-y-1">
-                            <strong className="block">Reviewer Reason & Directives:</strong>
+                            <strong className="block">{t('federationAuth.reviewerDirectives', { defaultValue: 'Reviewer Reason & Directives:' })}</strong>
                             <p className="text-xs font-medium text-amber-900 leading-relaxed italic">
                               "{federationStatusView.app.changeRequestReason || 'Please review statutory documents and update accordingly.'}"
                             </p>
                             {federationStatusView.app.reviewedBy && (
                               <span className="text-[11px] text-amber-700 block mt-1">
-                                Reviewed by {federationStatusView.app.reviewedBy} on {federationStatusView.app.reviewedAt}
+                                {t('federationAuth.reviewedByOn', { defaultValue: 'Reviewed by {{reviewer}} on {{date}}', reviewer: federationStatusView.app.reviewedBy, date: federationStatusView.app.reviewedAt })}
                               </span>
                             )}
                           </div>
@@ -602,7 +609,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               onClick={() => setFederationStatusView(null)}
                               className="px-4 py-2 rounded-xl bg-white border border-[#D5D0C7] text-xs font-semibold text-[#141413] hover:bg-[#FAF9F5] cursor-pointer"
                             >
-                              ← Back to Sign In
+                              {t('roleLogin.backToSignIn', { defaultValue: 'Back to Sign In' })}
                             </button>
                             <button
                               type="button"
@@ -614,7 +621,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               className="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
                             >
                               <FileText className="w-3.5 h-3.5" />
-                              <span>Update Documents & Resubmit</span>
+                              <span>{t('federationAuth.updateAndResubmit', { defaultValue: 'Update Documents & Resubmit' })}</span>
                             </button>
                           </div>
                         </>
@@ -627,24 +634,24 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               <XCircle className="w-6 h-6" />
                             </div>
                             <div>
-                              <Badge variant="danger" size="sm">REGISTRATION REJECTED</Badge>
+                              <Badge variant="danger" size="sm">{t('federationAuth.rejectedBadge', { defaultValue: 'REGISTRATION REJECTED' })}</Badge>
                               <h3 className="text-base font-serif font-bold text-rose-950 mt-0.5">
-                                Statutory Accreditation Denied
+                                {t('federationAuth.rejectedHeading', { defaultValue: 'Statutory Accreditation Denied' })}
                               </h3>
                               <p className="text-xs text-[#77736B]">
-                                Application Ref: <strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
+                                {t('federationAuth.applicationRef', { defaultValue: 'Application Ref: ' })}<strong className="font-mono text-[#141413]">#{federationStatusView.app.id}</strong>
                               </p>
                             </div>
                           </div>
 
                           <div className="p-3.5 bg-rose-50 rounded-xl border border-rose-200 text-xs text-rose-950 space-y-1">
-                            <strong className="block">Central Authority Decision:</strong>
+                            <strong className="block">{t('federationAuth.centralDecision', { defaultValue: 'Central Authority Decision:' })}</strong>
                             <p className="text-xs font-medium text-rose-900 leading-relaxed italic">
                               "{federationStatusView.app.rejectionReason || 'Application does not meet platform accreditation standards under the Multi-State Cooperative Societies Act.'}"
                             </p>
                             {federationStatusView.app.reviewedBy && (
                               <span className="text-[11px] text-rose-700 block mt-1">
-                                Reviewed by {federationStatusView.app.reviewedBy} on {federationStatusView.app.reviewedAt}
+                                {t('federationAuth.reviewedByOn', { defaultValue: 'Reviewed by {{reviewer}} on {{date}}', reviewer: federationStatusView.app.reviewedBy, date: federationStatusView.app.reviewedAt })}
                               </span>
                             )}
                           </div>
@@ -655,7 +662,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               onClick={() => setFederationStatusView(null)}
                               className="px-4 py-2 rounded-xl bg-white border border-[#D5D0C7] text-xs font-semibold text-[#141413] hover:bg-[#FAF9F5] cursor-pointer"
                             >
-                              ← Back to Sign In
+                              {t('roleLogin.backToSignIn', { defaultValue: 'Back to Sign In' })}
                             </button>
                             <button
                               type="button"
@@ -667,7 +674,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                               className="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
                             >
                               <FileText className="w-3.5 h-3.5" />
-                              <span>Submit New Registration</span>
+                              <span>{t('federationAuth.submitNewRegistration', { defaultValue: 'Submit New Registration' })}</span>
                             </button>
                           </div>
                         </>
@@ -683,7 +690,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                           className="py-2.5 px-3 rounded-xl transition-all cursor-pointer bg-white text-[#504161] shadow-2xs font-extrabold border border-[#DFD8E8] flex items-center justify-center gap-1.5"
                         >
                           <Network className="w-3.5 h-3.5" />
-                          <span>Existing Federation</span>
+                          <span>{t('roleLogin.existingFederation', { defaultValue: 'Existing Federation' })}</span>
                         </button>
                         <button
                           type="button"
@@ -691,28 +698,26 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                           className="py-2.5 px-3 rounded-xl transition-all cursor-pointer text-[#504161] hover:bg-[#EFEBF4] flex items-center justify-center gap-1.5"
                         >
                           <FileText className="w-3.5 h-3.5" />
-                          <span>+ New Registration</span>
+                          <span>{t('roleLogin.newRegistration', { defaultValue: '+ New Registration' })}</span>
                         </button>
                       </div>
 
                       {/* Approved Federation Card Preview */}
                       <div className="p-3.5 bg-[#EFEBF4] rounded-2xl border border-[#DFD8E8] flex items-center justify-between text-xs">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={selectedUser.avatar || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'}
-                            alt={selectedUser.name}
-                            className="w-10 h-10 rounded-full object-cover border border-[#DFD8E8]"
-                          />
+                          <div className="w-10 h-10 rounded-full bg-[#DFD8E8] border border-[#DFD8E8] flex items-center justify-center text-[#504161] font-bold text-sm shrink-0">
+                            {(selectedUser.name.includes('Priya') ? t('demoUsers.priyaPatel', selectedUser.name) : selectedUser.name).charAt(0)}
+                          </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-[#504161] font-bold uppercase block leading-none">Approved Federation</span>
-                              <span className="text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-bold">✓ Certified</span>
+                              <span className="text-[10px] text-[#504161] font-bold uppercase block leading-none">{t('roleLogin.approvedFederation', { defaultValue: 'Approved Federation' })}</span>
+                              <span className="text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-bold">{t('roleLogin.certifiedBadge', { defaultValue: '✓ Certified' })}</span>
                             </div>
-                            <strong className="text-sm font-bold text-[#292824] block mt-0.5">{selectedUser.name}</strong>
+                            <strong className="text-sm font-bold text-[#292824] block mt-0.5">{selectedUser.name.includes('Priya') ? t('demoUsers.priyaPatel', selectedUser.name) : selectedUser.name}</strong>
                             <span className="text-[11px] text-[#77736B]">{selectedUser.federationName || 'Maharashtra Community Federation'}</span>
                           </div>
                         </div>
-                        <Badge variant="coop" size="sm">Level 3 Apex</Badge>
+                        <Badge variant="coop" size="sm">{t('roleLogin.level3Apex', { defaultValue: 'Level 3 Apex' })}</Badge>
                       </div>
                     </>
                   )}
@@ -724,16 +729,12 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                 <form onSubmit={handleSubmit} className="relative z-10 space-y-4 pt-2 border-t border-[#E8E2D5]">
                   <div className="p-3.5 bg-[#F3EEE4] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
-                      {selectedUser.avatar && (
-                        <img
-                          src={selectedUser.avatar}
-                          alt={selectedUser.name}
-                          className="w-9 h-9 rounded-full object-cover border border-[#E8E2D5]"
-                        />
-                      )}
+                      <div className="w-9 h-9 rounded-full bg-[#FCF9F3] border border-[#E8E2D5] flex items-center justify-center text-[#80432E] font-bold text-xs shrink-0">
+                        {(selectedUser.name.includes('Priya') ? t('demoUsers.priyaPatel', selectedUser.name) : selectedUser.name).charAt(0)}
+                      </div>
                       <div>
-                        <span className="text-[10px] text-[#77736B] block font-medium uppercase tracking-wider">Active Selected Persona:</span>
-                        <strong className="text-sm text-[#292824] font-bold block">{selectedUser.name}</strong>
+                        <span className="text-[10px] text-[#77736B] block font-medium uppercase tracking-wider">{t('roleLogin.activePersona', { defaultValue: 'Active Selected Persona:' })}</span>
+                        <strong className="text-sm text-[#292824] font-bold block">{selectedUser.name.includes('Priya') ? t('demoUsers.priyaPatel', selectedUser.name) : selectedUser.name}</strong>
                         <span className="text-[11px] text-[#80432E] font-medium block">
                           {selectedUser.tradeProfession ? `${selectedUser.tradeProfession} · ` : ''}
                           {selectedUser.societyName || selectedUser.federationName || 'Cooperative'}
@@ -742,13 +743,13 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                     </div>
                     <span className="text-[11px] font-semibold text-[#364A32] bg-[#E6ECE4] border border-[#CFDDD0] px-2.5 py-1 rounded-full flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
-                      <span>Selected</span>
+                      <span>{t('roleLogin.selected', { defaultValue: 'Selected' })}</span>
                     </span>
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-[#524E47] block mb-1.5 uppercase tracking-wider">
-                      {isEmailRole ? 'Official Cooperative Email' : 'Phone Number or Email'}
+                      {isEmailRole ? t('roleLogin.officialEmail', { defaultValue: 'Official Cooperative Email' }) : t('roleLogin.phoneOrEmail', { defaultValue: 'Phone Number or Email' })}
                     </label>
                     <div className="relative">
                       {isEmailRole ? (
@@ -769,10 +770,10 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="text-xs font-bold text-[#524E47] uppercase tracking-wider">
-                        Password
+                        {t('roleLogin.password', { defaultValue: 'Password' })}
                       </label>
                       <span className="text-[11px] text-[#9A958B]">
-                        Pre-filled in demo
+                        {t('roleLogin.prefilledDemo', { defaultValue: 'Pre-filled in demo' })}
                       </span>
                     </div>
                     <div className="relative">
@@ -825,7 +826,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
 
         {/* Footer info */}
         <p className="text-center text-[11px] text-[#9A958B] leading-normal">
-          Protected by Cooperative Community Protocol · Role locked upon sign in
+          {t('roleLogin.footerProtocols', { defaultValue: 'Protected by Cooperative Community Protocol · Role locked upon sign in' })}
         </p>
       </div>
     </div>

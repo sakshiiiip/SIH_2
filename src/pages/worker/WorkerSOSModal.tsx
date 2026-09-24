@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { ServiceRequest } from '../../types';
@@ -18,20 +19,21 @@ interface WorkerSOSModalProps {
   onClose: () => void;
 }
 
-const WORKER_SOS_REASONS = [
-  'Unsafe environment',
-  'Customer safety issue',
-  'Medical emergency',
-  'Conflict',
-  'Equipment problem',
-  'Other',
-];
-
 export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onClose }) => {
+  const { t } = useTranslation();
   const { triggerActiveJobSOS, currentUser } = useCooperativeStore();
   const { currentCoordinates, currentAddress, captureSOSSnapshot } = useGeolocation();
 
-  const [selectedReason, setSelectedReason] = useState(WORKER_SOS_REASONS[0]);
+  const workerSosReasons = [
+    { key: 'unsafe_env', label: t('sos.workerReasons.unsafeEnv', 'Unsafe environment') },
+    { key: 'customer_safety', label: t('sos.workerReasons.customerSafetyIssue', 'Customer safety issue') },
+    { key: 'medical_emergency', label: t('sos.workerReasons.medicalEmergency', 'Medical emergency') },
+    { key: 'conflict', label: t('sos.workerReasons.conflict', 'Conflict') },
+    { key: 'equipment_problem', label: t('sos.workerReasons.equipmentProblem', 'Equipment problem') },
+    { key: 'other', label: t('sos.workerReasons.other', 'Other') },
+  ];
+
+  const [selectedReasonKey, setSelectedReasonKey] = useState(workerSosReasons[0].key);
   const [details, setDetails] = useState('');
   const [submittedTicketId, setSubmittedTicketId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,10 +61,12 @@ export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onC
       const snapshot = await captureSOSSnapshot(job.id, 'worker', currentUser.name);
       setGoogleMapsUrl(snapshot.googleMapsUrl);
 
+      const activeReason = workerSosReasons.find(r => r.key === selectedReasonKey)?.label || selectedReasonKey;
+
       const ticket = triggerActiveJobSOS(
         job.id,
         'worker',
-        selectedReason,
+        activeReason,
         details || 'Worker emergency assistance requested on-site.',
         {
           latitude: snapshot.coordinates.latitude,
@@ -93,9 +97,9 @@ export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onC
             </div>
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-[#C93B2B] text-white">
-                Worker Safety SOS
+                {t('sos.workerTitle', 'Worker Safety SOS')}
               </span>
-              <h3 className="text-base font-extrabold text-[#292824] mt-0.5">Worker Support Escalation</h3>
+              <h3 className="text-base font-extrabold text-[#292824] mt-0.5">{t('sos.workerSubtitle', 'Worker Support Escalation')}</h3>
             </div>
           </div>
           <button
@@ -114,7 +118,7 @@ export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onC
               <MapPin className="w-4 h-4 text-[#C93B2B] shrink-0" />
               <div className="min-w-0">
                 <span className="text-[10px] font-extrabold uppercase text-[#80432E] block">
-                  Worker Job Coordinates
+                  {t('sos.workerCoords', 'Worker Job Coordinates')}
                 </span>
                 <strong className="text-[#292824] font-bold block truncate">
                   {currentAddress.formattedAddress || 'Green Residency, Baner, Pune'}
@@ -128,7 +132,7 @@ export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onC
               className="p-1.5 bg-white hover:bg-[#FAF7F2] text-[#80432E] border border-[#F3C5B8] rounded-lg text-[10px] font-bold flex items-center gap-1 shrink-0"
             >
               <ExternalLink className="w-3 h-3" />
-              <span>Maps</span>
+              <span>{t('sos.maps', 'Maps')}</span>
             </a>
           </div>
 
@@ -139,35 +143,35 @@ export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onC
               </div>
               <div className="space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#445D3E]">
-                  Support Dispatched
+                  {t('sos.supportDispatched', 'Support Dispatched')}
                 </span>
-                <h4 className="text-lg font-black text-[#292824]">Ticket <span className="font-mono font-bold">#{submittedTicketId}</span></h4>
+                <h4 className="text-lg font-black text-[#292824]">{t('sos.ticketNumber', { id: submittedTicketId, defaultValue: `Ticket #${submittedTicketId}` })}</h4>
                 <p className="text-xs text-[#77736B] max-w-xs mx-auto">
-                  Your Society Manager and Cooperative Support desk are on stand-by to assist immediately.
+                  {t('sos.workerStandbyNotice', 'Your Society Manager and Cooperative Support desk are on stand-by to assist immediately.')}
                 </p>
               </div>
 
               {/* Direct Support lines */}
               <div className="space-y-2 pt-2">
                 <div className="p-3 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
-                  <span className="font-bold text-[#292824]">Society Safety Desk</span>
+                  <span className="font-bold text-[#292824]">{t('sos.societySafetyDesk', 'Society Safety Desk')}</span>
                   <a
                     href="tel:9820411983"
                     className="px-3 py-1.5 bg-[#537895] text-white font-bold rounded-lg flex items-center gap-1 text-xs shadow-2xs"
                   >
                     <PhoneCall className="w-3.5 h-3.5" />
-                    <span>Call Desk</span>
+                    <span>{t('sos.callDesk', 'Call Desk')}</span>
                   </a>
                 </div>
 
                 <div className="p-3 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D5] flex items-center justify-between text-xs">
-                  <span className="font-bold text-[#292824]">Emergency Police (112)</span>
+                  <span className="font-bold text-[#292824]">{t('sos.policeControl', 'Emergency Police (112)')}</span>
                   <a
                     href="tel:112"
                     className="px-3 py-1.5 bg-[#C93B2B] text-white font-bold rounded-lg flex items-center gap-1 text-xs shadow-2xs"
                   >
                     <PhoneCall className="w-3.5 h-3.5" />
-                    <span>Call 112</span>
+                    <span>{t('sos.call112', 'Call 112')}</span>
                   </a>
                 </div>
               </div>
@@ -177,30 +181,30 @@ export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onC
                 onClick={onClose}
                 className="w-full py-2.5 bg-[#F3EEE4] hover:bg-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl transition-colors cursor-pointer mt-2"
               >
-                Close Window
+                {t('sos.closeWindow', 'Close Window')}
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="text-sm font-bold text-[#292824] block mb-2">
-                  What's wrong?
+                  {t('sos.whatsWrong', "What's wrong?")}
                 </label>
                 <div className="space-y-1.5">
-                  {WORKER_SOS_REASONS.map((reason) => {
-                    const isSelected = selectedReason === reason;
+                  {workerSosReasons.map((reason) => {
+                    const isSelected = selectedReasonKey === reason.key;
                     return (
                       <button
-                        key={reason}
+                        key={reason.key}
                         type="button"
-                        onClick={() => setSelectedReason(reason)}
+                        onClick={() => setSelectedReasonKey(reason.key)}
                         className={`w-full p-2.5 rounded-xl text-left border transition-all flex items-center justify-between text-xs font-semibold cursor-pointer ${
                           isSelected
                             ? 'bg-[#FAEDE8] border-2 border-[#C93B2B] text-[#80432E]'
                             : 'bg-[#FCF9F3] border-[#E8E2D5] text-[#524E47] hover:border-[#F3C5B8]'
                         }`}
                       >
-                        <span>{reason}</span>
+                        <span>{reason.label}</span>
                         {isSelected && <span className="w-2 h-2 rounded-full bg-[#C93B2B]" />}
                       </button>
                     );
@@ -210,11 +214,11 @@ export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onC
 
               <div>
                 <label className="text-xs font-bold text-[#77736B] block mb-1">
-                  Additional Details (Optional)
+                  {t('sos.additionalDetails', 'Additional Details (Optional)')}
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Describe the immediate situation..."
+                  placeholder={t('sos.describeSituation', 'Describe the immediate situation...')}
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                   className="w-full p-2.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-xs text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#C93B2B]"
@@ -231,7 +235,7 @@ export const WorkerSOSModal: React.FC<WorkerSOSModalProps> = ({ job, isOpen, onC
                 ) : (
                   <>
                     <ShieldAlert className="w-4 h-4" />
-                    <span>Send Urgent Worker SOS</span>
+                    <span>{t('sos.sendWorkerSos', 'Send Urgent Worker SOS')}</span>
                   </>
                 )}
               </button>

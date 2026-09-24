@@ -1,5 +1,6 @@
 import React from 'react';
 import { Booking } from '../../types';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
@@ -41,17 +42,18 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
   onProceedToPayment,
   onOpenSOS,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen || !booking) return null;
 
   const statusInfo = mapBookingStatus(booking.state);
 
   // 5 customer-facing stages
   const customerSteps = [
-    { key: 'REQUESTED', label: 'Requested', desc: 'Finding verified specialist' },
-    { key: 'WORKER FOUND', label: 'Worker Found', desc: 'Specialist matched & assigned' },
-    { key: 'ON THE WAY', label: 'On The Way', desc: 'Travelling to your residence' },
-    { key: 'WORKING', label: 'Working', desc: 'Service underway at residence' },
-    { key: 'COMPLETED', label: 'Completed', desc: 'Job finished & verified' },
+    { key: 'REQUESTED', label: t('common.pending', 'Requested'), desc: 'Finding verified specialist' },
+    { key: 'WORKER FOUND', label: t('common.assigned', 'Worker Found'), desc: 'Specialist matched & assigned' },
+    { key: 'ON THE WAY', label: t('tracking.workerArriving', 'On The Way'), desc: 'Travelling to your residence' },
+    { key: 'WORKING', label: t('common.inProgress', 'Working'), desc: 'Service underway at residence' },
+    { key: 'COMPLETED', label: t('common.completed', 'Completed'), desc: 'Job finished & verified' },
   ];
 
   const currentStepIndex = statusInfo.stepIndex;
@@ -213,8 +215,12 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
                 <KeyRound className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] text-[#445D3E] font-bold uppercase tracking-wider block">Arrival Verification OTP</span>
-                <span className="text-xs text-[#524E47]">Share this code with your worker upon arrival:</span>
+                <span className="text-[10px] text-[#445D3E] font-bold uppercase tracking-wider block">
+                  {t('common.otpCode', 'Verification OTP')}
+                </span>
+                <span className="text-xs text-[#524E47]">
+                  {t('tracking.otpInstruction', 'Share this code with your worker upon arrival:')}
+                </span>
               </div>
             </div>
             <div className="px-3.5 py-1.5 bg-white border border-[#CFDDD0] rounded-xl font-mono text-lg font-black text-[#2A3927] tracking-widest shadow-2xs">

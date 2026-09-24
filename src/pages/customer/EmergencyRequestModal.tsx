@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
@@ -16,6 +17,7 @@ export const EmergencyRequestModal: React.FC<EmergencyRequestModalProps> = ({
   onClose,
   onEmergencyCreated,
 }) => {
+  const { t } = useTranslation();
   const { currentUser, createBooking } = useCooperativeStore();
 
   const [selectedEmergencyCategory, setSelectedEmergencyCategory] =
@@ -29,18 +31,21 @@ export const EmergencyRequestModal: React.FC<EmergencyRequestModalProps> = ({
 
   const emergencyOptions = [
     {
-      category: 'Plumbing',
-      problem: 'Severe pipe burst / continuous water leakage flooding room',
+      categoryKey: 'Plumbing',
+      label: t('emergency.plumbing', 'Plumbing'),
+      problem: t('emergency.plumbingDesc', 'Severe pipe burst / continuous water leakage flooding room'),
       icon: <Wrench className="w-5 h-5 text-sky-600" />,
     },
     {
-      category: 'Electrical',
-      problem: 'Main distribution box sparking / burning smell / complete blackout',
+      categoryKey: 'Electrical',
+      label: t('emergency.electrical', 'Electrical'),
+      problem: t('emergency.electricalDesc', 'Main distribution box sparking / burning smell / complete blackout'),
       icon: <Zap className="w-5 h-5 text-amber-600" />,
     },
     {
-      category: 'Carpentry',
-      problem: 'Main entrance security door jammed shut / resident locked out',
+      categoryKey: 'Carpentry',
+      label: t('emergency.carpentry', 'Carpentry'),
+      problem: t('emergency.carpentryDesc', 'Main entrance security door jammed shut / resident locked out'),
       icon: <Flame className="w-5 h-5 text-rose-600" />,
     },
   ];
@@ -67,8 +72,8 @@ export const EmergencyRequestModal: React.FC<EmergencyRequestModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Need help immediately?"
-      subtitle="Cooperative Priority Emergency Response"
+      title={t('emergency.title', 'Need help immediately?')}
+      subtitle={t('emergency.subtitle', 'Cooperative Priority Emergency Response')}
       maxWidth="md"
     >
       <div className="space-y-6">
@@ -77,10 +82,10 @@ export const EmergencyRequestModal: React.FC<EmergencyRequestModalProps> = ({
           <ShieldAlert className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
           <div>
             <h4 className="font-bold text-rose-950 text-sm">
-              Emergency Priority Queue
+              {t('emergency.queueTitle', 'Emergency Priority Queue')}
             </h4>
             <p className="text-xs text-rose-700 mt-0.5 leading-relaxed">
-              For situations requiring immediate assistance. Dispatches directly to closest available verified specialists with auto-escalation.
+              {t('emergency.queueDesc', 'For situations requiring immediate assistance. Dispatches directly to closest available verified specialists with auto-escalation.')}
             </p>
           </div>
         </div>
@@ -88,18 +93,18 @@ export const EmergencyRequestModal: React.FC<EmergencyRequestModalProps> = ({
         {/* Quick select */}
         <div className="space-y-3">
           <label className="text-xs font-semibold text-slate-700 block">
-            Select Emergency Type:
+            {t('emergency.selectType', 'Select Emergency Type:')}
           </label>
           <div className="space-y-2">
             {emergencyOptions.map((opt, idx) => (
               <button
                 key={idx}
                 onClick={() => {
-                  setSelectedEmergencyCategory(opt.category);
+                  setSelectedEmergencyCategory(opt.categoryKey);
                   setProblemDescription(opt.problem);
                 }}
                 className={`w-full p-3.5 rounded-xl border text-left flex items-center gap-3 transition-all ${
-                  selectedEmergencyCategory === opt.category
+                  selectedEmergencyCategory === opt.categoryKey
                     ? 'border-rose-600 bg-rose-50/50 ring-1 ring-rose-600'
                     : 'border-slate-200 hover:border-slate-300 bg-white'
                 }`}
@@ -108,7 +113,7 @@ export const EmergencyRequestModal: React.FC<EmergencyRequestModalProps> = ({
                   {opt.icon}
                 </div>
                 <div className="flex-1">
-                  <div className="text-xs font-bold text-slate-900">{opt.category}</div>
+                  <div className="text-xs font-bold text-slate-900">{opt.label}</div>
                   <div className="text-xs text-slate-600 line-clamp-1">{opt.problem}</div>
                 </div>
               </button>
@@ -118,7 +123,7 @@ export const EmergencyRequestModal: React.FC<EmergencyRequestModalProps> = ({
 
         {/* Location display */}
         <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-center justify-between">
-          <span>Dispatching to: <strong>{currentUser.address}</strong></span>
+          <span>{t('emergency.dispatchingTo', 'Dispatching to:')} <strong>{currentUser.address}</strong></span>
           <span className="text-teal-700 font-semibold">{currentUser.societyName}</span>
         </div>
 
@@ -131,7 +136,7 @@ export const EmergencyRequestModal: React.FC<EmergencyRequestModalProps> = ({
           isLoading={isSubmitting}
           leftIcon={<ShieldAlert className="w-5 h-5" />}
         >
-          Request Immediate Emergency Help
+          {t('emergency.requestHelp', 'Request Immediate Emergency Help')}
         </Button>
       </div>
     </Modal>

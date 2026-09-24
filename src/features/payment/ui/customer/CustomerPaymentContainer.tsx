@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Users, ChevronLeft, IndianRupee, LayoutList, Plus } from 'lucide-react';
 import { CommunityGroupBooking } from './CommunityGroupBooking';
 import { GroupBookingDetails } from './GroupBookingDetails';
@@ -28,14 +29,6 @@ interface CustomerPaymentContainerProps {
   onClose?: () => void;
 }
 
-// ─── Section titles per view ──────────────────────────────────────────────────
-
-function viewTitle(view: CustomerView): string {
-  if (view.type === 'list') return 'Community Group Bookings';
-  if (view.type === 'details') return 'Booking Details';
-  return 'Pay My Share';
-}
-
 // ─── main container ───────────────────────────────────────────────────────────
 
 export const CustomerPaymentContainer: React.FC<CustomerPaymentContainerProps> = ({
@@ -47,7 +40,14 @@ export const CustomerPaymentContainer: React.FC<CustomerPaymentContainerProps> =
   societyName = 'Green Residency',
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [view, setView] = useState<CustomerView>({ type: 'list' });
+
+  const viewTitle = (v: CustomerView): string => {
+    if (v.type === 'list') return t('groupBooking.title', 'Community Group Bookings');
+    if (v.type === 'details') return t('groupBooking.details.title', 'Booking Details');
+    return t('groupBooking.payShare', 'Pay My Share');
+  };
 
   const goToList = () => setView({ type: 'list' });
   const goToDetails = (id: string) => setView({ type: 'details', groupBookingId: id });
@@ -74,7 +74,7 @@ export const CustomerPaymentContainer: React.FC<CustomerPaymentContainerProps> =
             type="button"
             onClick={handleBack}
             className="w-8 h-8 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] flex items-center justify-center hover:bg-[#F3EEE4] transition-colors cursor-pointer shrink-0"
-            aria-label="Go back"
+            aria-label={t('common.back', 'Go back')}
           >
             <ChevronLeft className="w-4 h-4 text-[#77736B]" />
           </button>
@@ -104,12 +104,12 @@ export const CustomerPaymentContainer: React.FC<CustomerPaymentContainerProps> =
             onClick={goToList}
             className="text-[#537895] font-semibold hover:underline cursor-pointer"
           >
-            All Bookings
+            {t('common.all', 'All Bookings')}
           </button>
           {view.type === 'details' && (
             <>
               <span className="text-[#BCB7AD]">/</span>
-              <span className="text-[#292824] font-semibold">Details</span>
+              <span className="text-[#292824] font-semibold">{t('common.details', 'Details')}</span>
             </>
           )}
           {view.type === 'payment' && (
@@ -123,10 +123,10 @@ export const CustomerPaymentContainer: React.FC<CustomerPaymentContainerProps> =
                 }}
                 className="text-[#537895] font-semibold hover:underline cursor-pointer"
               >
-                Details
+                {t('common.details', 'Details')}
               </button>
               <span className="text-[#BCB7AD]">/</span>
-              <span className="text-[#292824] font-semibold">Pay</span>
+              <span className="text-[#292824] font-semibold">{t('payment.payVia', 'Pay')}</span>
             </>
           )}
         </nav>
@@ -176,12 +176,11 @@ export const CustomerPaymentContainer: React.FC<CustomerPaymentContainerProps> =
             type="button"
             id="fab-create-group-booking"
             onClick={() => {
-              // Scroll to the top of the page and trigger create modal via the header button
               const btn = document.getElementById('create-group-booking-btn');
               btn?.click();
             }}
             className="w-14 h-14 rounded-2xl bg-[#6E8B67] hover:bg-[#587352] text-white flex items-center justify-center shadow-float transition-all cursor-pointer active:scale-[0.96]"
-            aria-label="Start Group Booking"
+            aria-label={t('groupBooking.createBtn', 'Start Group Booking')}
           >
             <Plus className="w-6 h-6" />
           </button>

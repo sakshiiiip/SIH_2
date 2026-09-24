@@ -3,6 +3,7 @@ import { useCooperativeStore } from '../../store/cooperativeStore';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { CooperativeMap } from '../../components/common/Map/CooperativeMap';
 import { Booking } from '../../types';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/common/Badge';
 import { WorkerJobExecutionModal } from './WorkerJobExecutionModal';
 import { WorkerSOSModal } from './WorkerSOSModal';
@@ -70,6 +71,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     toggleWorkerAvailability,
     showToast,
   } = useCooperativeStore();
+  const { t } = useTranslation();
 
   const {
     workerTracking,
@@ -256,9 +258,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     }
 
     showToast({
-      title: '🟢 You are now Available',
-      message:
-        'New job requests will be dispatched to you based on skill and proximity.',
+      title: t('worker.dashboard.availableTitle', '🟢 You are now Available'),
+      message: t('worker.dashboard.availableMsg', 'New job requests will be dispatched to you based on skill and proximity.'),
       type: 'success',
     });
   };
@@ -273,9 +274,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     }
 
     showToast({
-      title: '🔴 You are now Offline',
-      message:
-        'You will not receive new dispatches while offline.',
+      title: t('worker.dashboard.offlineTitle', '🔴 You are now Offline'),
+      message: t('worker.dashboard.offlineMsg', 'You will not receive new dispatches while offline.'),
       type: 'warning',
     });
   };
@@ -286,14 +286,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   ) => {
     setAvailabilityStatus('break');
     setShowBreakSelector(false);
-
-    const label =
-      breakType === 'short'
-        ? 'Short Break'
-        : breakType === 'lunch'
-        ? 'Lunch Break'
-        : 'Custom Break';
-
+    const label = breakType === 'short' ? t('worker.breakShort', 'Short Break') : breakType === 'lunch' ? t('worker.breakLunch', 'Lunch Break') : t('worker.breakCustom', 'Custom Break');
     setBreakLabel(label);
 
     if (durationMinutes > 0) {
@@ -306,7 +299,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
     showToast({
       title: `🟡 ${label} Started`,
-      message: `You are temporarily paused for ${durationMinutes} minutes.`,
+      message: t('worker.dashboard.breakStartedMsg', { duration: durationMinutes, defaultValue: `You are temporarily paused for ${durationMinutes} minutes.` }),
       type: 'info',
     });
   };
@@ -316,9 +309,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     setBreakEndsAt(null);
 
     showToast({
-      title: '🟢 Welcome back!',
-      message:
-        'You are now ready to receive new job dispatches.',
+      title: t('worker.dashboard.welcomeBack', '🟢 Welcome back!'),
+      message: t('worker.dashboard.welcomeBackMsg', 'You are now ready to receive new job dispatches.'),
       type: 'success',
     });
   };
@@ -331,17 +323,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     if (!incomingRequest) return;
 
     if (incomingRequest.isReal) {
-      acceptBookingByWorker(
-        incomingRequest.id,
-        currentWorker.id
-      );
-
-      showToast({
-        title: 'Job Accepted! ✅',
-        message:
-          'Customer notified. Added to My Work.',
-        type: 'success',
-      });
+      acceptBookingByWorker(incomingRequest.id, currentWorker.id);
+      showToast({ title: t('worker.dashboard.jobAccepted', 'Job Accepted! ✅'), message: t('worker.dashboard.customerNotifiedMyWork', 'Customer notified. Added to My Work.'), type: 'success' });
     } else {
       setProcessingJobId(incomingRequest.id);
 
@@ -353,13 +336,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         );
 
         setProcessingJobId(null);
-
-        showToast({
-          title: 'Job Accepted! ✅',
-          message:
-            'Customer notified. Added to Upcoming jobs.',
-          type: 'success',
-        });
+        showToast({ title: t('worker.dashboard.jobAccepted', 'Job Accepted! ✅'), message: t('worker.dashboard.customerNotifiedUpcoming', 'Customer notified. Added to Upcoming jobs.'), type: 'success' });
       }, 600);
     }
   };
@@ -368,30 +345,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     if (!incomingRequest) return;
 
     if (incomingRequest.isReal) {
-      rejectBookingByWorker(
-        incomingRequest.id,
-        currentWorker.id
-      );
-
-      showToast({
-        title: 'Job Declined',
-        message:
-          'Assignment routed to the next available specialist.',
-        type: 'warning',
-      });
+      rejectBookingByWorker(incomingRequest.id, currentWorker.id);
+      showToast({ title: t('worker.dashboard.jobDeclined', 'Job Declined'), message: t('worker.dashboard.routedNextSpecialist', 'Assignment routed to the next available specialist.'), type: 'warning' });
     } else {
-      setMockJobRequests((previous) =>
-        previous.filter(
-          (job) => job.jobId !== incomingRequest.id
-        )
-      );
-
-      showToast({
-        title: 'Job Declined',
-        message:
-          'Assignment passed to next specialist.',
-        type: 'warning',
-      });
+      setMockJobRequests((prev) => prev.filter((j) => j.jobId !== incomingRequest.id));
+      showToast({ title: t('worker.dashboard.jobDeclined', 'Job Declined'), message: t('worker.dashboard.passedNextSpecialist', 'Assignment passed to next specialist.'), type: 'warning' });
     }
   };
 
@@ -400,14 +358,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   // ============================================================
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6 animate-fade-in">
-
-      {/* ======================================================== */}
-      {/* 1. WORKER HEADER                                        */}
-      {/* ======================================================== */}
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#E8E2D5]">
-
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 animate-fade-in">
+      {/* ============================================================ */}
+      {/* 1. WORKER HEADER — Avatar, Name, Skill, Society, Verification, */}
+      {/*    Availability Toggle                                      */}
+      {/* ============================================================ */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-200">
         <div className="flex items-center gap-3.5">
 
           <button
@@ -416,12 +372,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             className="relative cursor-pointer shrink-0 group focus:outline-none"
             title="View Profile"
           >
-            <img
-              src={currentWorker.avatar}
-              alt={currentWorker.name}
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border-2 border-[#B8CBDD] shadow-xs group-hover:border-[#537895] transition-colors"
-            />
-
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#E4EDF4] border-2 border-[#B8CBDD] shadow-xs flex items-center justify-center text-[#263D50] font-bold text-lg sm:text-xl">
+              {(currentWorker.name.includes('Priya') ? t('demoUsers.priyaPatel', currentWorker.name) : currentWorker.name).charAt(0)}
+            </div>
             <span
               className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
                 isAvailable
@@ -438,11 +391,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
 
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#292824] leading-tight">
-                {currentWorker.name}
+                {currentWorker.name.includes('Priya') ? t('demoUsers.priyaPatel', currentWorker.name) : currentWorker.name}
               </h1>
 
               <Badge variant="verified" size="sm">
-                Verified Specialist ✓
+                {t('demoUsers.verifiedExpert', 'Verified Specialist ✓')}
               </Badge>
 
             </div>
@@ -479,14 +432,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isAvailable
-                  ? 'bg-[#6E8B67] animate-pulse'
-                  : 'bg-[#CFDDD0]'
-              }`}
-            />
-            Available
+            <span className={`w-2 h-2 rounded-full ${isAvailable ? 'bg-[#6E8B67] animate-pulse' : 'bg-[#CFDDD0]'}`} />
+            {t('common.active', 'Available')}
           </button>
 
           <button
@@ -500,14 +447,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isOnBreak
-                  ? 'bg-[#E8A07A] animate-pulse'
-                  : 'bg-[#F4DCD3]'
-              }`}
-            />
-            Break
+            <span className={`w-2 h-2 rounded-full ${isOnBreak ? 'bg-[#E8A07A] animate-pulse' : 'bg-[#F4DCD3]'}`} />
+            {t('worker.takeBreak', 'Break')}
           </button>
 
           <button
@@ -519,14 +460,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                !isAvailable && !isOnBreak
-                  ? 'bg-[#D32F2F]'
-                  : 'bg-[#E8E2D5]'
-              }`}
-            />
-            Offline
+            <span className={`w-2 h-2 rounded-full ${!isAvailable && !isOnBreak ? 'bg-[#D32F2F]' : 'bg-[#E8E2D5]'}`} />
+            {t('worker.statusOffline', 'Offline')}
           </button>
 
         </div>
@@ -562,36 +497,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             <div className="flex items-center gap-2">
 
               <strong className="text-xs font-bold text-[#292824]">
-                {workerTracking.isSharing
-                  ? 'Live Location Sharing Active'
-                  : 'Location Sharing Paused'}
+                {workerTracking.isSharing ? t('worker.dashboard.locationActive', 'Live Location Sharing Active') : t('worker.dashboard.locationPaused', 'Location Sharing Paused')}
               </strong>
-
-              <span
-                className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                  workerTracking.isSharing
-                    ? 'bg-[#E6ECE4] text-[#445D3E]'
-                    : 'bg-[#FAF7F2] text-[#77736B]'
-                }`}
-              >
-                {workerTracking.isSharing
-                  ? 'GPS ±12m'
-                  : 'Offline'}
+              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                workerTracking.isSharing ? 'bg-[#E6ECE4] text-[#445D3E]' : 'bg-[#FAF7F2] text-[#77736B]'
+              }`}>
+                {workerTracking.isSharing ? 'GPS ±12m' : t('worker.dashboard.offlineLabel', 'Offline')}
               </span>
 
             </div>
 
             <p className="text-[11px] text-[#77736B] mt-0.5">
-              Station:{' '}
-              <span className="font-semibold text-[#524E47]">
-                {currentWorker.lastKnownArea ||
-                  currentWorker.societyName ||
-                  'Green Residency'}
-              </span>{' '}
-              · Ping:{' '}
-              <span className="font-mono">
-                {workerTracking.lastUpdated || 'Just now'}
-              </span>
+              {t('worker.dashboard.stationLabel', 'Station:')} <span className="font-semibold text-[#524E47]">{currentWorker.lastKnownArea || currentWorker.societyName || 'Green Residency'}</span> · {t('worker.dashboard.pingLabel', 'Ping:')} <span className="font-mono">{workerTracking.lastUpdated || t('admin.justNow', 'Just now')}</span>
             </p>
 
           </div>
@@ -613,9 +530,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 : 'bg-[#FAF7F2] hover:bg-[#E8E2D5] text-[#524E47] border border-[#E8E2D5]'
             }`}
           >
-            {workerTracking.isSharing
-              ? '● Sharing Active'
-              : 'Enable Sharing'}
+            {workerTracking.isSharing ? t('worker.dashboard.sharingActive', '● Sharing Active') : t('worker.dashboard.enableSharing', 'Enable Sharing')}
           </button>
 
         </div>
@@ -652,7 +567,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           <div className="flex items-center justify-between">
 
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#77736B]">
-              Today's Jobs
+              {t('worker.dashboard.todayJobs', "Today's Jobs")}
             </span>
 
             <Briefcase className="w-3.5 h-3.5 text-[#537895]" />
@@ -666,9 +581,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             </span>
 
             <span className="text-[10px] text-[#77736B]">
-              {storeUpcomingBooking
-                ? 'active'
-                : 'completed'}
+              {storeUpcomingBooking ? t('worker.dashboard.activeStat', 'active') : t('worker.dashboard.completedStat', 'completed')}
             </span>
 
           </div>
@@ -683,7 +596,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               className="w-full mt-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#E6ECE4] hover:bg-[#CFDDD0] text-[#364A32] text-xs font-bold transition-colors cursor-pointer"
             >
               <DollarSign className="w-3.5 h-3.5" />
-              View Earnings & Payments
+              {t('worker.dashboard.viewEarningsPayments', 'View Earnings & Payments')}
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -700,7 +613,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           <div className="flex items-center justify-between">
 
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#364A32]">
-              This Week's Earnings
+              {t('worker.dashboard.thisWeekEarnings', "This Week's Earnings")}
             </span>
 
             <TrendingUp className="w-3.5 h-3.5 text-[#6E8B67]" />
@@ -714,7 +627,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             </span>
 
             <span className="text-[10px] text-[#527048] font-semibold">
-              70% share
+              {t('worker.dashboard.sharePercent', '70% share')}
             </span>
 
           </div>
@@ -731,7 +644,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           <div className="flex items-center justify-between">
 
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#80432E]">
-              Rating
+              {t('worker.dashboard.ratingLabel', 'Rating')}
             </span>
 
             <Star className="w-3.5 h-3.5 text-[#B37055]" />
@@ -773,13 +686,13 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             <Zap className="w-4 h-4 text-[#537895]" />
 
             <h2 className="text-xs font-bold uppercase tracking-wider text-[#324F66]">
-              New Job For You
+              {t('worker.dashboard.newJobForYou', 'New Job For You')}
             </h2>
 
           </div>
 
           <span className="text-[11px] text-[#77736B]">
-            Matched based on your skill, distance and availability
+            {t('worker.dashboard.newJobSubtitle', 'Matched based on your skill, distance and availability')}
           </span>
 
         </div>
@@ -795,7 +708,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 <div className="flex items-center gap-2 flex-wrap mb-1">
 
                   <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 bg-[#E4EDF4] text-[#324F66] border border-[#B8CBDD] rounded-md">
-                    {incomingRequest.service}
+                    {t('category.' + incomingRequest.service.toLowerCase().replace(/[\s/&-]+/g, '_'), incomingRequest.service)}
                   </span>
 
                   <span
@@ -805,13 +718,13 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                         : 'bg-[#E6ECE4] text-[#364A32] border border-[#CFDDD0]'
                     }`}
                   >
-                    {incomingRequest.priority} Priority
+                    {t('worker.dashboard.prioritySuffix', { priority: t('priority.' + incomingRequest.priority.toLowerCase(), incomingRequest.priority), defaultValue: `${t('priority.' + incomingRequest.priority.toLowerCase(), incomingRequest.priority)} Priority` })}
                   </span>
 
                 </div>
 
                 <h3 className="text-base sm:text-lg font-bold text-[#292824]">
-                  {incomingRequest.problem}
+                  {incomingRequest.problem === 'Power Socket Issue' ? t('cardContent.powerSocketIssue', incomingRequest.problem) : incomingRequest.problem}
                 </h3>
 
               </div>
@@ -821,11 +734,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 <span className="text-lg sm:text-xl font-bold font-mono text-[#445D3E] block">
                   ₹{incomingRequest.earnings}
                 </span>
-
-                <span className="text-[10px] text-[#77736B]">
-                  Estimated Net
-                </span>
-
+                <span className="text-[10px] text-[#77736B]">{t('worker.dashboard.estimatedNet', 'Estimated Net')}</span>
               </div>
 
             </div>
@@ -840,16 +749,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               </div>
 
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-[#80432E]">
-                  Distance: {incomingRequest.distance}
-                </span>
+                <span className="font-semibold text-[#80432E]">{t('worker.dashboard.distanceLabel', { distance: incomingRequest.distance, defaultValue: `Distance: ${incomingRequest.distance}` })}</span>
               </div>
 
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#537895] shrink-0" />
-                <span>
-                  {incomingRequest.dateTime}
-                </span>
+                <span>{incomingRequest.dateTime === 'Immediate Dispatch' ? t('worker.dashboard.immediateDispatch', 'Immediate Dispatch') : incomingRequest.dateTime}</span>
               </div>
 
             </div>
@@ -861,7 +766,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 onClick={handleDeclineRequest}
                 className="px-4 py-2 bg-[#FCF9F3] hover:bg-[#F3EEE4] text-[#80432E] border border-[#E8E2D5] text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                Decline
+                {t('worker.dashboard.declineBtn', 'Decline')}
               </button>
 
               <button
@@ -870,9 +775,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 disabled={processingJobId !== null}
                 className="px-5 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
               >
-                {processingJobId
-                  ? 'Accepting…'
-                  : `Accept (₹${incomingRequest.earnings})`}
+                {processingJobId ? t('worker.dashboard.acceptingBtn', 'Accepting…') : t('worker.dashboard.acceptAmountBtn', { amount: incomingRequest.earnings, defaultValue: `Accept (₹${incomingRequest.earnings})` })}
               </button>
 
             </div>
@@ -884,15 +787,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center space-y-1">
 
             <CheckCircle2 className="w-6 h-6 text-[#6E8B67] mx-auto" />
-
-            <span className="text-xs font-semibold text-[#292824] block">
-              No pending requests
-            </span>
-
+            <span className="text-xs font-semibold text-[#292824] block">{t('worker.dashboard.noPendingRequests', 'No pending requests')}</span>
             <p className="text-[11px] text-[#77736B]">
               {isAvailable
-                ? 'You are active in the allocation queue. Nearby requests will pop up automatically.'
-                : 'Switch to Available to receive new dispatches from your society.'}
+                ? t('worker.dashboard.activeAllocationNotice', 'You are active in the allocation queue. Nearby requests will pop up automatically.')
+                : t('worker.dashboard.switchAvailableNotice', 'Switch to Available to receive new dispatches from your society.')}
             </p>
 
           </div>
@@ -1050,7 +949,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             <Clock className="w-4 h-4 text-[#537895]" />
 
             <h2 className="text-xs font-bold uppercase tracking-wider text-[#324F66]">
-              Next Job
+              {t('worker.dashboard.nextJob', 'Next Job')}
             </h2>
 
           </div>
@@ -1060,10 +959,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             onClick={onOpenMyWork}
             className="text-xs font-bold text-[#537895] hover:underline cursor-pointer flex items-center gap-0.5"
           >
-            <span>
-              View all in My Work
-            </span>
-
+            <span>{t('worker.dashboard.viewAllMyWork', 'View all in My Work')}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
 
@@ -1078,13 +974,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               <div>
 
                 <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-[#E4EDF4] text-[#324F66] border border-[#B8CBDD] rounded-md">
-                  {nextJob.service}
+                  {t('category.' + nextJob.service.toLowerCase().replace(/[\s/&-]+/g, '_'), nextJob.service)}
                 </span>
-
                 <h3 className="text-base font-bold text-[#292824] mt-1">
-                  {nextJob.problem}
+                  {nextJob.problem === 'Power Socket Issue' ? t('cardContent.powerSocketIssue', nextJob.problem) : nextJob.problem}
                 </h3>
-
               </div>
 
               <div className="text-right">
@@ -1092,11 +986,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 <span className="text-base font-bold font-mono text-[#445D3E] block">
                   ₹{nextJob.earnings}
                 </span>
-
-                <span className="text-[10px] text-[#77736B]">
-                  Confirmed Net
-                </span>
-
+                <span className="text-[10px] text-[#77736B]">{t('worker.dashboard.confirmedNet', 'Confirmed Net')}</span>
               </div>
 
             </div>
@@ -1112,25 +1002,19 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#537895] shrink-0" />
-                <span>
-                  {nextJob.dateTime}
-                </span>
+                <span>{nextJob.dateTime === 'Today · Scheduled' ? t('cardContent.todayScheduled', nextJob.dateTime) : nextJob.dateTime}</span>
               </div>
 
             </div>
 
             <div className="pt-2 border-t border-[#E8E2D5] flex items-center justify-between">
-
-              <span className="text-[11px] text-[#77736B]">
-                Job Reference #{nextJob.id}
-              </span>
-
+              <span className="text-[11px] text-[#77736B]">{t('worker.dashboard.jobRef', { id: nextJob.id, defaultValue: `Job Reference #${nextJob.id}` })}</span>
               <button
                 type="button"
                 onClick={onOpenMyWork}
                 className="px-4 py-1.5 bg-[#537895] hover:bg-[#41637E] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                Open in My Work →
+                {t('worker.dashboard.openInMyWork', 'Open in My Work →')}
               </button>
 
             </div>
@@ -1140,7 +1024,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         ) : (
 
           <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center text-xs text-[#77736B]">
-            No upcoming jobs scheduled yet.
+            {t('worker.dashboard.noUpcomingJobs', 'No upcoming jobs scheduled yet.')}
           </div>
 
         )}
@@ -1160,15 +1044,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             <Map className="w-4 h-4 text-[#6E8B67]" />
 
             <h2 className="text-xs font-bold uppercase tracking-wider text-[#364A32]">
-              Demand Near You
+              {t('worker.dashboard.demandNearYou', 'Demand Near You')}
             </h2>
 
           </div>
-
-          <span className="text-[11px] text-[#77736B]">
-            Predictive Heatmap Link
-          </span>
-
+          <span className="text-[11px] text-[#77736B]">{t('worker.dashboard.predictiveHeatmapLink', 'Predictive Heatmap Link')}</span>
         </div>
 
         <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl shadow-card space-y-3">
@@ -1213,7 +1093,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           <div className="pt-2 border-t border-[#E8E2D5] flex items-center justify-between">
 
             <span className="text-[10px] text-[#77736B]">
-              Predictive demand forecast updated every 30 mins
+              {t('worker.dashboard.demandForecastUpdate', 'Predictive demand forecast updated every 30 mins')}
             </span>
 
             <button
@@ -1223,10 +1103,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               }
               className="text-xs font-bold text-[#537895] hover:underline cursor-pointer flex items-center gap-1"
             >
-              <span>
-                Explore Demand Heatmap
-              </span>
-
+              <span>{t('worker.dashboard.exploreDemandHeatmap', 'Explore Demand Heatmap')}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
 
@@ -1264,11 +1141,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
       <Modal
         isOpen={showDemandHeatmapModal}
-        onClose={() =>
-          setShowDemandHeatmapModal(false)
-        }
-        title="Predictive Demand & Operational Sectors"
-        subtitle="Cooperative Spatial Dispatch Engine & Active Clusters"
+        onClose={() => setShowDemandHeatmapModal(false)}
+        title={t('worker.dashboard.heatmapModalTitle', 'Predictive Demand & Operational Sectors')}
+        subtitle={t('worker.dashboard.heatmapModalSubtitle', 'Cooperative Spatial Dispatch Engine & Active Clusters')}
         maxWidth="lg"
       >
 
@@ -1279,15 +1154,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             <p className="font-bold flex items-center gap-1.5">
 
               <Map className="w-4 h-4 text-[#324F66]" />
-
-              <span>
-                Active Cooperative Demand Hotspots
-              </span>
-
+              <span>{t('worker.dashboard.activeHotspots', 'Active Cooperative Demand Hotspots')}</span>
             </p>
 
             <p className="text-[11px] text-[#537895] mt-0.5">
-              Live spatial demand distribution across Western Pune member societies and high-volume sectors.
+              {t('worker.dashboard.hotspotsDesc', 'Live spatial demand distribution across Western Pune member societies and high-volume sectors.')}
             </p>
 
           </div>
@@ -1386,7 +1257,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
             }
             className="w-full py-2.5 bg-[#292824] text-white font-bold rounded-xl cursor-pointer hover:bg-black transition-colors"
           >
-            Close Heatmap
+            {t('worker.dashboard.closeHeatmap', 'Close Heatmap')}
           </button>
 
         </div>

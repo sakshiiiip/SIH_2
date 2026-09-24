@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Booking } from '../../types';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
-import { RotateCcw, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { RotateCcw, AlertTriangle } from 'lucide-react';
 
 interface RevisitRequestModalProps {
   isOpen: boolean;
@@ -11,18 +12,12 @@ interface RevisitRequestModalProps {
   booking: Booking | null;
 }
 
-const COMMON_REVISIT_REASONS = [
-  'Work still leaking / not holding pressure',
-  'Part improperly fitted or loose',
-  'Problem recurred within hours of repair',
-  'Incomplete cleanup or missing final check',
-];
-
 export const RevisitRequestModal: React.FC<RevisitRequestModalProps> = ({
   isOpen,
   onClose,
   booking,
 }) => {
+  const { t } = useTranslation();
   const { requestRevisit } = useCooperativeStore();
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,9 +25,16 @@ export const RevisitRequestModal: React.FC<RevisitRequestModalProps> = ({
 
   if (!isOpen || !booking) return null;
 
+  const COMMON_REVISIT_REASONS = [
+    t('customer.revisitReason1', 'Work still leaking / not holding pressure'),
+    t('customer.revisitReason2', 'Part improperly fitted or loose'),
+    t('customer.revisitReason3', 'Problem recurred within hours of repair'),
+    t('customer.revisitReason4', 'Incomplete cleanup or missing final check'),
+  ];
+
   const handleSubmit = () => {
     if (!reason.trim()) {
-      setError('Please provide a reason for the revisit request so the coordinator can inspect.');
+      setError(t('customer.revisitReasonRequired', 'Please provide a reason for the revisit request so the coordinator can inspect.'));
       return;
     }
     setError('');
@@ -49,10 +51,10 @@ export const RevisitRequestModal: React.FC<RevisitRequestModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Request Service Revisit"
+      title={t('customer.requestServiceRevisit', 'Request Service Revisit')}
       subtitle={
         <span>
-          Booking <span className="font-mono font-bold">#{booking.id}</span> · {booking.serviceCategory}
+          {t('customer.bookingLabel', 'Booking')} <span className="font-mono font-bold">#{booking.id}</span> · {booking.serviceCategory}
         </span>
       }
       maxWidth="md"
@@ -62,9 +64,9 @@ export const RevisitRequestModal: React.FC<RevisitRequestModalProps> = ({
         <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
           <RotateCcw className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="text-xs text-amber-900 space-y-1">
-            <strong className="block font-bold">Cooperative Quality Guarantee</strong>
+            <strong className="block font-bold">{t('customer.coopGuarantee', 'Cooperative Quality Guarantee')}</strong>
             <p>
-              If the completed service did not resolve your issue or requires follow-up adjustment, you can request a complimentary revisit. Your society manager will inspect and schedule the follow-up.
+              {t('customer.coopGuaranteeDesc', 'If the completed service did not resolve your issue or requires follow-up adjustment, you can request a complimentary revisit. Your society manager will inspect and schedule the follow-up.')}
             </p>
           </div>
         </div>
@@ -72,7 +74,7 @@ export const RevisitRequestModal: React.FC<RevisitRequestModalProps> = ({
         {/* Quick select reasons */}
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-2">
-            Common Concerns (tap to append):
+            {t('customer.commonConcerns', 'Common Concerns (tap to append):')}
           </label>
           <div className="flex flex-wrap gap-1.5">
             {COMMON_REVISIT_REASONS.map((r) => (
@@ -91,11 +93,11 @@ export const RevisitRequestModal: React.FC<RevisitRequestModalProps> = ({
         {/* Reason Textarea */}
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">
-            Describe what needs attention: <span className="text-rose-500">*</span>
+            {t('customer.describeNeedsAttention', 'Describe what needs attention:')} <span className="text-rose-500">*</span>
           </label>
           <textarea
             rows={3}
-            placeholder="e.g. The leak in the kitchen pipe started again after 2 hours. Needs washer replacement..."
+            placeholder={t('customer.revisitPlaceholder', 'e.g. The leak in the kitchen pipe started again after 2 hours. Needs washer replacement...')}
             value={reason}
             onChange={(e) => {
               setReason(e.target.value);
@@ -114,7 +116,7 @@ export const RevisitRequestModal: React.FC<RevisitRequestModalProps> = ({
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
           <Button variant="subtle" size="md" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {t('common.cancel', 'Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -123,7 +125,7 @@ export const RevisitRequestModal: React.FC<RevisitRequestModalProps> = ({
             isLoading={isSubmitting}
             leftIcon={<RotateCcw className="w-4 h-4" />}
           >
-            Submit Revisit Request
+            {t('customer.submitRevisitRequest', 'Submit Revisit Request')}
           </Button>
         </div>
       </div>

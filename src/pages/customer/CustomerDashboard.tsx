@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Booking, Worker } from '../../types';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../../components/common/Badge';
 import { LocationBadge } from '../../components/common/LocationBadge';
 import { LocationPickerModal } from '../../components/common/LocationPickerModal';
@@ -69,6 +70,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onOpenSupport,
 }) => {
   const { currentUser, bookings, communityBookings, communityMessages, joinCommunityBooking, showToast } = useCooperativeStore();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedWorkerForProfile, setSelectedWorkerForProfile] = useState<Worker | null>(null);
@@ -159,19 +161,19 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   const activeStatusInfo = activeBooking ? mapBookingStatus(activeBooking.state) : null;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-8 animate-fade-in">
       {/* ========================================================================= */}
       {/* 1. GREETING & 2. "WHAT DO YOU NEED HELP WITH?" WITH SEARCH (DOMINANT TOP) */}
       {/* ========================================================================= */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#292824] leading-tight flex items-center gap-2">
-              <span>{getGreeting()}, {currentUser.name.split(' ')[0]}</span>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-tight flex items-center gap-2">
+              <span>{t('customer.greeting', 'Hello')}, {currentUser.name.split(' ')[0]}</span>
               <span className="text-2xl inline-block select-none">👋</span>
             </h1>
-            <p className="text-sm sm:text-base font-medium text-[#524E47] mt-0.5">
-              What do you need help with?
+            <p className="text-sm sm:text-base font-medium text-slate-600 mt-0.5">
+              {t('customer.needHelp', 'What do you need help with today?')}
             </p>
           </div>
 
@@ -191,14 +193,14 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <Search className="w-5 h-5 text-[#9A958B] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search services (e.g. tap leak, AC cooling, deep cleaning, wiring)..."
+            placeholder={t('customer.searchServices', 'Search for plumbing, cleaning, repairs...')}
             value={searchQuery}
             onFocus={() => setIsSearchFocused(true)}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setIsSearchFocused(true);
             }}
-            className="w-full pl-12 pr-4 py-3.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-sm font-medium text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#6E8B67] focus:border-[#6E8B67] shadow-subtle transition-all"
+            className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 shadow-sm transition-all"
           />
 
           {/* Autocomplete Dropdown */}

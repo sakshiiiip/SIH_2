@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Users,
   Plus,
@@ -21,6 +22,7 @@ import {
   Clock,
   UserCheck,
   RefreshCw,
+  ArrowLeft,
 } from 'lucide-react';
 import { groupBookingService } from '../../container';
 import type { GroupBookingSummaryCard, CostSplitStrategy, GroupBookingStatus } from '../../types/groupBooking.types';
@@ -48,17 +50,18 @@ const SERVICE_CATEGORIES = [
 // ─── Status chip ─────────────────────────────────────────────────────────────
 
 function StatusChip({ status }: { status: GroupBookingStatus }) {
+  const { t } = useTranslation();
   const cfg: Record<string, { label: string; cls: string; dot: string }> = {
-    OPEN: { label: 'Open', cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', dot: 'bg-[#6E8B67] animate-pulse' },
-    LOCKED: { label: 'Locked', cls: 'bg-[#EFEBF4] text-[#504161] border-[#DFD8E8]', dot: 'bg-[#7A6A8E]' },
-    CONFIRMED: { label: 'Confirmed', cls: 'bg-[#E4EDF4] text-[#324F66] border-[#B8CBDD]', dot: 'bg-[#537895]' },
-    IN_PROGRESS: { label: 'In Progress', cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', dot: 'bg-[#B37055] animate-pulse' },
-    COMPLETED: { label: 'Completed', cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', dot: 'bg-[#6E8B67]' },
-    INVOICED: { label: 'Invoiced', cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', dot: 'bg-[#B37055]' },
-    PAID: { label: 'Paid', cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', dot: 'bg-[#6E8B67]' },
-    PARTIALLY_PAID: { label: 'Partial', cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', dot: 'bg-[#B37055]' },
-    DRAFT: { label: 'Draft', cls: 'bg-[#F3EEE4] text-[#77736B] border-[#E8E2D5]', dot: 'bg-[#9A958B]' },
-    CANCELLED: { label: 'Cancelled', cls: 'bg-[#FAEBEB] text-[#632727] border-[#F4D7D7]', dot: 'bg-[#B86B6B]' },
+    OPEN: { label: t('groupBooking.status.open', 'Open'), cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', dot: 'bg-[#6E8B67] animate-pulse' },
+    LOCKED: { label: t('groupBooking.status.locked', 'Locked'), cls: 'bg-[#EFEBF4] text-[#504161] border-[#DFD8E8]', dot: 'bg-[#7A6A8E]' },
+    CONFIRMED: { label: t('groupBooking.status.confirmed', 'Confirmed'), cls: 'bg-[#E4EDF4] text-[#324F66] border-[#B8CBDD]', dot: 'bg-[#537895]' },
+    IN_PROGRESS: { label: t('groupBooking.status.inProgress', 'In Progress'), cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', dot: 'bg-[#B37055] animate-pulse' },
+    COMPLETED: { label: t('groupBooking.status.completed', 'Completed'), cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', dot: 'bg-[#6E8B67]' },
+    INVOICED: { label: t('groupBooking.status.invoiced', 'Invoiced'), cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', dot: 'bg-[#B37055]' },
+    PAID: { label: t('groupBooking.status.paid', 'Paid'), cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', dot: 'bg-[#6E8B67]' },
+    PARTIALLY_PAID: { label: t('groupBooking.status.partiallyPaid', 'Partial'), cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', dot: 'bg-[#B37055]' },
+    DRAFT: { label: t('groupBooking.status.draft', 'Draft'), cls: 'bg-[#F3EEE4] text-[#77736B] border-[#E8E2D5]', dot: 'bg-[#9A958B]' },
+    CANCELLED: { label: t('groupBooking.status.cancelled', 'Cancelled'), cls: 'bg-[#FAEBEB] text-[#632727] border-[#F4D7D7]', dot: 'bg-[#B86B6B]' },
   };
   const s = cfg[status] ?? cfg.DRAFT;
   return (
@@ -90,6 +93,7 @@ function BookingCard({
   onViewDetails,
   onJoined,
 }: BookingCardProps) {
+  const { t } = useTranslation();
   const [joining, setJoining] = useState(false);
   const [joined, setJoined] = useState(false);
 
@@ -146,7 +150,7 @@ function BookingCard({
           <span>{booking.societyName}</span>
         </div>
         <p className="text-sm font-semibold text-[#292824] leading-snug">
-          Organised by <span className="font-bold">{booking.organiserName}</span>
+          {t('groupBooking.organisedBy', 'Organised by')} <span className="font-bold">{booking.organiserName}</span>
           <span className="text-[#9A958B] font-normal"> ({booking.organiserFlatNumber})</span>
         </p>
       </div>
@@ -156,10 +160,14 @@ function BookingCard({
         <div className="flex items-center justify-between text-xs">
           <span className="flex items-center gap-1 text-[#77736B]">
             <Users className="w-3.5 h-3.5" />
-            <span>{confirmed} joined</span>
+            <span>{t('groupBooking.joinedCount', { count: confirmed, defaultValue: `${confirmed} joined` })}</span>
           </span>
           <span className="text-[#9A958B]">
-            {spotsLeft > 0 ? `${spotsLeft} spot${spotsLeft > 1 ? 's' : ''} left` : 'Full'}
+            {spotsLeft > 0
+              ? (spotsLeft === 1
+                  ? t('groupBooking.spotsLeftOne', '1 spot left')
+                  : t('groupBooking.spotsLeft', { count: spotsLeft, defaultValue: `${spotsLeft} spots left` }))
+              : t('groupBooking.full', 'Full')}
           </span>
         </div>
         <div className="h-2 rounded-full bg-[#E8E2D5] overflow-hidden">
@@ -173,7 +181,7 @@ function BookingCard({
       {/* Cost + date */}
       <div className="flex items-center justify-between text-xs border-t border-[#E8E2D5] pt-3">
         <div className="space-y-0.5">
-          <p className="text-[#77736B]">Your share (est.)</p>
+          <p className="text-[#77736B]">{t('groupBooking.yourShareEst', 'Your share (est.)')}</p>
           <p className="font-bold font-mono text-[#292824] text-sm">
             {booking.userCostShare
               ? `₹${fmt(booking.userCostShare)}`
@@ -181,7 +189,7 @@ function BookingCard({
           </p>
         </div>
         <div className="text-right space-y-0.5">
-          <p className="text-[#77736B]">Preferred date</p>
+          <p className="text-[#77736B]">{t('groupBooking.preferredDate', 'Preferred date')}</p>
           <p className="font-semibold text-[#292824] flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5 text-[#537895]" />
             {fmtDate(booking.preferredDate)}
@@ -196,7 +204,7 @@ function BookingCard({
           onClick={() => onViewDetails(booking.id)}
           className="flex-1 py-2.5 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] text-xs font-semibold text-[#524E47] hover:bg-[#F3EEE4] hover:border-[#D8CFBE] transition-all cursor-pointer flex items-center justify-center gap-1.5"
         >
-          Details <ChevronRight className="w-3.5 h-3.5" />
+          {t('groupBooking.detailsBtn', 'Details')} <ChevronRight className="w-3.5 h-3.5" />
         </button>
         {isOpen && (
           <button
@@ -212,9 +220,9 @@ function BookingCard({
             {joining ? (
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
             ) : joined ? (
-              <><CheckCircle2 className="w-3.5 h-3.5" /> Joined</>
+              <><CheckCircle2 className="w-3.5 h-3.5" /> {t('groupBooking.joinedBtn', 'Joined')}</>
             ) : (
-              <>Join Group</>
+              <>{t('groupBooking.joinGroupBtn', 'Join Group')}</>
             )}
           </button>
         )}
@@ -246,6 +254,7 @@ function CreateModal({
   onClose,
   onCreated,
 }: CreateModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2>(1);
   const [category, setCategory] = useState('');
   const [problemType, setProblemType] = useState('');
@@ -263,7 +272,7 @@ function CreateModal({
 
   const handleSubmit = async () => {
     if (!category || !problemType || !description || !date) {
-      setError('Please fill in all required fields.');
+      setError(t('groupBooking.validationError', 'Please fill in all required fields.'));
       return;
     }
     setSubmitting(true);
@@ -465,16 +474,23 @@ function CreateModal({
           <button
             type="button"
             onClick={step === 1 ? onClose : () => setStep(1)}
-            className="px-4 py-2.5 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] text-sm font-semibold text-[#77736B] hover:bg-[#F3EEE4] transition-all cursor-pointer"
+            className="px-4 py-2.5 rounded-xl border border-[#E8E2D5] bg-[#FCF9F3] text-sm font-semibold text-[#77736B] hover:bg-[#F3EEE4] transition-all cursor-pointer flex items-center gap-1.5"
           >
-            {step === 1 ? 'Cancel' : '← Back'}
+            {step === 1 ? (
+              t('common.cancel', 'Cancel')
+            ) : (
+              <>
+                <ArrowLeft className="w-4 h-4" />
+                <span>{t('groupBooking.back', 'Back')}</span>
+              </>
+            )}
           </button>
           {step === 1 ? (
             <button
               type="button"
               onClick={() => {
                 if (!category || !problemType || !description || !date) {
-                  setError('Please complete all fields before continuing.');
+                  setError(t('groupBooking.validationError', 'Please complete all fields before continuing.'));
                   return;
                 }
                 setError('');
@@ -482,7 +498,7 @@ function CreateModal({
               }}
               className="px-6 py-2.5 rounded-xl bg-[#6E8B67] hover:bg-[#587352] text-white text-sm font-bold shadow-xs transition-all cursor-pointer flex items-center gap-2"
             >
-              Next →
+              {t('groupBooking.next', 'Next →')}
             </button>
           ) : (
             <button
@@ -492,7 +508,7 @@ function CreateModal({
               className="px-6 py-2.5 rounded-xl bg-[#6E8B67] hover:bg-[#587352] text-white text-sm font-bold shadow-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
             >
               {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {submitting ? 'Creating…' : 'Create Group Booking'}
+              {submitting ? t('groupBooking.creating', 'Creating…') : t('groupBooking.createBtn', 'Create Group Booking')}
             </button>
           )}
         </div>
@@ -522,6 +538,7 @@ export const CommunityGroupBooking: React.FC<CommunityGroupBookingProps> = ({
   societyName = 'Green Residency',
   onViewDetails,
 }) => {
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState<GroupBookingSummaryCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -550,11 +567,11 @@ export const CommunityGroupBooking: React.FC<CommunityGroupBookingProps> = ({
       }
       setBookings(merged);
     } catch {
-      setError('Unable to load group bookings.');
+      setError(t('groupBooking.loadError', 'Unable to load group bookings.'));
     } finally {
       setLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -572,9 +589,9 @@ export const CommunityGroupBooking: React.FC<CommunityGroupBookingProps> = ({
               {societyName}
             </span>
           </div>
-          <h2 className="text-xl font-bold text-[#292824]">Community Group Bookings</h2>
+          <h2 className="text-xl font-bold text-[#292824]">{t('groupBooking.title', 'Community Group Bookings')}</h2>
           <p className="text-xs text-[#77736B] mt-0.5">
-            Book together with neighbours and unlock up to 20% group discounts.
+            {t('groupBooking.subtitle', 'Book together with neighbours and unlock up to 20% group discounts.')}
           </p>
         </div>
         <button
@@ -584,7 +601,7 @@ export const CommunityGroupBooking: React.FC<CommunityGroupBookingProps> = ({
           className="flex items-center gap-2 px-4 py-2.5 bg-[#6E8B67] hover:bg-[#587352] text-white text-sm font-bold rounded-2xl shadow-xs transition-all cursor-pointer active:scale-[0.98] shrink-0"
         >
           <Plus className="w-4 h-4" />
-          Start Group Booking
+          {t('groupBooking.startGroupBooking', 'Start Group Booking')}
         </button>
       </div>
 
@@ -594,11 +611,9 @@ export const CommunityGroupBooking: React.FC<CommunityGroupBookingProps> = ({
           <Percent className="w-4.5 h-4.5 text-[#445D3E]" />
         </div>
         <div>
-          <p className="text-xs font-bold text-[#2A3927] mb-0.5">How Group Bookings Save You Money</p>
+          <p className="text-xs font-bold text-[#2A3927] mb-0.5">{t('groupBooking.howItWorksTitle', 'How Group Bookings Save You Money')}</p>
           <p className="text-[11px] text-[#364A32] leading-relaxed">
-            When multiple households book the same service on the same day, the cooperative worker
-            eliminates travel overhead. You get a direct <strong>20% discount</strong> and the worker
-            earns uninterrupted bulk wages — everyone wins.
+            {t('groupBooking.howItWorksDesc', 'When multiple households book the same service on the same day, the cooperative worker eliminates travel overhead. You get a direct 20% discount and the worker earns uninterrupted bulk wages — everyone wins.')}
           </p>
         </div>
       </div>
@@ -616,7 +631,13 @@ export const CommunityGroupBooking: React.FC<CommunityGroupBookingProps> = ({
                 : 'bg-[#FCF9F3] text-[#77736B] border-[#E8E2D5] hover:bg-[#F3EEE4]'
             }`}
           >
-            {s === 'all' ? `All (${bookings.length})` : s === 'OPEN' ? 'Open' : s === 'IN_PROGRESS' ? 'In Progress' : 'Completed'}
+            {s === 'all'
+              ? t('groupBooking.filterAll', { count: bookings.length, defaultValue: `All (${bookings.length})` })
+              : s === 'OPEN'
+              ? t('groupBooking.filterOpen', 'Open')
+              : s === 'IN_PROGRESS'
+              ? t('groupBooking.filterInProgress', 'In Progress')
+              : t('groupBooking.filterCompleted', 'Completed')}
           </button>
         ))}
       </div>
@@ -630,7 +651,7 @@ export const CommunityGroupBooking: React.FC<CommunityGroupBookingProps> = ({
         <div className="py-12 flex flex-col items-center gap-3 text-center">
           <AlertCircle className="w-8 h-8 text-[#B86B6B]" />
           <p className="text-sm text-[#80432E] font-medium">{error}</p>
-          <button type="button" onClick={load} className="text-xs font-bold text-[#537895] hover:underline cursor-pointer">Retry</button>
+          <button type="button" onClick={load} className="text-xs font-bold text-[#537895] hover:underline cursor-pointer">{t('groupBooking.retry', 'Retry')}</button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-12 flex flex-col items-center gap-4 text-center">
@@ -638,15 +659,15 @@ export const CommunityGroupBooking: React.FC<CommunityGroupBookingProps> = ({
             <Users className="w-7 h-7 text-[#6E8B67]" />
           </div>
           <div>
-            <p className="text-sm font-bold text-[#292824]">No group bookings yet</p>
-            <p className="text-xs text-[#9A958B] mt-1">Be the first to start one for your society!</p>
+            <p className="text-sm font-bold text-[#292824]">{t('groupBooking.noBookings', 'No group bookings yet')}</p>
+            <p className="text-xs text-[#9A958B] mt-1">{t('groupBooking.noBookingsSub', 'Be the first to start one for your society!')}</p>
           </div>
           <button
             type="button"
             onClick={() => setShowCreate(true)}
             className="px-5 py-2.5 bg-[#6E8B67] hover:bg-[#587352] text-white text-sm font-bold rounded-2xl shadow-xs transition-all cursor-pointer"
           >
-            + Start Group Booking
+            + {t('groupBooking.startGroupBooking', 'Start Group Booking')}
           </button>
         </div>
       ) : (

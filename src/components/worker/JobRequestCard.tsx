@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { WorkerJobRequest } from '../../data/workerMockData';
 import { JobStatusBadge } from './JobStatusBadge';
 import {
@@ -21,21 +22,22 @@ interface JobRequestCardProps {
   isProcessing?: boolean;
 }
 
-const PRIORITY_MAP = {
-  emergency: { label: 'EMERGENCY', bg: 'bg-[#FAEBEB]', text: 'text-[#C93B2B]', border: 'border-[#F4D7D7]', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
-  urgent:    { label: 'URGENT',    bg: 'bg-[#FAEDE8]', text: 'text-[#80432E]', border: 'border-[#F4DCD3]', icon: <Zap className="w-3.5 h-3.5" /> },
-  normal:    { label: 'STANDARD',  bg: 'bg-[#E4EDF4]', text: 'text-[#2B4C68]', border: 'border-[#B8CBDD]', icon: null },
-};
-
 export const JobRequestCard: React.FC<JobRequestCardProps> = ({
   job,
   onAccept,
   onDecline,
   isProcessing = false,
 }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
+
+  const PRIORITY_MAP = {
+    emergency: { label: t('worker.priorityEmergency', 'EMERGENCY'), bg: 'bg-[#FAEBEB]', text: 'text-[#C93B2B]', border: 'border-[#F4D7D7]', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+    urgent:    { label: t('worker.priorityUrgent', 'URGENT'),    bg: 'bg-[#FAEDE8]', text: 'text-[#80432E]', border: 'border-[#F4DCD3]', icon: <Zap className="w-3.5 h-3.5" /> },
+    normal:    { label: t('worker.priorityStandard', 'STANDARD'),  bg: 'bg-[#E4EDF4]', text: 'text-[#2B4C68]', border: 'border-[#B8CBDD]', icon: null },
+  };
 
   const priority = PRIORITY_MAP[job.priority];
 
@@ -57,9 +59,9 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
       {job.priority !== 'normal' && (
         <div className={`flex items-center gap-1.5 px-4 py-1.5 ${priority.bg} ${priority.text} border-b ${priority.border}`}>
           {priority.icon}
-          <span className="text-[11px] font-extrabold tracking-widest uppercase">{priority.label} JOB REQUEST</span>
+          <span className="text-[11px] font-extrabold tracking-widest uppercase">{priority.label} {t('worker.jobRequest', 'JOB REQUEST')}</span>
           {job.priority === 'emergency' && (
-            <span className="ml-auto text-[11px] font-bold animate-pulse">Expires in 2 min</span>
+            <span className="ml-auto text-[11px] font-bold animate-pulse">{t('worker.expiresIn', { min: 2, defaultValue: 'Expires in 2 min' })}</span>
           )}
         </div>
       )}
@@ -79,7 +81,7 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
           </div>
           <div className="text-right shrink-0">
             <span className="text-lg font-bold font-mono text-[#445D3E] block">₹{job.estimatedEarnings}</span>
-            <span className="text-[10px] text-[#77736B]">est. earnings</span>
+            <span className="text-[10px] text-[#77736B]">{t('worker.estEarnings', 'est. earnings')}</span>
           </div>
         </div>
 
@@ -116,7 +118,7 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
           className="flex items-center gap-1 text-xs text-[#537895] font-medium hover:underline cursor-pointer"
         >
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          {expanded ? 'Hide' : 'Show'} job description
+          {expanded ? t('worker.hideJobDesc', 'Hide job description') : t('worker.showJobDesc', 'Show job description')}
         </button>
 
         {expanded && (
@@ -124,7 +126,7 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
             <p className="italic">"{job.description}"</p>
             {job.allocationReason && (
               <p className="text-[#364A32] font-semibold">
-                🤖 AI Allocation: {job.allocationReason}
+                🤖 {t('worker.aiAllocation', 'AI Allocation:')} {job.allocationReason}
               </p>
             )}
             <div className="flex items-center gap-1.5 text-[#77736B]">
@@ -138,7 +140,7 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
         <div className="flex items-center gap-2 p-2.5 bg-[#EEF3EC] border border-[#CFDDD0] rounded-xl">
           <DollarSign className="w-4 h-4 text-[#6E8B67] shrink-0" />
           <span className="text-xs text-[#364A32]">
-            Your share: <strong className="font-mono">₹{job.estimatedEarnings}</strong>
+            {t('worker.yourShare', 'Your share:')} <strong className="font-mono">₹{job.estimatedEarnings}</strong>
             <span className="text-[#527048] ml-1">(70% of ₹{Math.round(job.estimatedEarnings / 0.7)})</span>
           </span>
         </div>
@@ -146,18 +148,18 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
         {/* Decline confirm panel */}
         {showDeclineConfirm && (
           <div className="p-3 bg-[#FAEBEB] border border-[#F4D7D7] rounded-xl space-y-2">
-            <p className="text-xs font-bold text-[#632727]">Reason for declining (optional):</p>
+            <p className="text-xs font-bold text-[#632727]">{t('worker.declineReasonLabel', 'Reason for declining (optional):')}</p>
             <select
               value={declineReason}
               onChange={(e) => setDeclineReason(e.target.value)}
               className="w-full px-3 py-2 bg-white border border-[#E8E2D5] rounded-xl text-xs text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#B86B6B]"
             >
-              <option value="">Select a reason...</option>
-              <option value="too_far">Location too far</option>
-              <option value="no_skills">Outside my skill set</option>
-              <option value="on_break">Currently on break</option>
-              <option value="personal">Personal reasons</option>
-              <option value="other">Other</option>
+              <option value="">{t('worker.selectReason', 'Select a reason...')}</option>
+              <option value="too_far">{t('worker.declineTooFar', 'Location too far')}</option>
+              <option value="no_skills">{t('worker.declineNoSkills', 'Outside my skill set')}</option>
+              <option value="on_break">{t('worker.declineOnBreak', 'Currently on break')}</option>
+              <option value="personal">{t('worker.declinePersonal', 'Personal reasons')}</option>
+              <option value="other">{t('worker.declineOther', 'Other')}</option>
             </select>
             <div className="flex gap-2">
               <button
@@ -165,14 +167,14 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
                 onClick={() => setShowDeclineConfirm(false)}
                 className="flex-1 px-3 py-2 bg-white border border-[#E8E2D5] text-[#524E47] text-xs font-bold rounded-xl cursor-pointer hover:bg-[#F3EEE4]"
               >
-                Back
+                {t('common.back', 'Back')}
               </button>
               <button
                 type="button"
                 onClick={handleDeclineConfirm}
                 className="flex-1 px-3 py-2 bg-[#B86B6B] hover:bg-[#9B4E4E] text-white text-xs font-bold rounded-xl cursor-pointer transition-colors"
               >
-                Confirm Decline
+                {t('worker.confirmDecline', 'Confirm Decline')}
               </button>
             </div>
           </div>
@@ -187,7 +189,7 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
               disabled={isProcessing}
               className="flex-1 px-4 py-2.5 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-[#80432E] text-sm font-bold rounded-xl cursor-pointer transition-colors disabled:opacity-50"
             >
-              Decline
+              {t('worker.decline', 'Decline')}
             </button>
             <button
               type="button"
@@ -195,7 +197,7 @@ export const JobRequestCard: React.FC<JobRequestCardProps> = ({
               disabled={isProcessing}
               className="flex-[2] px-4 py-2.5 bg-[#6E8B67] hover:bg-[#587352] text-white text-sm font-bold rounded-xl cursor-pointer transition-colors shadow-sm disabled:opacity-50"
             >
-              {isProcessing ? 'Processing…' : `Accept Job — ₹${job.estimatedEarnings}`}
+              {isProcessing ? t('worker.processing', 'Processing…') : t('worker.acceptJob', { amount: job.estimatedEarnings, defaultValue: `Accept Job — ₹${job.estimatedEarnings}` })}
             </button>
           </div>
         )}

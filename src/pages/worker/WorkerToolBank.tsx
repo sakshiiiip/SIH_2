@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { ToolBankItem } from '../../types';
 import { Card } from '../../components/common/Card';
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 export const WorkerToolBank: React.FC = () => {
+  const { t } = useTranslation();
   const { toolBank, borrowTool, returnTool, currentUser, showToast } = useCooperativeStore();
 
   const [selectedTool, setSelectedTool] = useState<ToolBankItem | null>(null);
@@ -42,8 +44,8 @@ export const WorkerToolBank: React.FC = () => {
     borrowTool(selectedTool.id, currentUser.id, currentUser.name, borrowDays);
     setSelectedTool(null);
     showToast({
-      title: 'Tool Checkout Confirmed! 🔧',
-      message: `${selectedTool.name} reserved for ${borrowDays} days. Free zero-interest member loan.`,
+      title: t('worker.toolBank.checkoutSuccessTitle', 'Tool Checkout Confirmed! 🔧'),
+      message: t('worker.toolBank.checkoutSuccessMsg', { name: selectedTool.name, days: borrowDays, defaultValue: `${selectedTool.name} reserved for ${borrowDays} days. Free zero-interest member loan.` }),
       type: 'success',
     });
   };
@@ -51,8 +53,8 @@ export const WorkerToolBank: React.FC = () => {
   const handleReturn = (tool: ToolBankItem) => {
     returnTool(tool.id);
     showToast({
-      title: 'Tool Returned to Hub ✅',
-      message: `${tool.name} checked back into depot. Society manager will inspect condition.`,
+      title: t('worker.toolBank.returnSuccessTitle', 'Tool Returned to Hub ✅'),
+      message: t('worker.toolBank.returnSuccessMsg', { name: tool.name, defaultValue: `${tool.name} checked back into depot. Society manager will inspect condition.` }),
       type: 'info',
     });
   };
@@ -66,15 +68,15 @@ export const WorkerToolBank: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#80432E] bg-[#FAEDE8] px-2.5 py-0.5 rounded-md border border-[#F4DCD3]">
-              Collective Asset Depot
+              {t('worker.toolBank.assetDepot', 'Collective Asset Depot')}
             </span>
-            <Badge variant="coop" size="sm">Zero-Cost Loan</Badge>
+            <Badge variant="coop" size="sm">{t('worker.toolBank.zeroCostLoan', 'Zero-Cost Loan')}</Badge>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292824] tracking-tight">
-            Tool Bank
+            {t('worker.toolBank.title', 'Tool Bank')}
           </h1>
           <p className="text-xs sm:text-sm text-[#77736B] mt-1">
-            Borrow industrial-grade machinery, rotary hammers, and diagnostic cameras with zero interest or deposit.
+            {t('worker.toolBank.subtitle', 'Borrow industrial-grade machinery, rotary hammers, and diagnostic cameras with zero interest or deposit.')}
           </p>
         </div>
 
@@ -87,7 +89,7 @@ export const WorkerToolBank: React.FC = () => {
           className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>Request Tool →</span>
+          <span>{t('worker.toolBank.requestToolBtn', 'Request Tool →')}</span>
         </button>
       </div>
 
@@ -102,22 +104,24 @@ export const WorkerToolBank: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold text-[#292824]">
-                My Tools (Issued to You)
+                {t('worker.toolBank.myIssuedTools', 'My Borrowed Tools & Equipment')}
               </h2>
-              <span className="text-xs text-[#77736B]">Currently active tool checkouts under your account</span>
+              <span className="text-xs text-[#77736B]">
+                {t('worker.toolBank.myIssuedSub', 'Currently active tool checkouts under your account')}
+              </span>
             </div>
           </div>
           <span className="text-xs font-mono font-bold text-[#324F66] bg-[#E4EDF4] px-2.5 py-1 rounded-lg border border-[#B8CBDD]">
-            {myIssuedTools.length} Active {myIssuedTools.length === 1 ? 'Loan' : 'Loans'}
+            {myIssuedTools.length} {t('worker.toolBank.activeLoans', { count: myIssuedTools.length, defaultValue: `${myIssuedTools.length} Active Loan(s)` })}
           </span>
         </div>
 
         {myIssuedTools.length === 0 ? (
           <div className="p-6 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl text-center space-y-1.5">
             <CheckCircle2 className="w-7 h-7 text-[#6E8B67] mx-auto opacity-70" />
-            <p className="text-xs font-bold text-[#292824]">No tools currently issued to you</p>
+            <p className="text-xs font-bold text-[#292824]">{t('worker.toolBank.noBorrowed', 'No tools currently borrowed')}</p>
             <p className="text-[11px] text-[#77736B]">
-              Browse the catalog below to request industrial machinery for upcoming assignments.
+              {t('worker.toolBank.noBorrowedDesc', 'Request diagnostic machinery or heavy tools from the cooperative catalog below.')}
             </p>
           </div>
         ) : (
@@ -132,22 +136,22 @@ export const WorkerToolBank: React.FC = () => {
                     <span className="text-[10px] font-bold uppercase text-[#324F66] bg-[#E4EDF4] px-2 py-0.5 rounded-md border border-[#B8CBDD]">
                       {tool.category} · #{tool.serialNumber}
                     </span>
-                    <Badge variant="pending" size="sm">Checked Out</Badge>
+                    <Badge variant="pending" size="sm">{t('worker.toolBank.checkedOutBadge', 'Checked Out')}</Badge>
                   </div>
                   <h3 className="text-sm font-bold text-[#292824] mt-1.5">{tool.name}</h3>
                   <p className="text-xs text-[#77736B] mt-0.5">
-                    Condition: <strong className="text-[#292824] capitalize">{tool.condition}</strong>
+                    {t('worker.toolBank.condition', 'Condition:')} <strong className="text-[#292824] capitalize">{tool.condition}</strong>
                   </p>
 
                   <div className="mt-2.5 p-2.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-lg text-xs space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="text-[#77736B] flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-[#80432E]" /> Due Date:
+                        <Clock className="w-3 h-3 text-[#80432E]" /> {t('worker.toolBank.dueDate', 'Due Date:')}
                       </span>
                       <strong className="text-[#80432E] font-mono">{tool.returnDate || 'Tomorrow'}</strong>
                     </div>
                     <div className="text-[10px] text-[#77736B]">
-                      Society Depot: Green Residency Hub B
+                      {t('worker.toolBank.societyDepot', 'Society Depot: Green Residency Hub B')}
                     </div>
                   </div>
                 </div>
@@ -160,7 +164,7 @@ export const WorkerToolBank: React.FC = () => {
                     onClick={() => handleReturn(tool)}
                     leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                   >
-                    Return Tool to Hub
+                    {t('worker.toolBank.returnDepotBtn', 'Return to Hub')}
                   </Button>
                 </div>
               </div>
@@ -175,8 +179,8 @@ export const WorkerToolBank: React.FC = () => {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-[#292824]">Tool Availability Catalog</h2>
-            <p className="text-xs text-[#77736B]">Equipment ready for free member reservation at society depot</p>
+            <h2 className="text-base font-bold text-[#292824]">{t('worker.toolBank.availableCatalog', 'Available Tool Depot Catalog')}</h2>
+            <p className="text-xs text-[#77736B]">{t('worker.toolBank.catalogSub', 'Equipment ready for free member reservation at society depot')}</p>
           </div>
 
           {/* Search & Category Filter */}
@@ -187,7 +191,7 @@ export const WorkerToolBank: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tools..."
+                placeholder={t('worker.toolBank.searchPlaceholder', 'Search equipment by name, category, or serial...')}
                 className="pl-8 pr-3 py-1.5 bg-white border border-[#E8E2D5] rounded-xl text-xs text-[#292824] focus:outline-none focus:ring-2 focus:ring-[#6E8B67]"
               />
             </div>
@@ -201,7 +205,7 @@ export const WorkerToolBank: React.FC = () => {
                     categoryFilter === cat ? 'bg-white text-[#292824] shadow-xs' : 'text-[#77736B] hover:text-[#292824]'
                   }`}
                 >
-                  {cat}
+                  {cat === 'all' ? t('common.all', 'All') : cat}
                 </button>
               ))}
             </div>
@@ -232,21 +236,21 @@ export const WorkerToolBank: React.FC = () => {
                       size="sm"
                     >
                       {isAvailable
-                        ? 'Available'
+                        ? t('common.active', 'Available')
                         : isBorrowedByMe
-                        ? 'Issued to You'
-                        : 'Checked Out'}
+                        ? t('worker.toolBank.issuedToYou', 'Issued to You')
+                        : t('worker.toolBank.checkedOutBadge', 'Checked Out')}
                     </Badge>
                   </div>
 
                   <h3 className="font-bold text-sm sm:text-base text-[#292824] mt-1">{tool.name}</h3>
                   <p className="text-xs text-[#77736B] mt-0.5">
-                    Condition: <strong className="text-[#292824] capitalize">{tool.condition}</strong>
+                    {t('worker.toolBank.condition', 'Condition:')} <strong className="text-[#292824] capitalize">{tool.condition}</strong>
                   </p>
 
                   {!isAvailable && !isBorrowedByMe && (
                     <div className="mt-2 text-[11px] text-[#77736B] p-2 bg-[#FAF7F2] rounded-lg border border-[#E8E2D5]">
-                      Expected return: <span className="font-mono font-bold text-[#80432E]">{tool.returnDate}</span>
+                      {t('worker.toolBank.expectedReturn', 'Expected return:')} <span className="font-mono font-bold text-[#80432E]">{tool.returnDate}</span>
                     </div>
                   )}
                 </div>
@@ -258,7 +262,7 @@ export const WorkerToolBank: React.FC = () => {
                       onClick={() => setSelectedTool(tool)}
                       className="w-full py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
                     >
-                      Request Tool →
+                      {t('worker.toolBank.requestToolBtn', 'Request Tool →')}
                     </button>
                   ) : isBorrowedByMe ? (
                     <button
@@ -266,7 +270,7 @@ export const WorkerToolBank: React.FC = () => {
                       onClick={() => handleReturn(tool)}
                       className="w-full py-2 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#B8CBDD] text-[#324F66] text-xs font-bold rounded-xl transition-colors cursor-pointer"
                     >
-                      Return Tool to Hub
+                      {t('worker.toolBank.returnDepotBtn', 'Return to Hub')}
                     </button>
                   ) : (
                     <button
@@ -274,7 +278,7 @@ export const WorkerToolBank: React.FC = () => {
                       disabled
                       className="w-full py-2 bg-[#F3EEE4] text-[#9A958B] text-xs font-bold rounded-xl cursor-not-allowed opacity-75"
                     >
-                      Unavailable ({tool.returnDate})
+                      {t('worker.toolBank.unavailable', { date: tool.returnDate, defaultValue: `Unavailable (${tool.returnDate})` })}
                     </button>
                   )}
                 </div>
@@ -288,7 +292,7 @@ export const WorkerToolBank: React.FC = () => {
       <Modal
         isOpen={selectedTool !== null}
         onClose={() => setSelectedTool(null)}
-        title="Request Cooperative Tool Checkout"
+        title={t('worker.toolBank.modalTitle', 'Request Cooperative Tool Checkout')}
         subtitle={selectedTool?.name}
         maxWidth="md"
       >
@@ -296,16 +300,16 @@ export const WorkerToolBank: React.FC = () => {
           <div className="p-3.5 bg-[#E6ECE4] border border-[#CFDDD0] rounded-xl text-xs text-[#364A32]">
             <p className="font-bold flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-[#6E8B67]" />
-              Zero-Cost Member Benefit
+              {t('worker.toolBank.zeroCostBenefit', 'Zero-Cost Member Benefit')}
             </p>
             <p className="text-[11px] text-[#527048] mt-0.5">
-              As a verified cooperative specialist, no deposit or rental charges apply. Please return on or before due date.
+              {t('worker.toolBank.benefitDesc', 'As a verified cooperative specialist, no deposit or rental charges apply. Please return on or before due date.')}
             </p>
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase tracking-wider text-[#77736B] block">
-              Borrow Duration:
+              {t('worker.toolBank.borrowDuration', 'Borrow Duration (Days):')}
             </label>
             <select
               value={borrowDays}
@@ -321,10 +325,10 @@ export const WorkerToolBank: React.FC = () => {
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E8E2D5]">
             <Button variant="subtle" size="sm" onClick={() => setSelectedTool(null)}>
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </Button>
             <Button variant="primary" size="sm" onClick={handleBorrow}>
-              Confirm Checkout
+              {t('worker.toolBank.confirmBorrowBtn', 'Confirm Equipment Loan')}
             </Button>
           </div>
         </div>

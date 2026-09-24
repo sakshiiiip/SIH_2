@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MessageSquare, Phone, ChevronDown, ChevronUp, HeadphonesIcon, Clock } from 'lucide-react';
 
 interface SupportPanelProps {
@@ -6,14 +7,8 @@ interface SupportPanelProps {
   compact?: boolean; // true = floating button variant
 }
 
-// =============================================================
-// INTEGRATION POINT FOR PERSON 5
-// This component is a placeholder entry point for the Human
-// Agent Support module. When Person 5 builds the support backend,
-// replace the mock chat UI below with a call to their API.
-// The props interface is intentionally minimal for easy extension.
-// =============================================================
 export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = false }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(!compact);
   const [messageText, setMessageText] = useState('');
   const [messageSent, setMessageSent] = useState(false);
@@ -32,10 +27,18 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = f
         className="flex items-center gap-2 px-4 py-2.5 bg-[#537895] hover:bg-[#41637E] text-white text-sm font-bold rounded-xl shadow-md transition-colors cursor-pointer"
       >
         <HeadphonesIcon className="w-4 h-4" />
-        Talk to Human Agent
+        {t('worker.support.talkToAgent', 'Talk to Human Agent')}
       </button>
     );
   }
+
+  const QUICK_TOPICS = [
+    { key: 'topicJobAcceptance', text: t('worker.support.topicJobAcceptance', '❓ Job acceptance issue') },
+    { key: 'topicPayment', text: t('worker.support.topicPayment', '💰 Payment not received') },
+    { key: 'topicExecution', text: t('worker.support.topicExecution', '🛠️ Job execution problem') },
+    { key: 'topicKyc', text: t('worker.support.topicKyc', '📋 Account / KYC issue') },
+    { key: 'topicEmergency', text: t('worker.support.topicEmergency', '🚨 Emergency situation') },
+  ];
 
   return (
     <div className="bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl shadow-card overflow-hidden">
@@ -43,12 +46,12 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = f
       <div className="flex items-center justify-between px-4 py-3 bg-[#324F66] text-white">
         <div className="flex items-center gap-2">
           <HeadphonesIcon className="w-4 h-4" />
-          <span className="text-sm font-bold">Human Agent Support</span>
+          <span className="text-sm font-bold">{t('worker.support.humanAgentTitle', 'Human Agent Support')}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-[10px] text-[#A8D0E6]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#6DE89A] animate-pulse" />
-            Agents Online
+            {t('worker.support.agentsOnline', 'Agents Online')}
           </span>
           {compact && (
             <button type="button" onClick={() => setExpanded(false)} className="text-white/70 hover:text-white cursor-pointer">
@@ -64,39 +67,27 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = f
       </div>
 
       <div className="p-4 space-y-4">
-        {/* ============================================================
-            PERSON 5 INTEGRATION POINT
-            This entire chat section below is a placeholder.
-            Replace with real-time chat/messaging from Person 5's module.
-            ============================================================ */}
-
         {/* Status banner */}
         <div className="flex items-center gap-2 p-3 bg-[#E4EDF4] border border-[#B8CBDD] rounded-xl">
           <Clock className="w-4 h-4 text-[#324F66] shrink-0" />
           <div>
-            <p className="text-xs font-bold text-[#324F66]">Average wait: ~3 minutes</p>
-            <p className="text-[10px] text-[#537895]">Human agents available 7 AM – 10 PM IST</p>
+            <p className="text-xs font-bold text-[#324F66]">{t('worker.support.avgWait', 'Average wait: ~3 minutes')}</p>
+            <p className="text-[10px] text-[#537895]">{t('worker.support.agentsAvailableHours', 'Human agents available 7 AM – 10 PM IST')}</p>
           </div>
         </div>
 
         {/* Quick options */}
         <div>
-          <p className="text-xs font-bold text-[#77736B] mb-2 uppercase tracking-wider">Quick Help Topics</p>
+          <p className="text-xs font-bold text-[#77736B] mb-2 uppercase tracking-wider">{t('worker.support.quickHelpTopics', 'Quick Help Topics')}</p>
           <div className="space-y-1.5">
-            {[
-              '❓ Job acceptance issue',
-              '💰 Payment not received',
-              '🛠️ Job execution problem',
-              '📋 Account / KYC issue',
-              '🚨 Emergency situation',
-            ].map((topic) => (
+            {QUICK_TOPICS.map((topic) => (
               <button
-                key={topic}
+                key={topic.key}
                 type="button"
-                onClick={() => setMessageText(topic)}
+                onClick={() => setMessageText(topic.text)}
                 className="w-full text-left px-3 py-2 bg-[#F3EEE4] hover:bg-[#EBE4D6] border border-[#E8E2D5] rounded-xl text-xs text-[#292824] transition-colors cursor-pointer"
               >
-                {topic}
+                {topic.text}
               </button>
             ))}
           </div>
@@ -104,7 +95,7 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = f
 
         {/* Mock chat display */}
         <div className="bg-white border border-[#E8E2D5] rounded-xl p-3 min-h-[80px] space-y-2">
-          <p className="text-[11px] text-[#9A958B] text-center">Chat with a human agent below</p>
+          <p className="text-[11px] text-[#9A958B] text-center">{t('worker.support.chatSubtext', 'Chat with a human agent below')}</p>
           {messageSent && (
             <>
               <div className="flex justify-end">
@@ -114,7 +105,7 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = f
               </div>
               <div className="flex justify-start">
                 <div className="bg-[#F3EEE4] text-[#292824] px-3 py-1.5 rounded-xl rounded-bl-sm text-xs max-w-[80%]">
-                  🤝 A human agent will connect shortly. Please hold on.
+                  🤝 {t('worker.support.messageSentNotice', 'Your message has been assigned to an active support agent. Live agent will respond momentarily.')}
                 </div>
               </div>
             </>
@@ -125,7 +116,7 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = f
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Describe your issue…"
+            placeholder={t('worker.support.typeMessagePlaceholder', 'Type your message or query here...')}
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
@@ -136,6 +127,7 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = f
             onClick={handleSendMessage}
             disabled={!messageText.trim()}
             className="px-4 py-2.5 bg-[#537895] hover:bg-[#41637E] text-white rounded-xl font-bold text-sm transition-colors cursor-pointer disabled:opacity-50"
+            title={t('worker.support.sendMessage', 'Send Message')}
           >
             <MessageSquare className="w-4 h-4" />
           </button>
@@ -145,15 +137,15 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({ onClose, compact = f
         <div className="flex items-center gap-3 p-3 bg-[#EEF3EC] border border-[#CFDDD0] rounded-xl">
           <Phone className="w-4 h-4 text-[#6E8B67] shrink-0" />
           <div>
-            <p className="text-xs font-bold text-[#364A32]">Prefer a call?</p>
-            <p className="text-[10px] text-[#527048]">Support Line: 1800-XXX-XXXX (toll-free)</p>
+            <p className="text-xs font-bold text-[#364A32]">{t('worker.support.preferCall', 'Prefer a call?')}</p>
+            <p className="text-[10px] text-[#527048]">{t('worker.support.callSupportDirect', 'Call Cooperative Support (Toll-Free)')}</p>
           </div>
           <button
             type="button"
             onClick={() => alert('Calling support line…')}
             className="ml-auto px-3 py-1.5 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
           >
-            Call
+            {t('worker.support.callSupport', 'Call Support')}
           </button>
         </div>
       </div>

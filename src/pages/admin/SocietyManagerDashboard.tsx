@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Badge } from '../../components/common/Badge';
 import { Worker, WorkerVerificationStatus, Booking } from '../../types';
@@ -45,6 +46,7 @@ interface SocietyManagerDashboardProps {
 }
 
 export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = () => {
+  const { t } = useTranslation();
   const {
     currentUser,
     societies,
@@ -250,11 +252,11 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-7 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-7 animate-fade-in">
       {/* ========================================================================= */}
       {/* 1. HEADER: SOCIETY MANAGER OVERVIEW (MY SOCIETY) */}
       {/* ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E2D5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#FAEDE8] border border-[#F3C5B8] flex items-center justify-center text-[#80432E] shadow-xs">
             <Building2 className="w-6 h-6" />
@@ -494,19 +496,11 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
                         <tr key={acc.workerId} className="hover:bg-[#F3EEE4]/60 transition-colors">
                           <td className="py-3 px-3">
                             <div className="flex items-center gap-2.5">
-                              {acc.avatar ? (
-                                <img
-                                  src={acc.avatar}
-                                  alt={acc.name}
-                                  className="w-8 h-8 rounded-full object-cover border border-[#E8E2D5]"
-                                />
-                              ) : (
-                                <div className="w-8 h-8 rounded-full bg-[#FAEDE8] text-[#80432E] flex items-center justify-center font-bold text-xs">
-                                  {acc.name[0]}
-                                </div>
-                              )}
+                              <div className="w-8 h-8 rounded-full bg-[#FAEDE8] text-[#80432E] flex items-center justify-center font-bold text-xs shrink-0">
+                                {(acc.name.includes('Priya') ? t('demoUsers.priyaPatel', acc.name) : acc.name)[0]}
+                              </div>
                               <div>
-                                <strong className="font-bold text-[#292824] block">{acc.name}</strong>
+                                <strong className="font-bold text-[#292824] block">{acc.name.includes('Priya') ? t('demoUsers.priyaPatel', acc.name) : acc.name}</strong>
                                 <span className="text-[11px] text-[#80432E]">{acc.skills[0]}</span>
                               </div>
                             </div>
@@ -1518,10 +1512,12 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
                               onChange={() => setSelectedAssignWorkerId(w.id)}
                               className="text-[#445D3E] focus:ring-[#445D3E]"
                             />
-                            <img src={w.avatar} alt={w.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0" />
+                            <div className="w-10 h-10 rounded-xl bg-[#E4EDF4] border border-slate-200 text-[#324F66] flex items-center justify-center font-bold text-sm shrink-0">
+                              {(w.name.includes('Priya') ? t('demoUsers.priyaPatel', w.name) : w.name)[0]}
+                            </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <strong className="text-xs font-bold text-[#292824]">{w.name}</strong>
+                                <strong className="text-xs font-bold text-[#292824]">{w.name.includes('Priya') ? t('demoUsers.priyaPatel', w.name) : w.name}</strong>
                                 <Badge variant="verified" size="sm">✓ Verified</Badge>
                               </div>
                               <span className="text-[11px] text-[#80432E] font-medium block">
@@ -1560,10 +1556,12 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
                               onChange={() => setSelectedAssignWorkerId(w.id)}
                               className="text-[#445D3E] focus:ring-[#445D3E]"
                             />
-                            <img src={w.avatar} alt={w.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0" />
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">
+                              {(w.name.includes('Priya') ? t('demoUsers.priyaPatel', w.name) : w.name)[0]}
+                            </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <strong className="text-xs font-bold text-[#292824]">{w.name}</strong>
+                                <strong className="text-xs font-bold text-[#292824]">{w.name.includes('Priya') ? t('demoUsers.priyaPatel', w.name) : w.name}</strong>
                                 <Badge variant="verified" size="sm">✓ Verified</Badge>
                               </div>
                               <span className="text-[11px] text-[#77736B] block">

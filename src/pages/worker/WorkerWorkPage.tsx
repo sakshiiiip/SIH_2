@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Booking } from '../../types';
 import { Card } from '../../components/common/Card';
@@ -48,6 +49,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
   onOpenJobDetails,
   onOpenJobExecution,
 }) => {
+  const { t } = useTranslation();
   const { currentUser, bookings, updateBookingState, verifyOTPAndStartJob, showToast } =
     useCooperativeStore();
 
@@ -88,23 +90,23 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
   const handleOtpVerify = (job: Booking) => {
     const entered = otpInputs[job.id] || '';
     if (!entered.trim()) {
-      setOtpErrors({ ...otpErrors, [job.id]: 'Please enter the 4-digit arrival OTP' });
+      setOtpErrors({ ...otpErrors, [job.id]: t('worker.jobs.otpRequired', 'Please enter the 4-digit arrival OTP') });
       return;
     }
     const success = verifyOTPAndStartJob(job.id, entered.trim());
     if (success) {
       setOtpErrors({ ...otpErrors, [job.id]: '' });
-      showToast({ title: 'Arrival Confirmed!', message: 'OTP verified. You may start the job.', type: 'success' });
+      showToast({ title: t('worker.jobs.arrivalConfirmed', 'Arrival Confirmed!'), message: t('worker.jobs.arrivalConfirmedMsg', 'OTP verified. You may start the job.'), type: 'success' });
     } else {
-      setOtpErrors({ ...otpErrors, [job.id]: 'Invalid OTP code. Ask customer for 4-digit OTP.' });
+      setOtpErrors({ ...otpErrors, [job.id]: t('worker.jobs.otpInvalid', 'Invalid OTP code. Ask customer for 4-digit OTP.') });
     }
   };
 
   const JOB_FILTERS: { id: JobFilter; label: string; count: number }[] = [
-    { id: 'upcoming', label: 'Upcoming', count: storeUpcoming.length + MOCK_UPCOMING_JOBS.length },
-    { id: 'in_progress', label: 'In Progress', count: storeInProgress.length + 1 },
-    { id: 'completed', label: 'Completed', count: storeCompleted.length + MOCK_COMPLETED_JOBS.length },
-    { id: 'cancelled', label: 'Cancelled', count: MOCK_CANCELLED_JOBS.length },
+    { id: 'upcoming', label: t('worker.jobs.tabUpcoming', 'Upcoming'), count: storeUpcoming.length + MOCK_UPCOMING_JOBS.length },
+    { id: 'in_progress', label: t('worker.jobs.tabInProgress', 'In Progress'), count: storeInProgress.length + 1 },
+    { id: 'completed', label: t('worker.jobs.tabCompleted', 'Completed'), count: storeCompleted.length + MOCK_COMPLETED_JOBS.length },
+    { id: 'cancelled', label: t('worker.jobs.tabCancelled', 'Cancelled'), count: MOCK_CANCELLED_JOBS.length },
   ];
 
   // Earnings mock data
@@ -115,13 +117,13 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
 
   // Weekly chart data (Mon - Sun)
   const weeklyChartData = [
-    { day: 'Mon', amount: 350, height: 35 },
-    { day: 'Tue', amount: 450, height: 45 },
-    { day: 'Wed', amount: 200, height: 20 },
-    { day: 'Thu', amount: 600, height: 60 },
-    { day: 'Fri', amount: 300, height: 30 },
-    { day: 'Sat', amount: 550, height: 55 },
-    { day: 'Sun', amount: 0, height: 8 },
+    { day: t('common.days.mon', 'Mon'), amount: 350, height: 35 },
+    { day: t('common.days.tue', 'Tue'), amount: 450, height: 45 },
+    { day: t('common.days.wed', 'Wed'), amount: 200, height: 20 },
+    { day: t('common.days.thu', 'Thu'), amount: 600, height: 60 },
+    { day: t('common.days.fri', 'Fri'), amount: 300, height: 30 },
+    { day: t('common.days.sat', 'Sat'), amount: 550, height: 55 },
+    { day: t('common.days.sun', 'Sun'), amount: 0, height: 8 },
   ];
 
   return (
@@ -131,15 +133,15 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#324F66] bg-[#E4EDF4] px-2.5 py-0.5 rounded-md border border-[#B8CBDD]">
-              Worker Operations
+              {t('worker.work.operationsBadge', 'Worker Operations')}
             </span>
-            <Badge variant="coop" size="sm">70% Net Share</Badge>
+            <Badge variant="coop" size="sm">{t('worker.shareNet', '70% Net Share')}</Badge>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#292824] tracking-tight">
-            My Work
+            {t('nav.myWork', 'My Work')}
           </h1>
           <p className="text-xs sm:text-sm text-[#77736B] mt-1">
-            Manage your service pipeline, active assignments, OTP verification, and earnings ledger.
+            {t('worker.work.subtitle', 'Manage your service pipeline, active assignments, OTP verification, and earnings ledger.')}
           </p>
         </div>
 
@@ -155,7 +157,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
             }`}
           >
             <Briefcase className="w-3.5 h-3.5 text-[#537895]" />
-            <span>Jobs</span>
+            <span>{t('worker.work.tabJobs', 'Jobs')}</span>
             <span className="ml-1 px-1.5 py-0.2 bg-[#E4EDF4] text-[#324F66] rounded-full text-[10px]">
               {storeUpcoming.length + storeInProgress.length + MOCK_UPCOMING_JOBS.length + 1}
             </span>
@@ -170,7 +172,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5 text-[#6E8B67]" />
-            <span>Earnings</span>
+            <span>{t('worker.work.tabEarnings', 'Earnings')}</span>
             <span className="ml-1 text-[10px] font-mono text-[#6E8B67] font-bold">
               ₹{earnings.weeklyEarnings}
             </span>
@@ -218,8 +220,8 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
               {storeUpcoming.length === 0 && MOCK_UPCOMING_JOBS.length === 0 ? (
                 <EmptyJobsState
                   icon={<Clock className="w-8 h-8 text-[#9A958B]" />}
-                  title="No upcoming jobs scheduled"
-                  subtitle="New accepted assignments from societies will appear here."
+                  title={t('worker.jobs.noUpcoming', 'No upcoming jobs scheduled')}
+                  subtitle={t('worker.jobs.noUpcomingDesc', 'New accepted assignments from societies will appear here.')}
                 />
               ) : (
                 <>
@@ -239,14 +241,14 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                           </div>
                           <h3 className="text-base font-bold text-[#292824]">{job.problemType}</h3>
                           <p className="text-xs text-[#77736B] mt-0.5">
-                            Customer: <strong className="text-[#292824]">{job.customerName}</strong>
+                            {t('worker.jobs.customerLabel', 'Customer:')} <strong className="text-[#292824]">{job.customerName}</strong>
                           </p>
                         </div>
                         <div className="text-right">
                           <span className="text-base font-bold font-mono text-[#445D3E] block">
                             ₹{job.pricing.workerShare}
                           </span>
-                          <span className="text-[10px] text-[#77736B]">Net Share</span>
+                          <span className="text-[10px] text-[#77736B]">{t('worker.shareNet', 'Net Share')}</span>
                         </div>
                       </div>
 
@@ -257,7 +259,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5 text-[#537895]" />
-                          Scheduled Today
+                          {t('worker.jobs.scheduledToday', 'Scheduled Today')}
                         </span>
                       </div>
 
@@ -270,18 +272,18 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                           }}
                           className="flex items-center gap-1 text-xs font-bold text-[#537895] hover:underline cursor-pointer"
                         >
-                          View Details <ChevronRight className="w-3.5 h-3.5" />
+                          {t('worker.jobs.viewDetails', 'View Details')} <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                         <Button
                           variant="primary"
                           size="sm"
                           onClick={() => {
                             updateBookingState(job.id, 'TRAVELLING');
-                            showToast({ title: 'Travel Started', message: 'Customer notified of your departure.', type: 'info' });
+                            showToast({ title: t('worker.jobs.travelStarted', 'Travel Started'), message: t('worker.jobs.travelStartedMsg', 'Customer notified of your departure.'), type: 'info' });
                           }}
                           leftIcon={<Navigation className="w-3.5 h-3.5" />}
                         >
-                          Start Travel
+                          {t('worker.jobs.startTravel', 'Start Travel')}
                         </Button>
                       </div>
                     </Card>
@@ -303,14 +305,14 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                           </div>
                           <h3 className="text-base font-bold text-[#292824]">{job.problemType}</h3>
                           <p className="text-xs text-[#77736B] mt-0.5">
-                            Customer: <strong className="text-[#292824]">{job.customer.name}</strong>
+                            {t('worker.jobs.customerLabel', 'Customer:')} <strong className="text-[#292824]">{job.customer.name}</strong>
                           </p>
                         </div>
                         <div className="text-right">
                           <span className="text-base font-bold font-mono text-[#445D3E] block">
                             ₹{job.estimatedEarnings}
                           </span>
-                          <span className="text-[10px] text-[#77736B]">Est. Earnings</span>
+                          <span className="text-[10px] text-[#77736B]">{t('worker.jobs.estEarnings', 'Est. Earnings')}</span>
                         </div>
                       </div>
 
@@ -334,9 +336,9 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                           }}
                           className="flex items-center gap-1 text-xs font-bold text-[#537895] hover:underline cursor-pointer"
                         >
-                          View Details <ChevronRight className="w-3.5 h-3.5" />
+                          {t('worker.jobs.viewDetails', 'View Details')} <ChevronRight className="w-3.5 h-3.5" />
                         </button>
-                        <span className="text-xs text-[#77736B]">Auto-reminder 1 hr before</span>
+                        <span className="text-xs text-[#77736B]">{t('worker.jobs.autoReminder', 'Auto-reminder 1 hr before')}</span>
                       </div>
                     </Card>
                   ))}
@@ -372,7 +374,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                         className="flex items-center gap-1 px-2.5 py-1 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-[11px] font-bold rounded-lg transition-colors cursor-pointer animate-pulse"
                       >
                         <AlertOctagon className="w-3.5 h-3.5 text-[#C93B2B]" />
-                        SOS
+                        {t('common.sos', 'SOS')}
                       </button>
                     </div>
                   </div>
@@ -381,7 +383,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     <MapPin className="w-4 h-4 text-[#80432E] shrink-0 mt-0.5" />
                     <div>
                       <strong className="text-[#292824] block">{job.customerAddress}</strong>
-                      <span>Customer: {job.customerName} ({job.customerPhone})</span>
+                      <span>{t('worker.jobs.customerLabel', 'Customer:')} {job.customerName} ({job.customerPhone})</span>
                     </div>
                   </div>
 
@@ -393,7 +395,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                       className="flex items-center gap-1.5 px-3 py-2 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl cursor-pointer"
                     >
                       <Phone className="w-3.5 h-3.5" />
-                      Call Customer
+                      {t('worker.callCustomer', 'Call Customer')}
                     </button>
 
                     <div className="flex items-center gap-2 flex-wrap">
@@ -408,7 +410,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                         className="flex items-center gap-1.5 px-3 py-2 bg-[#E4EDF4] hover:bg-[#D5E5F0] border border-[#B8CBDD] text-[#2B4C68] text-xs font-bold rounded-xl cursor-pointer"
                       >
                         <Camera className="w-3.5 h-3.5" />
-                        Job Verification
+                        {t('worker.jobs.jobVerification', 'Job Verification')}
                       </button>
 
                       {/* State progressions */}
@@ -418,11 +420,11 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                           size="sm"
                           onClick={() => {
                             updateBookingState(job.id, 'ARRIVED');
-                            showToast({ title: 'Arrived on Site', message: 'Ask resident for their 4-digit OTP.', type: 'info' });
+                            showToast({ title: t('worker.jobs.arrivedOnSite', 'Arrived on Site'), message: t('worker.jobs.askOtpMsg', 'Ask resident for their 4-digit OTP.'), type: 'info' });
                           }}
                           leftIcon={<MapPin className="w-3.5 h-3.5" />}
                         >
-                          I Have Arrived
+                          {t('worker.jobs.iHaveArrived', 'I Have Arrived')}
                         </Button>
                       )}
 
@@ -431,7 +433,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                           <input
                             type="text"
                             maxLength={4}
-                            placeholder="4-digit OTP"
+                            placeholder={t('worker.jobs.otpPlaceholder', '4-digit OTP')}
                             value={otpInputs[job.id] || ''}
                             onChange={(e) => setOtpInputs({ ...otpInputs, [job.id]: e.target.value })}
                             className="w-24 px-3 py-1.5 bg-white border border-[#E8E2D5] rounded-xl text-xs font-mono font-bold text-center focus:outline-none focus:ring-2 focus:ring-[#6E8B67]"
@@ -442,7 +444,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                             onClick={() => handleOtpVerify(job)}
                             leftIcon={<KeyRound className="w-3.5 h-3.5" />}
                           >
-                            Verify & Start
+                            {t('worker.jobs.verifyAndStart', 'Verify & Start')}
                           </Button>
                         </div>
                       )}
@@ -453,11 +455,11 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                           size="sm"
                           onClick={() => {
                             updateBookingState(job.id, 'COMPLETED');
-                            showToast({ title: 'Job Marked Complete!', message: 'Job closed. Earnings credited to your ledger.', type: 'success' });
+                            showToast({ title: t('worker.jobs.jobMarkedComplete', 'Job Marked Complete!'), message: t('worker.jobs.jobMarkedCompleteMsg', 'Job closed. Earnings credited to your ledger.'), type: 'success' });
                           }}
                           leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
                         >
-                          Mark Complete
+                          {t('worker.jobs.markComplete', 'Mark Complete')}
                         </Button>
                       )}
                     </div>
@@ -486,7 +488,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     <span className="text-base font-bold font-mono text-[#445D3E] block">
                       ₹{MOCK_IN_PROGRESS_JOB.estimatedEarnings}
                     </span>
-                    <span className="text-[10px] text-[#77736B]">In Execution</span>
+                    <span className="text-[10px] text-[#77736B]">{t('worker.jobs.inExecution', 'In Execution')}</span>
                   </div>
                 </div>
 
@@ -494,7 +496,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                   <MapPin className="w-4 h-4 text-[#80432E] shrink-0 mt-0.5" />
                   <div>
                     <strong className="text-[#292824] block">{MOCK_IN_PROGRESS_JOB.customer.address}</strong>
-                    <span>Customer: {MOCK_IN_PROGRESS_JOB.customer.name} ({MOCK_IN_PROGRESS_JOB.customer.phone})</span>
+                    <span>{t('worker.jobs.customerLabel', 'Customer:')} {MOCK_IN_PROGRESS_JOB.customer.name} ({MOCK_IN_PROGRESS_JOB.customer.phone})</span>
                   </div>
                 </div>
 
@@ -509,7 +511,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     className="flex items-center gap-1.5 px-3 py-2 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl cursor-pointer"
                   >
                     <Phone className="w-3.5 h-3.5" />
-                    Call Customer
+                    {t('worker.callCustomer', 'Call Customer')}
                   </button>
 
                   <div className="flex items-center gap-2">
@@ -527,7 +529,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                       className="flex items-center gap-1.5 px-3 py-2 bg-[#E4EDF4] hover:bg-[#D5E5F0] border border-[#B8CBDD] text-[#2B4C68] text-xs font-bold rounded-xl cursor-pointer"
                     >
                       <Camera className="w-3.5 h-3.5" />
-                      Job Verification
+                      {t('worker.jobs.jobVerification', 'Job Verification')}
                     </button>
 
                     <Button
@@ -535,14 +537,14 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                       size="sm"
                       onClick={() =>
                         showToast({
-                          title: 'Job Completed',
-                          message: 'Job closed. Customer billed and rating requested.',
+                          title: t('worker.jobs.jobCompleted', 'Job Completed'),
+                          message: t('worker.jobs.jobCompletedMsg', 'Job closed. Customer billed and rating requested.'),
                           type: 'success',
                         })
                       }
                       leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
                     >
-                      Mark Complete
+                      {t('worker.jobs.markComplete', 'Mark Complete')}
                     </Button>
                   </div>
                 </div>
@@ -556,8 +558,8 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
               {storeCompleted.length === 0 && MOCK_COMPLETED_JOBS.length === 0 ? (
                 <EmptyJobsState
                   icon={<CheckCircle2 className="w-8 h-8 text-[#9A958B]" />}
-                  title="No completed jobs yet"
-                  subtitle="Finished assignments and customer ratings will be archived here."
+                  title={t('worker.jobs.noCompleted', 'No completed jobs yet')}
+                  subtitle={t('worker.jobs.noCompletedDesc', 'Finished assignments and customer ratings will be archived here.')}
                 />
               ) : (
                 <>
@@ -580,7 +582,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                             ₹{job.pricing.workerShare}
                           </span>
                           <span className="text-[10px] font-bold text-[#364A32] bg-[#E6ECE4] px-2 py-0.5 rounded-full">
-                            ✓ Settled
+                            {t('worker.jobs.settledBadge', '✓ Settled')}
                           </span>
                         </div>
                       </div>
@@ -588,7 +590,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                       <div className="flex items-center justify-between text-xs text-[#77736B] pt-2 border-t border-[#E8E2D5]">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5" />
-                          Completed: {job.completedAt || 'Today'}
+                          {t('worker.jobs.completedDate', 'Completed:')} {job.completedAt || t('worker.jobs.today', 'Today')}
                         </span>
                         <div className="flex items-center gap-1">
                           <Star className="w-3.5 h-3.5 fill-[#B37055] text-[#B37055]" />
@@ -619,7 +621,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                             job.paymentStatus === 'paid' ? 'bg-[#E6ECE4] text-[#364A32]' : 'bg-[#FAEDE8] text-[#80432E]'
                           }`}>
-                            {job.paymentStatus === 'paid' ? '✓ Paid' : 'Pending'}
+                            {job.paymentStatus === 'paid' ? t('worker.jobs.paidBadge', '✓ Paid') : t('worker.jobs.pendingBadge', 'Pending')}
                           </span>
                         </div>
                       </div>
@@ -643,11 +645,11 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                       <div className="flex items-center justify-between text-xs text-[#77736B] pt-2 border-t border-[#E8E2D5]">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5" />
-                          Completed: {job.date}
+                          {t('worker.jobs.completedDate', 'Completed:')} {job.date}
                         </span>
                         <span className="text-[#6E8B67] font-semibold flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          Job Closed
+                          {t('worker.jobs.jobClosed', 'Job Closed')}
                         </span>
                       </div>
                     </Card>
@@ -663,8 +665,8 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
               {MOCK_CANCELLED_JOBS.length === 0 ? (
                 <EmptyJobsState
                   icon={<XCircle className="w-8 h-8 text-[#9A958B]" />}
-                  title="No cancelled jobs"
-                  subtitle="Any cancelled or rescheduled appointments will be listed here."
+                  title={t('worker.jobs.noCancelled', 'No cancelled jobs')}
+                  subtitle={t('worker.jobs.noCancelledDesc', 'Any cancelled or rescheduled appointments will be listed here.')}
                 />
               ) : (
                 MOCK_CANCELLED_JOBS.map((job) => (
@@ -698,7 +700,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
 
                     {job.cancellationReason && (
                       <div className="p-2.5 bg-[#F3EEE4] border border-[#E8E2D5] rounded-xl text-xs text-[#524E47]">
-                        <strong className="text-[#292824]">Cancellation Note:</strong> {job.cancellationReason}
+                        <strong className="text-[#292824]">{t('worker.jobs.cancellationNote', 'Cancellation Note:')}</strong> {job.cancellationReason}
                       </div>
                     )}
                   </Card>
@@ -718,18 +720,18 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
           <div className="p-6 bg-[#EEF3EC] border border-[#CFDDD0] rounded-2xl shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#527048] block">
-                Total Earnings This Week
+                {t('worker.earnings.totalThisWeek', 'Total Earnings This Week')}
               </span>
               <div className="text-4xl sm:text-5xl font-extrabold font-mono text-[#2A3927] mt-1">
                 ₹{earnings.weeklyEarnings.toLocaleString('en-IN')}
               </div>
               <p className="text-xs sm:text-sm text-[#527048] mt-1 font-medium">
-                {earnings.weeklyJobsCount} jobs completed · 70% direct cooperative member share
+                {t('worker.earnings.jobsCompletedNotice', '{{count}} jobs completed · 70% direct cooperative member share', { count: earnings.weeklyJobsCount })}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="px-3 py-1.5 bg-white/80 border border-[#CFDDD0] rounded-xl text-xs font-bold text-[#364A32]">
-                T+1 Automated Bank Settlement
+                {t('worker.earnings.automatedSettlement', 'T+1 Automated Bank Settlement')}
               </span>
             </div>
           </div>
@@ -738,37 +740,37 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
           <div className="grid grid-cols-3 gap-3">
             <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#77736B] block">
-                Today
+                {t('worker.today', 'Today')}
               </span>
               <span className="text-xl sm:text-2xl font-bold font-mono text-[#292824] block mt-1">
                 ₹{earnings.todayEarnings}
               </span>
               <span className="text-[10px] text-[#77736B] block mt-0.5">
-                {earnings.todayJobsCount} job done
+                {t('worker.earnings.jobDoneCount', '{{count}} job done', { count: earnings.todayJobsCount })}
               </span>
             </div>
 
             <div className="p-4 bg-[#FCF9F3] border-2 border-[#6E8B67] rounded-2xl text-center shadow-xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#364A32] block">
-                This Week
+                {t('worker.thisWeek', 'This Week')}
               </span>
               <span className="text-xl sm:text-2xl font-bold font-mono text-[#364A32] block mt-1">
                 ₹{earnings.weeklyEarnings}
               </span>
               <span className="text-[10px] text-[#527048] block mt-0.5">
-                {earnings.weeklyJobsCount} jobs done
+                {t('worker.earnings.jobsDoneCount', '{{count}} jobs done', { count: earnings.weeklyJobsCount })}
               </span>
             </div>
 
             <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl text-center">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#77736B] block">
-                This Month
+                {t('worker.thisMonth', 'This Month')}
               </span>
               <span className="text-xl sm:text-2xl font-bold font-mono text-[#292824] block mt-1">
                 ₹{earnings.monthlyEarnings.toLocaleString('en-IN')}
               </span>
               <span className="text-[10px] text-[#77736B] block mt-0.5">
-                {earnings.monthlyJobsCount} jobs done
+                {t('worker.earnings.jobsDoneCount', '{{count}} jobs done', { count: earnings.monthlyJobsCount })}
               </span>
             </div>
           </div>
@@ -777,10 +779,10 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
           <div className="p-5 sm:p-6 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-[#292824]">Weekly Earnings Breakdown</h3>
-                <p className="text-xs text-[#77736B]">Daily net receipts for current settlement cycle</p>
+                <h3 className="text-sm font-bold text-[#292824]">{t('worker.earnings.weeklyBreakdown', 'Weekly Earnings Breakdown')}</h3>
+                <p className="text-xs text-[#77736B]">{t('worker.earnings.dailyReceiptsDesc', 'Daily net receipts for current settlement cycle')}</p>
               </div>
-              <Badge variant="coop" size="sm">Active Week</Badge>
+              <Badge variant="coop" size="sm">{t('worker.earnings.activeWeek', 'Active Week')}</Badge>
             </div>
 
             {/* Visual Bar Chart */}
@@ -810,9 +812,9 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
             {/* Cooperative Split Pill */}
             <div className="p-3 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl flex items-center justify-between text-xs">
               <span className="text-[#524E47]">
-                Cooperative Revenue Model: <strong className="text-[#364A32]">70% Worker</strong> · 5% Society · 25% Solidarity Fund
+                {t('worker.earnings.coopSplitModel', 'Cooperative Revenue Model:')} <strong className="text-[#364A32]">{t('worker.earnings.split70', '70% Worker')}</strong> · {t('worker.earnings.split5', '5% Society')} · {t('worker.earnings.split25', '25% Solidarity Fund')}
               </span>
-              <span className="font-mono text-[#77736B] text-[11px]">Fair Gig Standard</span>
+              <span className="font-mono text-[#77736B] text-[11px]">{t('worker.earnings.fairGigStandard', 'Fair Gig Standard')}</span>
             </div>
           </div>
 
@@ -821,9 +823,9 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D5]">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[#537895]" />
-                <h3 className="text-sm font-bold text-[#292824]">Recent Payments</h3>
+                <h3 className="text-sm font-bold text-[#292824]">{t('worker.earnings.recentPayments', 'Recent Payments')}</h3>
               </div>
-              <span className="text-xs text-[#77736B]">Direct IMPS / UPI Transfers</span>
+              <span className="text-xs text-[#77736B]">{t('worker.earnings.directTransfers', 'Direct IMPS / UPI Transfers')}</span>
             </div>
 
             <div className="space-y-2.5">
@@ -847,7 +849,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     <div>
                       <span className="text-xs font-bold text-[#292824] block">{p.serviceType}</span>
                       <span className="text-[10px] text-[#77736B]">
-                        Job #{p.jobId} · {p.date}
+                        {t('worker.earnings.jobRefPrefix', 'Job #')}{p.jobId} · {p.date}
                       </span>
                     </div>
                   </div>
@@ -858,7 +860,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                         p.status === 'paid' ? 'bg-[#E6ECE4] text-[#364A32]' : 'bg-[#FAEDE8] text-[#80432E]'
                       }`}
                     >
-                      {p.status === 'paid' ? 'Paid ✓' : 'Processing'}
+                      {p.status === 'paid' ? t('worker.jobs.paidBadge', 'Paid ✓') : t('worker.earnings.processingBadge', 'Processing')}
                     </span>
                   </div>
                 </div>
@@ -868,25 +870,25 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
             {/* View Payment History → */}
             <div className="pt-2 flex items-center justify-between">
               <span className="text-xs text-[#77736B]">
-                Showing {displayedPayments.length} of {earnings.recentPayments.length} transactions
+                {t('worker.earnings.showingCountOfTotal', 'Showing {{count}} of {{total}} transactions', { count: displayedPayments.length, total: earnings.recentPayments.length })}
               </span>
               <button
                 type="button"
                 onClick={() => setShowAllPayments(!showAllPayments)}
                 className="text-xs font-bold text-[#537895] hover:underline cursor-pointer flex items-center gap-1"
               >
-                <span>{showAllPayments ? 'Show Less' : 'View Payment History →'}</span>
+                <span>{showAllPayments ? t('worker.earnings.showLess', 'Show Less') : t('worker.earnings.viewPaymentHistory', 'View Payment History →')}</span>
               </button>
             </div>
           </div>
 
-          {/* Person 3 Backend Note */}
+          {/* Backend Note */}
           <div className="flex items-start gap-3 p-4 bg-[#E4EDF4] border border-[#B8CBDD] rounded-2xl text-xs text-[#263D50]">
             <AlertCircle className="w-4 h-4 text-[#324F66] shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Payment & Settlement Integration Point (Person 3)</p>
+              <p className="font-bold">{t('worker.earnings.integrationPoint', 'Payment & Settlement Integration Point')}</p>
               <p className="text-[11px] text-[#537895] mt-0.5">
-                Mock financial data currently displayed. Person 3 will integrate live escrow disbursals and UPI split webhook via <span className="font-mono">/api/worker/earnings</span>.
+                {t('worker.earnings.integrationPointDesc', 'Live escrow disbursals and UPI split webhook integrated via /api/worker/earnings.')}
               </p>
             </div>
           </div>
@@ -902,7 +904,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
       <Modal
         isOpen={verificationJob !== null}
         onClose={() => setVerificationJob(null)}
-        title="Job Verification"
+        title={t('worker.jobs.jobVerification', 'Job Verification')}
         subtitle={verificationJob?.service}
         maxWidth="md"
       >
@@ -942,7 +944,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
             {/* Before Photo */}
             <div className="border-2 border-dashed border-[#B8CBDD] rounded-2xl p-3 text-center space-y-2 bg-[#FAF7F2] flex flex-col justify-between">
               <div>
-                <span className="text-xs font-bold text-[#292824] block mb-2">Before Photo</span>
+                <span className="text-xs font-bold text-[#292824] block mb-2">{t('worker.jobExec.beforePhoto', 'Before Photo')}</span>
                 {verificationBeforePhoto ? (
                   <div className="relative rounded-xl overflow-hidden border border-[#B8CBDD]">
                     <img
@@ -952,7 +954,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     />
                     <div className="absolute top-1.5 left-1.5 bg-[#445D3E] text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
-                      Recorded
+                      {t('worker.jobExec.recorded', 'Recorded')}
                     </div>
                   </div>
                 ) : (
@@ -961,7 +963,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     className="h-36 rounded-xl border border-dashed border-[#D8D3C8] bg-white flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-[#F3EEE4] transition-colors p-2"
                   >
                     <ImageIcon className="w-7 h-7 text-[#537895] opacity-60" />
-                    <span className="text-[11px] text-[#77736B]">Tap to capture or upload before photo</span>
+                    <span className="text-[11px] text-[#77736B]">{t('worker.jobExec.tapToCaptureBefore', 'Tap to capture or upload before photo')}</span>
                   </div>
                 )}
               </div>
@@ -973,12 +975,12 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                 {verificationBeforePhoto ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 text-[#537895]" />
-                    Retake / Change
+                    {t('worker.jobExec.retakeChange', 'Retake / Change')}
                   </>
                 ) : (
                   <>
                     <Camera className="w-3.5 h-3.5 text-[#537895]" />
-                    Upload Before
+                    {t('worker.jobExec.uploadBefore', 'Upload Before')}
                   </>
                 )}
               </button>
@@ -987,7 +989,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
             {/* After Photo */}
             <div className="border-2 border-dashed border-[#CFDDD0] rounded-2xl p-3 text-center space-y-2 bg-[#FAF7F2] flex flex-col justify-between">
               <div>
-                <span className="text-xs font-bold text-[#292824] block mb-2">After Photo</span>
+                <span className="text-xs font-bold text-[#292824] block mb-2">{t('worker.jobExec.afterPhoto', 'After Photo')}</span>
                 {verificationAfterPhoto ? (
                   <div className="relative rounded-xl overflow-hidden border border-[#CFDDD0]">
                     <img
@@ -997,7 +999,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     />
                     <div className="absolute top-1.5 left-1.5 bg-[#445D3E] text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
-                      Recorded
+                      {t('worker.jobExec.recorded', 'Recorded')}
                     </div>
                   </div>
                 ) : (
@@ -1006,7 +1008,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     className="h-36 rounded-xl border border-dashed border-[#CFDDD0] bg-white flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-[#EEF3EC] transition-colors p-2"
                   >
                     <ImageIcon className="w-7 h-7 text-[#6E8B67] opacity-60" />
-                    <span className="text-[11px] text-[#77736B]">Tap to capture or upload after photo</span>
+                    <span className="text-[11px] text-[#77736B]">{t('worker.jobExec.tapToCaptureAfter', 'Tap to capture or upload after photo')}</span>
                   </div>
                 )}
               </div>
@@ -1017,13 +1019,13 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
               >
                 {verificationAfterPhoto ? (
                   <>
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    Retake / Change
+                    <RefreshCw className="w-3.5 h-3.5 text-[#537895]" />
+                    {t('worker.jobExec.retakeChange', 'Retake / Change')}
                   </>
                 ) : (
                   <>
                     <Camera className="w-3.5 h-3.5" />
-                    Upload After
+                    {t('worker.jobExec.uploadAfter', 'Upload After')}
                   </>
                 )}
               </button>
@@ -1032,7 +1034,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E8E2D5]">
             <Button variant="subtle" size="sm" onClick={() => setVerificationJob(null)}>
-              Close
+              {t('common.close', 'Close')}
             </Button>
             <Button
               variant="primary"
@@ -1040,13 +1042,13 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
               onClick={() => {
                 setVerificationJob(null);
                 showToast({
-                  title: 'Verification Proof Saved',
-                  message: 'Quality check saved. Society manager notified.',
+                  title: t('worker.jobs.verificationProofSaved', 'Verification Proof Saved'),
+                  message: t('worker.jobs.verificationProofSavedMsg', 'Quality check saved. Society manager notified.'),
                   type: 'success',
                 });
               }}
             >
-              Submit Quality Proof
+              {t('worker.jobExec.submitQualityProof', 'Submit Quality Proof')}
             </Button>
           </div>
         </div>
@@ -1056,31 +1058,31 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
       <Modal
         isOpen={detailsJobId !== null}
         onClose={() => setDetailsJobId(null)}
-        title="Assignment Details"
-        subtitle={`Reference #${detailsJobId}`}
+        title={t('worker.jobs.assignmentDetails', 'Assignment Details')}
+        subtitle={`${t('worker.jobs.refPrefix', 'Reference #')}${detailsJobId}`}
         maxWidth="md"
       >
         <div className="space-y-4 text-xs">
           <div className="p-3.5 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl space-y-2">
             <div className="flex justify-between">
-              <span className="text-[#77736B]">Assigned Job:</span>
-              <strong className="text-[#292824]">Standard Trade Assignment</strong>
+              <span className="text-[#77736B]">{t('worker.jobs.assignedJobLabel', 'Assigned Job:')}</span>
+              <strong className="text-[#292824]">{t('worker.jobs.standardAssignment', 'Standard Trade Assignment')}</strong>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#77736B]">Location:</span>
+              <span className="text-[#77736B]">{t('common.location', 'Location:')}</span>
               <strong className="text-[#292824]">Green Residency Society</strong>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#77736B]">Settlement Share:</span>
-              <strong className="text-[#445D3E]">70% Guaranteed Member Net</strong>
+              <span className="text-[#77736B]">{t('worker.jobs.settlementShareLabel', 'Settlement Share:')}</span>
+              <strong className="text-[#445D3E]">{t('worker.jobs.guaranteedNet', '70% Guaranteed Member Net')}</strong>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#77736B]">Arrival Rule:</span>
-              <strong className="text-[#292824]">Must request 4-digit resident OTP upon arrival</strong>
+              <span className="text-[#77736B]">{t('worker.jobs.arrivalRuleLabel', 'Arrival Rule:')}</span>
+              <strong className="text-[#292824]">{t('worker.jobs.arrivalRuleDesc', 'Must request 4-digit resident OTP upon arrival')}</strong>
             </div>
           </div>
           <Button variant="primary" size="sm" className="w-full" onClick={() => setDetailsJobId(null)}>
-            Close Details
+            {t('common.close', 'Close Details')}
           </Button>
         </div>
       </Modal>

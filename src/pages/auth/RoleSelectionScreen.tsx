@@ -9,9 +9,11 @@ import {
   ArrowLeft,
   ShieldCheck,
   Wrench,
-  Layers,
   PlayCircle,
+  Layers,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from '../../components/common/LanguageToggle';
 import { useBackgroundParallax } from '../../hooks/useCursorReactive';
 
 interface RoleSelectionScreenProps {
@@ -23,6 +25,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
   onSelectRoleForAuth,
   onOpenGuidedScenario,
 }) => {
+  const { t } = useTranslation();
   const [viewLevel, setViewLevel] = useState<'main' | 'services'>('main');
 
   const { bgRef } = useBackgroundParallax(0.02);
@@ -32,6 +35,11 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
       ref={bgRef}
       className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden bg-[#F8F4EC] text-[#292824]"
     >
+      {/* Top right language switch toggle */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <LanguageToggle variant="pill" />
+      </div>
+
       {/* Background Decorative Gradient Blobs */}
       <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#E6ECE4]/70 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#FAEDE8]/70 rounded-full blur-3xl pointer-events-none" />
@@ -43,16 +51,16 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E6ECE4] border border-[#CFDDD0] text-xs font-semibold text-[#364A32] shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-[#6E8B67] animate-pulse" />
-            <span>Cooperative Services Platform</span>
+            <span>{t('app.subtagline', 'Community-backed platform')}</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-[#292824] tracking-tight leading-[1.05]">
-            {viewLevel === 'main' ? 'Welcome to Cooperative' : 'Services & Operations'}
+            {viewLevel === 'main' ? t('auth.welcome', 'Welcome to Cooperative') : t('roleSelection.title', 'Services & Operations')}
           </h1>
           <p className="text-sm sm:text-base text-[#77736B] max-w-md mx-auto font-normal leading-relaxed">
             {viewLevel === 'main'
-              ? 'How would you like to continue?'
-              : 'Choose your operational role to access your dedicated workspace.'}
+              ? t('auth.chooseRoleSubtitle', 'How would you like to continue?')
+              : t('roleSelection.subtitle', 'Choose your operational role to access your dedicated workspace.')}
           </p>
         </div>
 
@@ -75,16 +83,16 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                     <User className="w-7 h-7" />
                   </div>
                   <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#E6ECE4] text-[#364A32] border border-[#CFDDD0]">
-                    Resident
+                    {t('landing.resident', 'RESIDENT')}
                   </span>
                 </div>
 
                 <div>
                   <h2 className="text-2xl font-bold text-[#292824] group-hover:text-[#2A3927] transition-colors tracking-tight">
-                    Customer
+                    {t('demoUsers.customer', 'Customer')}
                   </h2>
                   <p className="text-xs sm:text-sm text-[#77736B] mt-1.5 leading-relaxed font-normal">
-                    Book trusted household & community services with fair, transparent pricing and live tracking.
+                    {t('landing.customerCardDesc', 'Book trusted household & community services with fair, transparent pricing and live tracking.')}
                   </p>
                 </div>
               </div>
@@ -92,7 +100,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
               <div className="pt-4 border-t border-[#E8E2D5] flex items-center justify-between relative z-10">
                 <span className="text-xs font-bold text-[#445D3E] flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Fair Gig & Verified Help</span>
+                  <span>{t('landing.fairGigBadge', 'Fair Gig & Verified Help')}</span>
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-[#E6ECE4] text-[#445D3E] flex items-center justify-center group-hover:bg-[#6E8B67] group-hover:text-white transition-colors">
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -114,16 +122,16 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                     <Wrench className="w-7 h-7" />
                   </div>
                   <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#E4EDF4] text-[#263D50] border border-[#CDE0EC]">
-                    Operations
+                    {t('landing.operations', 'OPERATIONS')}
                   </span>
                 </div>
 
                 <div>
                   <h2 className="text-2xl font-bold text-[#292824] group-hover:text-[#1C2C3A] transition-colors tracking-tight">
-                    Services
+                    {t('landing.services', 'Services')}
                   </h2>
                   <p className="text-xs sm:text-sm text-[#77736B] mt-1.5 leading-relaxed font-normal">
-                    Access professional services, trade specialist portals, and cooperative management operations.
+                    {t('landing.servicesCardDesc', 'Access professional services, trade specialist portals, and cooperative management operations.')}
                   </p>
                 </div>
               </div>
@@ -131,7 +139,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
               <div className="pt-4 border-t border-[#E8E2D5] flex items-center justify-between relative z-10">
                 <span className="text-xs font-semibold text-[#324F66] flex items-center gap-1.5">
                   <Layers className="w-4 h-4" />
-                  <span>Workers & Managers</span>
+                  <span>{t('landing.workersManagersBadge', 'Workers & Managers')}</span>
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-[#E4EDF4] text-[#324F66] flex items-center justify-center group-hover:bg-[#537895] group-hover:text-white transition-colors">
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -154,11 +162,11 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                 className="px-3 py-1.5 rounded-xl bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-xs font-semibold text-[#524E47] hover:text-[#292824] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>← Back</span>
+                <span>{t('common.back', 'Back')}</span>
               </button>
 
               <span className="text-xs font-semibold uppercase tracking-wider text-[#77736B]">
-                Choose Service Persona
+                {t('roleSelection.choosePersona', 'CHOOSE SERVICE PERSONA')}
               </span>
             </div>
 
@@ -175,22 +183,22 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                       <HardHat className="w-6 h-6" />
                     </div>
                     <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#E4EDF4] text-[#263D50] border border-[#CDE0EC]">
-                      70% Share
+                      {t('roleSelection.workerBadge', '70% Share')}
                     </span>
                   </div>
 
                   <div>
                     <h3 className="text-lg font-bold text-[#292824] group-hover:text-[#324F66] tracking-tight">
-                      Worker
+                      {t('demoUsers.cooperativeWorker', 'Cooperative Worker')}
                     </h3>
                     <p className="text-xs text-[#77736B] mt-1 leading-relaxed font-normal">
-                      Provide services, receive fairly dispatched nearby jobs, borrow zero-cost tools, and manage earnings.
+                      {t('roleSelection.workerDesc', 'Provide services, receive fairly dispatched nearby jobs, borrow zero-cost tools, and manage earnings.')}
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#324F66]">Login as Worker</span>
+                  <span className="text-xs font-semibold text-[#324F66]">{t('roleSelection.loginWorker', 'Login as Worker')}</span>
                   <ArrowRight className="w-4 h-4 text-[#324F66] group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
@@ -206,22 +214,22 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                       <Building2 className="w-6 h-6" />
                     </div>
                     <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FAEDE8] text-[#643222] border border-[#F3C5B8]">
-                      Society Desk
+                      {t('roleSelection.managerBadge', 'Society Desk')}
                     </span>
                   </div>
 
                   <div>
                     <h3 className="text-lg font-bold text-[#292824] group-hover:text-[#80432E] tracking-tight">
-                      Society Manager
+                      {t('demoUsers.societyManager', 'Society Manager')}
                     </h3>
                     <p className="text-xs text-[#77736B] mt-1 leading-relaxed font-normal">
-                      Manage stationed workers, inspect worker locations on the map, verify KYC documents, and resolve resident issues.
+                      {t('roleSelection.managerDesc', 'Manage stationed workers, inspect worker locations on the map, verify KYC documents, and resolve resident issues.')}
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#80432E]">Login as Manager</span>
+                  <span className="text-xs font-semibold text-[#80432E]">{t('roleSelection.loginManager', 'Login as Manager')}</span>
                   <ArrowRight className="w-4 h-4 text-[#80432E] group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
@@ -237,22 +245,22 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                       <Network className="w-6 h-6" />
                     </div>
                     <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EFEBF4] text-[#3D314C] border border-[#DFD8E8]">
-                      Federation Apex
+                      {t('roleSelection.federationBadge', 'Federation Apex')}
                     </span>
                   </div>
 
                   <div>
                     <h3 className="text-lg font-bold text-[#292824] group-hover:text-[#504161] tracking-tight">
-                      Federation Manager
+                      {t('demoUsers.federationManager', 'Federation Manager')}
                     </h3>
                     <p className="text-xs text-[#77736B] mt-1 leading-relaxed font-normal">
-                      Coordinate member societies, govern multi-society managers, calibrate matching preferences, and oversee the 25% fund.
+                      {t('roleSelection.federationDesc', 'Coordinate member societies, govern multi-society managers, calibrate matching preferences, and oversee the 25% fund.')}
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#504161]">Login as Federation</span>
+                  <span className="text-xs font-semibold text-[#504161]">{t('roleSelection.loginFederation', 'Login as Federation')}</span>
                   <ArrowRight className="w-4 h-4 text-[#504161] group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
@@ -268,22 +276,22 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                       <ShieldCheck className="w-6 h-6" />
                     </div>
                     <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#141413] text-purple-200 border border-[#2A2926]">
-                      Central Authority
+                      {t('roleSelection.authorityBadge', 'Central Authority')}
                     </span>
                   </div>
 
                   <div>
                     <h3 className="text-lg font-bold text-[#292824] group-hover:text-[#141413] tracking-tight">
-                      Platform Admin
+                      {t('demoUsers.platformAdmin', 'Platform Admin')}
                     </h3>
                     <p className="text-xs text-[#77736B] mt-1 leading-relaxed font-normal">
-                      Accredit and verify apex federations, audit statutory registration documents, and govern platform policies.
+                      {t('roleSelection.authorityDesc', 'Accredit and verify apex federations, audit statutory registration documents, and govern platform policies.')}
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
-                  <span className="text-xs font-semibold text-purple-950 font-bold">Login as Authority</span>
+                  <span className="text-xs font-semibold text-purple-950 font-bold">{t('roleSelection.loginAuthority', 'Login as Authority')}</span>
                   <ArrowRight className="w-4 h-4 text-purple-900 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
@@ -299,7 +307,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
             className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#FAF7F2] hover:bg-[#E8E2D5] text-[#524E47] hover:text-[#292824] border border-[#E8E2D5] text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <PlayCircle className="w-4 h-4 text-[#6E8B67]" />
-            <span>Interactive Demo: Test Full Household to Worker Lifecycle</span>
+            <span>{t('roleSelection.interactiveDemo', 'Interactive Demo: Test Full Household to Worker Lifecycle')}</span>
           </button>
         </div>
       </div>

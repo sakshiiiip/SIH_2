@@ -312,26 +312,6 @@ export interface Booking {
     estimatedDurationMins: number;
     reason?: string;
   };
-}
-  /** Populated when booking state is WORKER_ON_BREAK */
-  breakDetails?: {
-    startedAt: string;
-    estimatedDurationMins: number;
-    reason?: string;
-  };
-}
-  /** Populated when booking state is WORKER_ON_BREAK */
-  breakDetails?: {
-    startedAt: string;
-    estimatedDurationMins: number;
-    reason?: string;
-  };
-  /** Populated when booking state is WORKER_ON_BREAK */
-  breakDetails?: {
-    startedAt: string;
-    estimatedDurationMins: number;
-    reason?: string;
-  };
   // Before/After job photo evidence
   beforeImage?: string;
   afterImage?: string;

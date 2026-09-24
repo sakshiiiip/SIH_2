@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Users,
   Calendar,
@@ -59,17 +60,18 @@ const makeTxnId = () =>
 // ─── Status chips ─────────────────────────────────────────────────────────────
 
 function BookingStatusBadge({ status }: { status: GroupBookingStatus }) {
+  const { t } = useTranslation();
   const cfg: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
-    OPEN:         { label: 'Open – Accepting Participants',   cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', icon: <Unlock      className="w-3.5 h-3.5" /> },
-    LOCKED:       { label: 'Locked – Cost Split Finalised',  cls: 'bg-[#EFEBF4] text-[#504161] border-[#DFD8E8]', icon: <Lock        className="w-3.5 h-3.5" /> },
-    CONFIRMED:    { label: 'Confirmed – Worker Assigned',    cls: 'bg-[#E4EDF4] text-[#324F66] border-[#B8CBDD]', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-    IN_PROGRESS:  { label: 'Work In Progress',               cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', icon: <HardHat    className="w-3.5 h-3.5" /> },
-    COMPLETED:    { label: 'Work Completed',                 cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-    INVOICED:     { label: 'Invoice Sent',                   cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', icon: <CreditCard  className="w-3.5 h-3.5" /> },
-    PAID:         { label: 'Fully Paid',                     cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-    PARTIALLY_PAID:{ label: 'Partially Paid',               cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', icon: <CircleDollarSign className="w-3.5 h-3.5" /> },
-    DRAFT:        { label: 'Draft',                          cls: 'bg-[#F3EEE4] text-[#77736B] border-[#E8E2D5]', icon: <Clock       className="w-3.5 h-3.5" /> },
-    CANCELLED:    { label: 'Cancelled',                      cls: 'bg-[#FAEBEB] text-[#632727] border-[#F4D7D7]', icon: <AlertCircle className="w-3.5 h-3.5" /> },
+    OPEN:         { label: t('groupBooking.statusBadge.open', 'Open – Accepting Participants'),   cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', icon: <Unlock      className="w-3.5 h-3.5" /> },
+    LOCKED:       { label: t('groupBooking.statusBadge.locked', 'Locked – Cost Split Finalised'),  cls: 'bg-[#EFEBF4] text-[#504161] border-[#DFD8E8]', icon: <Lock        className="w-3.5 h-3.5" /> },
+    CONFIRMED:    { label: t('groupBooking.statusBadge.confirmed', 'Confirmed – Worker Assigned'),    cls: 'bg-[#E4EDF4] text-[#324F66] border-[#B8CBDD]', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+    IN_PROGRESS:  { label: t('groupBooking.statusBadge.inProgress', 'Work In Progress'),               cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', icon: <HardHat    className="w-3.5 h-3.5" /> },
+    COMPLETED:    { label: t('groupBooking.statusBadge.completed', 'Work Completed'),                 cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+    INVOICED:     { label: t('groupBooking.statusBadge.invoiced', 'Invoice Sent'),                   cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', icon: <CreditCard  className="w-3.5 h-3.5" /> },
+    PAID:         { label: t('groupBooking.statusBadge.paid', 'Fully Paid'),                     cls: 'bg-[#E6ECE4] text-[#364A32] border-[#CFDDD0]', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+    PARTIALLY_PAID:{ label: t('groupBooking.statusBadge.partiallyPaid', 'Partially Paid'),               cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]', icon: <CircleDollarSign className="w-3.5 h-3.5" /> },
+    DRAFT:        { label: t('groupBooking.statusBadge.draft', 'Draft'),                          cls: 'bg-[#F3EEE4] text-[#77736B] border-[#E8E2D5]', icon: <Clock       className="w-3.5 h-3.5" /> },
+    CANCELLED:    { label: t('groupBooking.statusBadge.cancelled', 'Cancelled'),                      cls: 'bg-[#FAEBEB] text-[#632727] border-[#F4D7D7]', icon: <AlertCircle className="w-3.5 h-3.5" /> },
   };
   const s = cfg[status] ?? cfg.DRAFT;
   return (
@@ -80,6 +82,7 @@ function BookingStatusBadge({ status }: { status: GroupBookingStatus }) {
 }
 
 function ParticipantStatusChip({ status }: { status: ParticipantStatus }) {
+  const { t } = useTranslation();
   const cfg: Record<ParticipantStatus, { cls: string; dot: string }> = {
     PENDING:         { cls: 'text-[#77736B]', dot: 'bg-[#9A958B]' },
     CONFIRMED:       { cls: 'text-[#364A32]', dot: 'bg-[#6E8B67]' },
@@ -90,10 +93,11 @@ function ParticipantStatusChip({ status }: { status: ParticipantStatus }) {
     PAYMENT_FAILED:  { cls: 'text-[#632727]', dot: 'bg-[#B86B6B] animate-pulse' },
   };
   const s = cfg[status];
+  const labelKey = status.toLowerCase();
   return (
     <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${s.cls}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-      {status.replace('_', ' ')}
+      {t(`groupBooking.participants.${labelKey}`, status.replace('_', ' '))}
     </span>
   );
 }
@@ -115,10 +119,11 @@ function DetailSkeleton() {
 // ─── Split strategy badge ─────────────────────────────────────────────────────
 
 function SplitStrategyBadge({ strategy }: { strategy: CostSplitStrategy }) {
+  const { t } = useTranslation();
   const cfg = {
-    EQUAL:        { label: 'Equal Split',             cls: 'bg-[#E4EDF4] text-[#324F66] border-[#B8CBDD]' },
-    PROPORTIONAL: { label: 'Proportional (by area)',  cls: 'bg-[#EFEBF4] text-[#504161] border-[#DFD8E8]' },
-    CUSTOM:       { label: 'Custom Amounts',           cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]' },
+    EQUAL:        { label: t('groupBooking.splitStrategy.equal', 'Equal Split'),             cls: 'bg-[#E4EDF4] text-[#324F66] border-[#B8CBDD]' },
+    PROPORTIONAL: { label: t('groupBooking.splitStrategy.proportional', 'Proportional (by area)'),  cls: 'bg-[#EFEBF4] text-[#504161] border-[#DFD8E8]' },
+    CUSTOM:       { label: t('groupBooking.splitStrategy.custom', 'Custom Amounts'),           cls: 'bg-[#FAEDE8] text-[#80432E] border-[#F4DCD3]' },
   };
   const s = cfg[strategy];
   return (
@@ -135,12 +140,20 @@ const LIFECYCLE: GroupBookingStatus[] = [
 ];
 
 function LifecycleTimeline({ current }: { current: GroupBookingStatus }) {
+  const { t } = useTranslation();
   const idx = LIFECYCLE.indexOf(current);
   if (idx === -1) return null;
   const labels: Record<GroupBookingStatus, string> = {
-    OPEN: 'Open', LOCKED: 'Locked', CONFIRMED: 'Confirmed', IN_PROGRESS: 'In Progress',
-    COMPLETED: 'Completed', INVOICED: 'Invoiced', PAID: 'Paid',
-    DRAFT: 'Draft', PARTIALLY_PAID: 'Partial', CANCELLED: 'Cancelled',
+    OPEN: t('groupBooking.status.open', 'Open'),
+    LOCKED: t('groupBooking.status.locked', 'Locked'),
+    CONFIRMED: t('groupBooking.status.confirmed', 'Confirmed'),
+    IN_PROGRESS: t('groupBooking.status.inProgress', 'In Progress'),
+    COMPLETED: t('groupBooking.status.completed', 'Completed'),
+    INVOICED: t('groupBooking.status.invoiced', 'Invoiced'),
+    PAID: t('groupBooking.status.paid', 'Paid'),
+    DRAFT: t('groupBooking.status.draft', 'Draft'),
+    PARTIALLY_PAID: t('groupBooking.status.partiallyPaid', 'Partial'),
+    CANCELLED: t('groupBooking.status.cancelled', 'Cancelled'),
   };
   return (
     <div className="flex items-center gap-1 overflow-x-auto pb-1">
@@ -206,6 +219,7 @@ interface GatewayModalProps {
 }
 
 function GatewayModal({ amount, invoiceNumber, customerName, onPaid, onClose }: GatewayModalProps) {
+  const { t } = useTranslation();
   const [phase, setPhase]               = useState<GatewayPhase>('select');
   const [method, setMethod]             = useState<GatewayMethod>('UPI');
   const [selectedUpiApp, setSelectedUpiApp] = useState('gpay');
@@ -570,6 +584,7 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
   onBack,
   onPayMyShare,
 }) => {
+  const { t } = useTranslation();
   const [booking, setBooking]         = useState<GroupBooking | null>(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
@@ -588,11 +603,11 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
       const gb = await groupBookingService.getDetailView(groupBookingId);
       setBooking(gb.booking);
     } catch {
-      setError('Unable to load group booking details.');
+      setError(t('groupBooking.details.loadError', 'Unable to load group booking details.'));
     } finally {
       setLoading(false);
     }
-  }, [groupBookingId]);
+  }, [groupBookingId, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -625,7 +640,7 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
         onPayMyShare(myParticipation.invoiceId, myParticipation.id);
       }
     } catch {
-      setPayError('Payment confirmation failed. Please contact support.');
+      setPayError(t('groupBooking.details.loadError', 'Payment confirmation failed. Please contact support.'));
     } finally {
       setConfirming(false);
     }
@@ -636,8 +651,8 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
     return (
       <div className="py-12 flex flex-col items-center gap-3 text-center">
         <AlertCircle className="w-8 h-8 text-[#B86B6B]" />
-        <p className="text-sm text-[#80432E]">{error ?? 'Booking not found.'}</p>
-        <button type="button" onClick={load} className="text-xs font-bold text-[#537895] hover:underline cursor-pointer">Retry</button>
+        <p className="text-sm text-[#80432E]">{error ?? t('groupBooking.details.bookingNotFound', 'Booking not found.')}</p>
+        <button type="button" onClick={load} className="text-xs font-bold text-[#537895] hover:underline cursor-pointer">{t('groupBooking.details.retry', 'Retry')}</button>
       </div>
     );
   }
@@ -695,21 +710,21 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
           </button>
         </div>
 
-        {/* ── Pay My Share CTA ─────────────────────────────────────── */}
+        {/* ── Pay My Share CTA ─────────────────────────────────── */}
         {paidSuccess ? (
           <div className="p-4 bg-[#E6ECE4] border border-[#CFDDD0] rounded-2xl flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-[#6E8B67] shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-[#2A3927]">Payment Confirmed!</p>
+              <p className="text-sm font-bold text-[#2A3927]">{t('groupBooking.details.paymentConfirmed', 'Payment Confirmed!')}</p>
               <p className="text-xs text-[#445D3E] font-mono">{paidTxnId}</p>
             </div>
           </div>
         ) : canPay ? (
           <div className="p-4 bg-gradient-to-r from-[#E6ECE4] to-[#F3F7FA] border border-[#CFDDD0] rounded-2xl flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-bold text-[#2A3927]">Invoice Ready — Pay Your Share</p>
+              <p className="text-sm font-bold text-[#2A3927]">{t('groupBooking.details.invoiceReady', 'Invoice Ready — Pay Your Share')}</p>
               <p className="text-xs text-[#445D3E] mt-0.5">
-                Your share: <span className="font-bold font-mono">₹{fmt(myShare)}</span>
+                {t('groupBooking.details.yourShareAmount', { amount: fmt(myShare), defaultValue: `Your share: ₹${fmt(myShare)}` })}
               </p>
               {payError && (
                 <p className="text-[11px] text-[#80432E] mt-0.5">{payError}</p>
@@ -725,14 +740,14 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
               disabled={confirming}
               className="flex items-center gap-1.5 px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-sm font-bold rounded-xl shadow-xs transition-all cursor-pointer active:scale-[0.98] shrink-0 disabled:opacity-60"
             >
-              {confirming ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <>Pay Now <ArrowRight className="w-3.5 h-3.5" /></>}
+              {confirming ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <>{t('groupBooking.details.payNow', 'Pay Now')} <ArrowRight className="w-3.5 h-3.5" /></>}
             </button>
           </div>
         ) : null}
 
         {/* ── Lifecycle timeline ─────────────────────────────────────── */}
         <div className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl">
-          <p className="text-[11px] font-bold text-[#77736B] uppercase tracking-wider mb-3">Booking Progress</p>
+          <p className="text-[11px] font-bold text-[#77736B] uppercase tracking-wider mb-3">{t('groupBooking.details.bookingProgress', 'Booking Progress')}</p>
           <LifecycleTimeline current={booking.status} />
         </div>
 
@@ -740,24 +755,24 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-2xl p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] shadow-subtle space-y-1">
             <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#77736B]">
-              <Users className="w-3.5 h-3.5 text-[#537895]" /> Participants
+              <Users className="w-3.5 h-3.5 text-[#537895]" /> {t('groupBooking.details.participantsStat', 'Participants')}
             </span>
             <p className="text-lg font-bold font-mono text-[#292824]">{totalCount}</p>
-            <p className="text-[11px] text-[#9A958B]">of max {booking.maximumParticipants}</p>
+            <p className="text-[11px] text-[#9A958B]">{t('groupBooking.details.ofMax', { max: booking.maximumParticipants, defaultValue: `of max ${booking.maximumParticipants}` })}</p>
           </div>
           <div className="rounded-2xl p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] shadow-subtle space-y-1">
             <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#77736B]">
-              <Percent className="w-3.5 h-3.5 text-[#6E8B67]" /> Discount
+              <Percent className="w-3.5 h-3.5 text-[#6E8B67]" /> {t('groupBooking.details.discount', 'Discount')}
             </span>
             <p className="text-lg font-bold font-mono text-[#364A32]">{booking.costSplit.groupDiscountPercent}%</p>
-            <p className="text-[11px] text-[#587352]">group saving</p>
+            <p className="text-[11px] text-[#587352]">{t('groupBooking.details.groupSaving', 'group saving')}</p>
           </div>
           <div className="rounded-2xl p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] shadow-subtle space-y-1">
             <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#77736B]">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67]" /> Paid
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67]" /> {t('groupBooking.details.paid', 'Paid')}
             </span>
             <p className="text-lg font-bold font-mono text-[#292824]">{paidCount}/{totalCount}</p>
-            <p className="text-[11px] text-[#9A958B]">{paidPct}% settled</p>
+            <p className="text-[11px] text-[#9A958B]">{t('groupBooking.details.settled', { pct: paidPct, defaultValue: `${paidPct}% settled` })}</p>
           </div>
         </div>
 
@@ -766,26 +781,26 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-[#292824] flex items-center gap-1.5">
               <CircleDollarSign className="w-4 h-4 text-[#537895]" />
-              Cost Breakdown
+              {t('groupBooking.details.costBreakdown', 'Cost Breakdown')}
             </h3>
             <SplitStrategyBadge strategy={booking.costSplit.strategy} />
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-[#77736B]">
-              <span>Total Service Cost</span>
+              <span>{t('groupBooking.details.totalServiceCost', 'Total Service Cost')}</span>
               <span className="font-mono">₹{fmt(booking.costSplit.totalGroupCost)}</span>
             </div>
             <div className="flex justify-between text-[#445D3E]">
-              <span>Group Discount ({booking.costSplit.groupDiscountPercent}%)</span>
+              <span>{t('groupBooking.details.groupDiscount', { pct: booking.costSplit.groupDiscountPercent, defaultValue: `Group Discount (${booking.costSplit.groupDiscountPercent}%)` })}</span>
               <span className="font-mono font-semibold">−₹{fmt(booking.costSplit.totalGroupCost - booking.costSplit.discountedTotal)}</span>
             </div>
             <div className="flex justify-between text-[#292824] font-bold border-t border-[#E8E2D5] pt-2">
-              <span>Discounted Total</span>
+              <span>{t('groupBooking.details.discountedTotal', 'Discounted Total')}</span>
               <span className="font-mono">₹{fmt(booking.costSplit.discountedTotal)}</span>
             </div>
             {myParticipation?.assignedCostShare != null && (
               <div className="flex justify-between text-[#364A32] font-bold bg-[#E6ECE4] rounded-xl px-3 py-2 border border-[#CFDDD0]">
-                <span>Your Share</span>
+                <span>{t('groupBooking.details.yourShare', 'Your Share')}</span>
                 <span className="font-mono">₹{fmt(myParticipation.assignedCostShare)}</span>
               </div>
             )}
@@ -793,7 +808,7 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
 
           {booking.costSplit.allocations.length > 0 && (
             <div className="pt-3 border-t border-[#E8E2D5] space-y-2.5">
-              <p className="text-[11px] font-bold text-[#77736B] uppercase tracking-wider">Individual Allocations</p>
+              <p className="text-[11px] font-bold text-[#77736B] uppercase tracking-wider">{t('groupBooking.details.individualAllocations', 'Individual Allocations')}</p>
               {booking.costSplit.allocations.map((alloc) => {
                 const pct = booking.costSplit.discountedTotal > 0
                   ? (alloc.finalShare / booking.costSplit.discountedTotal) * 100
@@ -803,7 +818,7 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
                   <div key={alloc.participantId} className={`space-y-1 p-2.5 rounded-xl ${isMe ? 'bg-[#E6ECE4] border border-[#CFDDD0]' : ''}`}>
                     <div className="flex items-center justify-between text-xs">
                       <span className={`font-medium ${isMe ? 'text-[#364A32] font-bold' : 'text-[#292824]'}`}>
-                        {alloc.customerName} ({alloc.flatNumber}){isMe && ' · You'}
+                        {alloc.customerName} ({alloc.flatNumber}){isMe && ` ${t('groupBooking.details.youSuffix', '· You')}`}
                       </span>
                       <span className="font-mono font-bold text-[#292824]">₹{fmt(alloc.finalShare)}</span>
                     </div>
@@ -825,9 +840,9 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-[#292824] flex items-center gap-1.5">
               <Users className="w-4 h-4 text-[#537895]" />
-              Participants ({activeParticipants.length})
+              {t('groupBooking.details.participantsSection', { count: activeParticipants.length, defaultValue: `Participants (${activeParticipants.length})` })}
             </h3>
-            <span className="text-[11px] text-[#9A958B]">{paidCount} paid · {totalCount - paidCount} pending</span>
+            <span className="text-[11px] text-[#9A958B]">{t('groupBooking.details.paidPendingSummary', { paid: paidCount, pending: totalCount - paidCount, defaultValue: `${paidCount} paid · ${totalCount - paidCount} pending` })}</span>
           </div>
           <div className="divide-y divide-[#F0EDE6]">
             {activeParticipants.map((p) => {
@@ -839,7 +854,7 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-semibold ${isMe ? 'text-[#364A32]' : 'text-[#292824]'} truncate`}>
-                      {p.customerName}{isMe && ' (You)'}
+                      {p.customerName}{isMe && ` ${t('groupBooking.details.youParenthetical', '(You)')}`}
                     </p>
                     <p className="text-[11px] text-[#9A958B]">
                       {p.flatNumber}{p.tower ? `, ${p.tower}` : ''}
@@ -862,7 +877,7 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
           <div className="p-5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-3xl shadow-subtle space-y-3">
             <h3 className="text-sm font-bold text-[#292824] flex items-center gap-1.5">
               <HardHat className="w-4 h-4 text-[#537895]" />
-              Worker Assignments
+              {t('groupBooking.details.workerAssignments', 'Worker Assignments')}
             </h3>
             {booking.workerAssignments.map((w) => (
               <div key={w.id} className="flex items-start gap-3 p-3 bg-[#F3EEE4] border border-[#E8E2D5] rounded-2xl">
@@ -888,15 +903,15 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
         {/* ── Schedule ─────────────────────────────────────────────── */}
         <div className="p-5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl">
           <h3 className="text-xs font-bold text-[#77736B] uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5" /> Schedule
+            <Calendar className="w-3.5 h-3.5" /> {t('groupBooking.details.schedule', 'Schedule')}
           </h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-[11px] text-[#9A958B]">Preferred Date</p>
+              <p className="text-[11px] text-[#9A958B]">{t('groupBooking.details.preferredDate', 'Preferred Date')}</p>
               <p className="font-semibold text-[#292824]">{fmtDate(booking.schedule.preferredDate)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-[#9A958B]">Time Window</p>
+              <p className="text-[11px] text-[#9A958B]">{t('groupBooking.details.timeWindow', 'Time Window')}</p>
               <p className="font-semibold text-[#292824]">
                 {fmtTime(booking.schedule.preferredTimeStart)} – {fmtTime(booking.schedule.preferredTimeEnd)}
               </p>
@@ -904,11 +919,11 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
             {booking.schedule.confirmedDate && (
               <>
                 <div>
-                  <p className="text-[11px] text-[#6E8B67] font-semibold">Confirmed Date ✓</p>
+                  <p className="text-[11px] text-[#6E8B67] font-semibold">{t('groupBooking.details.confirmedDate', 'Confirmed Date ✓')}</p>
                   <p className="font-bold text-[#364A32]">{fmtDate(booking.schedule.confirmedDate)}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6E8B67] font-semibold">Confirmed Time ✓</p>
+                  <p className="text-[11px] text-[#6E8B67] font-semibold">{t('groupBooking.details.confirmedTime', 'Confirmed Time ✓')}</p>
                   <p className="font-bold text-[#364A32]">
                     {fmtTime(booking.schedule.confirmedTimeStart ?? booking.schedule.preferredTimeStart)}
                   </p>
@@ -924,7 +939,7 @@ export const GroupBookingDetails: React.FC<GroupBookingDetailsProps> = ({
             <User className="w-4 h-4 text-[#445D3E]" />
           </div>
           <div>
-            <p className="text-xs font-bold text-[#292824]">Organised by {booking.organiserName}</p>
+            <p className="text-xs font-bold text-[#292824]">{t('groupBooking.details.organisedBy', { name: booking.organiserName, defaultValue: `Organised by ${booking.organiserName}` })}</p>
             <p className="text-[11px] text-[#77736B]">
               {booking.organiserFlatNumber} · {booking.societyName}
             </p>

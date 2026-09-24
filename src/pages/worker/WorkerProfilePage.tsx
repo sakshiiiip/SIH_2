@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 
 export const WorkerProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser, workers, showToast } = useCooperativeStore();
 
   const currentWorker =
@@ -52,8 +54,8 @@ export const WorkerProfilePage: React.FC = () => {
   const handleSaveProfile = () => {
     setIsEditing(false);
     showToast({
-      title: 'Profile Updated',
-      message: 'Your personal and trade information has been saved.',
+      title: t('worker.profile.profileUpdated', 'Profile Updated'),
+      message: t('worker.profile.profileUpdatedMsg', 'Your personal and trade information has been saved.'),
       type: 'success',
     });
   };
@@ -61,11 +63,11 @@ export const WorkerProfilePage: React.FC = () => {
   const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword || !newPassword || !confirmPassword) {
-      showToast({ title: 'Please fill all fields', message: 'Enter current and new passwords.', type: 'warning' });
+      showToast({ title: t('common.error', 'Error'), message: 'Please fill all fields.', type: 'warning' });
       return;
     }
     if (newPassword !== confirmPassword) {
-      showToast({ title: 'Passwords do not match', message: 'New password and confirmation must match.', type: 'warning' });
+      showToast({ title: t('common.error', 'Error'), message: 'Passwords do not match.', type: 'warning' });
       return;
     }
     setShowPasswordModal(false);
@@ -73,11 +75,19 @@ export const WorkerProfilePage: React.FC = () => {
     setNewPassword('');
     setConfirmPassword('');
     showToast({
-      title: 'Password Changed Successfully! 🔒',
-      message: 'Your credentials have been securely updated.',
+      title: t('worker.profile.passwordSuccess', 'Password Changed Successfully! 🔒'),
+      message: t('worker.profile.passwordSuccessMsg', 'Your credentials have been securely updated.'),
       type: 'success',
     });
   };
+
+  const VERIFICATION_POINTS = [
+    { label: t('worker.profile.verifIdentity', 'Identity'), desc: t('worker.profile.verifIdentityDesc', 'Government Aadhaar / ID verified with biometric match'), status: t('common.verified', 'Approved') },
+    { label: t('worker.profile.verifMembership', 'Membership'), desc: t('worker.profile.verifMembershipDesc', { society: currentWorker.societyName || 'Green Residency', defaultValue: `Registered member of ${currentWorker.societyName || 'Green Residency'} hub` }), status: t('common.verified', 'Approved') },
+    { label: t('worker.profile.verifSkills', 'Skills'), desc: t('worker.profile.verifSkillsDesc', 'Certified in plumbing, pipe pressure diagnostics, and fittings'), status: t('common.verified', 'Approved') },
+    { label: t('worker.profile.verifSociety', 'Society'), desc: t('worker.profile.verifSocietyDesc', 'Endorsed by Society Manager with local residency trust certificate'), status: t('common.verified', 'Approved') },
+    { label: t('worker.profile.verifAssessment', 'Assessment'), desc: t('worker.profile.verifAssessmentDesc', 'Field practical assessment passed with 94% safety grade'), status: t('common.verified', 'Approved') },
+  ];
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-7 animate-fade-in">
@@ -116,10 +126,10 @@ export const WorkerProfilePage: React.FC = () => {
               <div className="flex items-center gap-2 text-xs text-[#77736B] mt-1 flex-wrap">
                 <span className="flex items-center gap-0.5">
                   <Star className="w-3.5 h-3.5 fill-[#B37055] text-[#B37055]" />
-                  <strong className="text-[#292824]">{currentWorker.rating} ★</strong> ({currentWorker.totalReviews} reviews)
+                  <strong className="text-[#292824]">{currentWorker.rating} ★</strong> ({currentWorker.totalReviews} {t('common.reviews', 'reviews')})
                 </span>
                 <span>·</span>
-                <span>Experience: <strong>6+ Years</strong></span>
+                <span>{t('worker.profile.experience', 'Experience:')} <strong>6+ Years</strong></span>
                 <span>·</span>
                 <span>{currentWorker.societyName || 'Green Residency'}</span>
               </div>
@@ -141,12 +151,12 @@ export const WorkerProfilePage: React.FC = () => {
             {isEditing ? (
               <>
                 <Save className="w-3.5 h-3.5" />
-                <span>Save Changes</span>
+                <span>{t('worker.profile.saveChanges', 'Save Changes')}</span>
               </>
             ) : (
               <>
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit Profile</span>
+                <span>{t('worker.profile.editProfile', 'Edit Profile')}</span>
               </>
             )}
           </button>
@@ -155,7 +165,7 @@ export const WorkerProfilePage: React.FC = () => {
         {/* Contact details row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#77736B]">Email Address</span>
+            <span className="text-[10px] font-bold uppercase text-[#77736B]">{t('worker.profile.email', 'Email Address')}</span>
             {isEditing ? (
               <input
                 type="email"
@@ -172,7 +182,7 @@ export const WorkerProfilePage: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#77736B]">Phone Number</span>
+            <span className="text-[10px] font-bold uppercase text-[#77736B]">{t('worker.profile.phone', 'Phone Number')}</span>
             {isEditing ? (
               <input
                 type="tel"
@@ -191,7 +201,7 @@ export const WorkerProfilePage: React.FC = () => {
 
         {/* Bio */}
         <div className="space-y-1 pt-1 border-t border-[#E8E2D5]">
-          <span className="text-[10px] font-bold uppercase text-[#77736B]">About & Background</span>
+          <span className="text-[10px] font-bold uppercase text-[#77736B]">{t('worker.profile.tradeBio', 'About & Background')}</span>
           {isEditing ? (
             <textarea
               rows={3}
@@ -216,14 +226,14 @@ export const WorkerProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-xl bg-[#E4EDF4] text-[#324F66] flex items-center justify-center font-bold">
               <Briefcase className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-bold text-[#292824]">Professional Information</h2>
+            <h2 className="text-base font-bold text-[#292824]">{t('worker.profile.personalInfo', 'Professional Information')}</h2>
           </div>
           <Badge variant="neutral" size="sm">Tier 6 Trade Specialist</Badge>
         </div>
 
         <div className="space-y-3 text-xs">
           <div>
-            <span className="text-[10px] font-bold uppercase text-[#77736B] block mb-1.5">Trade Skills</span>
+            <span className="text-[10px] font-bold uppercase text-[#77736B] block mb-1.5">{t('worker.profile.tradeSkills', 'Trade Skills')}</span>
             <div className="flex flex-wrap gap-2">
               {currentWorker.skills.map((skill) => (
                 <span
@@ -238,19 +248,19 @@ export const WorkerProfilePage: React.FC = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
             <div className="p-3 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl">
-              <span className="text-[10px] text-[#77736B] block">Experience</span>
+              <span className="text-[10px] text-[#77736B] block">{t('worker.profile.experience', 'Experience')}</span>
               <strong className="text-sm font-bold text-[#292824]">6+ Years</strong>
             </div>
             <div className="p-3 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl">
-              <span className="text-[10px] text-[#77736B] block">Completed Jobs</span>
+              <span className="text-[10px] text-[#77736B] block">{t('worker.profile.completedJobs', 'Completed Jobs')}</span>
               <strong className="text-sm font-bold text-[#292824]">{currentWorker.completedJobs || 24}</strong>
             </div>
             <div className="p-3 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl">
-              <span className="text-[10px] text-[#77736B] block">Member Since</span>
+              <span className="text-[10px] text-[#77736B] block">{t('worker.profile.memberSince', 'Member Since')}</span>
               <strong className="text-sm font-bold text-[#292824]">Jan 2023</strong>
             </div>
             <div className="p-3 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl">
-              <span className="text-[10px] text-[#77736B] block">Member ID</span>
+              <span className="text-[10px] text-[#77736B] block">{t('worker.profile.memberId', 'Member ID')}</span>
               <strong className="text-sm font-mono font-bold text-[#292824]">
                 {currentWorker.cooperativeMemberId || 'W-2024-001'}
               </strong>
@@ -259,7 +269,7 @@ export const WorkerProfilePage: React.FC = () => {
 
           <div className="pt-2">
             <span className="text-[10px] font-bold uppercase text-[#77736B] block mb-1.5">
-              Certificates & Trade Qualifications
+              {t('worker.profile.certifications', 'Certificates & Trade Qualifications')}
             </span>
             <div className="space-y-1.5">
               {currentWorker.certificates.map((cert) => (
@@ -269,7 +279,7 @@ export const WorkerProfilePage: React.FC = () => {
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67] shrink-0" />
                   <span className="font-medium">{cert}</span>
-                  <span className="ml-auto text-[10px] font-mono text-[#77736B]">Verified by Board</span>
+                  <span className="ml-auto text-[10px] font-mono text-[#77736B]">{t('worker.profile.verifiedByBoard', 'Verified by Board')}</span>
                 </div>
               ))}
             </div>
@@ -278,9 +288,7 @@ export const WorkerProfilePage: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* SECTION 2: VERIFICATION (Requirement 6)                      */}
-      {/* Show: Identity, Membership, Skills, Society, Assessment      */}
-      {/* Note: Person 4 will integrate the actual verification system */}
+      {/* SECTION 2: VERIFICATION                                      */}
       {/* ============================================================ */}
       <div className="p-5 sm:p-6 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl shadow-card space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D5]">
@@ -289,22 +297,16 @@ export const WorkerProfilePage: React.FC = () => {
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#292824]">Verification Status</h2>
-              <span className="text-xs text-[#77736B]">5-Point Trust & Cooperative Compliance Pipeline</span>
+              <h2 className="text-base font-bold text-[#292824]">{t('worker.profile.verificationStatus', 'Verification Status')}</h2>
+              <span className="text-xs text-[#77736B]">{t('worker.profile.trustPipeline', '5-Point Trust & Cooperative Compliance Pipeline')}</span>
             </div>
           </div>
-          <Badge variant="verified" size="sm">ALL VERIFIED ✓</Badge>
+          <Badge variant="verified" size="sm">{t('worker.profile.allVerifiedBadge', 'ALL VERIFIED ✓')}</Badge>
         </div>
 
-        {/* 5 Points: Identity, Membership, Skills, Society, Assessment */}
+        {/* 5 Points */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            { label: 'Identity', desc: 'Government Aadhaar / ID verified with biometric match', status: 'Approved' },
-            { label: 'Membership', desc: `Registered member of ${currentWorker.societyName || 'Green Residency'} hub`, status: 'Approved' },
-            { label: 'Skills', desc: 'Certified in plumbing, pipe pressure diagnostics, and fittings', status: 'Approved' },
-            { label: 'Society', desc: 'Endorsed by Society Manager with local residency trust certificate', status: 'Approved' },
-            { label: 'Assessment', desc: 'Field practical assessment passed with 94% safety grade', status: 'Approved' },
-          ].map((item) => (
+          {VERIFICATION_POINTS.map((item) => (
             <div key={item.label} className="p-3 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-[#6E8B67] shrink-0 mt-0.5" />
               <div>
@@ -320,24 +322,22 @@ export const WorkerProfilePage: React.FC = () => {
           ))}
         </div>
 
-        {/* Person 4 Integration Note & Action */}
         <div className="pt-2 border-t border-[#E8E2D5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <p className="text-[11px] text-[#77736B]">
-            Managed via the Society Manager KYC verification module (Person 4).
+            {t('worker.profile.kycNotice', 'Managed via the Society Manager KYC verification module.')}
           </p>
           <button
             type="button"
             onClick={() => setShowVerificationModal(true)}
             className="px-3.5 py-2 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl transition-colors cursor-pointer self-start sm:self-auto"
           >
-            View Verification Certificate →
+            {t('worker.profile.viewCertBtn', 'View Verification Certificate →')}
           </button>
         </div>
       </div>
 
       {/* ============================================================ */}
-      {/* SECTION 3: ACCOUNT SETTINGS (Requirement 6)                  */}
-      {/* Show: Change Password, Login settings, Remember Me           */}
+      {/* SECTION 3: ACCOUNT SETTINGS                                  */}
       {/* ============================================================ */}
       <div className="p-5 sm:p-6 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl shadow-card space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D5]">
@@ -345,32 +345,32 @@ export const WorkerProfilePage: React.FC = () => {
             <div className="w-8 h-8 rounded-xl bg-[#FAEDE8] text-[#80432E] flex items-center justify-center font-bold">
               <Lock className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-bold text-[#292824]">Account Settings</h2>
+            <h2 className="text-base font-bold text-[#292824]">{t('worker.profile.accountSecurity', 'Account Settings')}</h2>
           </div>
-          <span className="text-xs text-[#77736B]">Security & Sessions</span>
+          <span className="text-xs text-[#77736B]">{t('worker.profile.securitySessions', 'Security & Sessions')}</span>
         </div>
 
         <div className="space-y-3 divide-y divide-[#E8E2D5]">
           {/* Change Password */}
           <div className="flex items-center justify-between pt-1">
             <div>
-              <p className="text-xs font-bold text-[#292824]">Change Password</p>
-              <p className="text-[11px] text-[#77736B]">Update your login passphrase regularly for security.</p>
+              <p className="text-xs font-bold text-[#292824]">{t('worker.profile.changePassword', 'Change Password')}</p>
+              <p className="text-[11px] text-[#77736B]">{t('worker.profile.changePasswordSub', 'Update your login passphrase regularly for security.')}</p>
             </div>
             <button
               type="button"
               onClick={() => setShowPasswordModal(true)}
               className="px-3.5 py-1.5 bg-[#FCF9F3] hover:bg-[#F3EEE4] border border-[#E8E2D5] text-[#292824] text-xs font-bold rounded-xl cursor-pointer transition-colors"
             >
-              Update Password
+              {t('worker.profile.updatePasswordBtn', 'Update Password')}
             </button>
           </div>
 
           {/* Login Settings / 2FA */}
           <div className="flex items-center justify-between pt-3">
             <div>
-              <p className="text-xs font-bold text-[#292824]">Login Settings (Two-Factor Authentication)</p>
-              <p className="text-[11px] text-[#77736B]">Require SMS OTP code for logins on new devices.</p>
+              <p className="text-xs font-bold text-[#292824]">{t('worker.profile.twoFactor', 'Login Settings (Two-Factor Authentication)')}</p>
+              <p className="text-[11px] text-[#77736B]">{t('worker.profile.twoFactorSub', 'Require SMS OTP code for logins on new devices.')}</p>
             </div>
             <button
               type="button"
@@ -395,8 +395,8 @@ export const WorkerProfilePage: React.FC = () => {
           {/* Remember Me Toggle */}
           <div className="flex items-center justify-between pt-3">
             <div>
-              <p className="text-xs font-bold text-[#292824]">Remember Me on This Device</p>
-              <p className="text-[11px] text-[#77736B]">Stay signed into the worker dashboard on this browser.</p>
+              <p className="text-xs font-bold text-[#292824]">{t('worker.profile.rememberDevice', 'Remember Me on This Device')}</p>
+              <p className="text-[11px] text-[#77736B]">{t('worker.profile.rememberDeviceSub', 'Stay signed into the worker dashboard on this browser.')}</p>
             </div>
             <button
               type="button"
@@ -421,9 +421,7 @@ export const WorkerProfilePage: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* SECTION 4: SUPPORT (Requirement 6)                           */}
-      {/* Show: Contact Human Agent                                    */}
-      {/* Note: Person 5 will integrate the actual Support system      */}
+      {/* SECTION 4: SUPPORT                                           */}
       {/* ============================================================ */}
       <div className="p-5 sm:p-6 bg-[#FCF9F3] border border-[#E8E2D5] rounded-2xl shadow-card space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D5]">
@@ -432,53 +430,43 @@ export const WorkerProfilePage: React.FC = () => {
               <HeadphonesIcon className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#292824]">Worker Support & Human Agent</h2>
-              <span className="text-xs text-[#77736B]">Human assistance for dispute resolution & job support</span>
+              <h2 className="text-base font-bold text-[#292824]">{t('worker.support.humanAgentTitle', 'Worker Support & Human Agent')}</h2>
+              <span className="text-xs text-[#77736B]">{t('worker.support.supportSub', 'Human assistance for dispute resolution & job support')}</span>
             </div>
           </div>
-          <Badge variant="coop" size="sm">7 AM – 10 PM IST</Badge>
+          <Badge variant="coop" size="sm">{t('worker.support.hoursBadge', '7 AM – 10 PM IST')}</Badge>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="p-4 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-[#292824]">Direct Toll-Free Helpline</p>
+              <p className="text-xs font-bold text-[#292824]">{t('worker.support.directTollFree', 'Direct Toll-Free Helpline')}</p>
               <p className="text-[11px] text-[#537895] font-mono mt-0.5">+91 1800 200 4567</p>
-              <span className="text-[10px] text-[#77736B]">Immediate dispatch to on-duty manager</span>
+              <span className="text-[10px] text-[#77736B]">{t('worker.support.dispatchNotice', 'Immediate dispatch to on-duty manager')}</span>
             </div>
             <button
               type="button"
               onClick={() => alert('Calling Worker Support Hotline: +91 1800 200 4567')}
               className="px-3 py-1.5 bg-[#324F66] text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-[#263D50]"
             >
-              Call Agent
+              {t('worker.support.callAgent', 'Call Agent')}
             </button>
           </div>
 
           <div className="p-4 bg-[#FAF7F2] border border-[#E8E2D5] rounded-xl flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-[#292824]">Live Agent Chat Desk</p>
-              <p className="text-[11px] text-[#77736B] mt-0.5">Average wait time: &lt; 2 mins</p>
-              <span className="text-[10px] text-[#6E8B67] font-semibold">Agents Online</span>
+              <p className="text-xs font-bold text-[#292824]">{t('worker.support.chatDesk', 'Live Agent Chat Desk')}</p>
+              <p className="text-[11px] text-[#77736B] mt-0.5">{t('worker.support.avgWaitTime', 'Average wait time: < 2 mins')}</p>
+              <span className="text-[10px] text-[#6E8B67] font-semibold">{t('worker.support.agentsOnline', 'Agents Online')}</span>
             </div>
             <button
               type="button"
               onClick={() => setShowSupportModal(true)}
               className="px-3 py-1.5 bg-[#6E8B67] text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-[#587352]"
             >
-              Open Chat
+              {t('worker.support.openChat', 'Open Chat')}
             </button>
           </div>
-        </div>
-
-        <div className="p-3 bg-[#E4EDF4] border border-[#B8CBDD] rounded-xl text-xs text-[#263D50]">
-          <p className="font-bold flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5 text-[#324F66]" />
-            Human Agent Support Integration Point (Person 5)
-          </p>
-          <p className="text-[11px] text-[#537895] mt-0.5">
-            Full human ticketing and dispute arbitration engine will be connected by Person 5.
-          </p>
         </div>
       </div>
 
@@ -486,14 +474,14 @@ export const WorkerProfilePage: React.FC = () => {
       <Modal
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
-        title="Change Password"
-        subtitle="Secure your cooperative specialist login"
+        title={t('worker.profile.changePassword', 'Change Password')}
+        subtitle={t('worker.profile.passwordModalSub', 'Secure your cooperative specialist login')}
         maxWidth="sm"
       >
         <form onSubmit={handlePasswordChange} className="space-y-3.5">
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase tracking-wider text-[#77736B] block">
-              Current Password:
+              {t('worker.profile.currentPassword', 'Current Password:')}
             </label>
             <input
               type="password"
@@ -507,13 +495,13 @@ export const WorkerProfilePage: React.FC = () => {
 
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase tracking-wider text-[#77736B] block">
-              New Password:
+              {t('worker.profile.newPassword', 'New Password:')}
             </label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder={t('worker.profile.passwordMinChars', 'At least 8 characters')}
               className="w-full px-3 py-2 bg-white border border-[#E8E2D5] rounded-xl text-xs focus:ring-2 focus:ring-[#537895]"
               required
             />
@@ -521,13 +509,13 @@ export const WorkerProfilePage: React.FC = () => {
 
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase tracking-wider text-[#77736B] block">
-              Confirm New Password:
+              {t('worker.profile.confirmNewPassword', 'Confirm New Password:')}
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm new password"
+              placeholder={t('worker.profile.confirmPasswordPlaceholder', 'Confirm new password')}
               className="w-full px-3 py-2 bg-white border border-[#E8E2D5] rounded-xl text-xs focus:ring-2 focus:ring-[#537895]"
               required
             />
@@ -535,10 +523,10 @@ export const WorkerProfilePage: React.FC = () => {
 
           <div className="flex items-center justify-between pt-3 border-t border-[#E8E2D5]">
             <Button variant="subtle" size="sm" onClick={() => setShowPasswordModal(false)}>
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </Button>
             <Button variant="primary" size="sm" type="submit">
-              Update Password
+              {t('worker.profile.updatePasswordBtn', 'Update Password')}
             </Button>
           </div>
         </form>
@@ -548,8 +536,8 @@ export const WorkerProfilePage: React.FC = () => {
       <Modal
         isOpen={showVerificationModal}
         onClose={() => setShowVerificationModal(false)}
-        title="Worker Verification Certificate"
-        subtitle="Verified 6-Tier Trust Pipeline (Person 4)"
+        title={t('worker.profile.verificationCertTitle', 'Worker Verification Certificate')}
+        subtitle={t('worker.profile.trustPipelineSub', 'Verified 6-Tier Trust Pipeline')}
         maxWidth="lg"
       >
         <WorkerOnboarding />
@@ -559,8 +547,8 @@ export const WorkerProfilePage: React.FC = () => {
       <Modal
         isOpen={showSupportModal}
         onClose={() => setShowSupportModal(false)}
-        title="Human Agent Support Desk"
-        subtitle="Cooperative Specialist Care (Person 5)"
+        title={t('worker.support.humanAgentTitle', 'Human Agent Support Desk')}
+        subtitle={t('worker.support.careSubtitle', 'Cooperative Specialist Care')}
         maxWidth="md"
       >
         <SupportPanel onClose={() => setShowSupportModal(false)} />

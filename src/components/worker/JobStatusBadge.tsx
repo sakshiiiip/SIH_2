@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BookingState } from '../../types';
 
 interface JobStatusBadgeProps {
@@ -7,42 +8,42 @@ interface JobStatusBadgeProps {
   dot?: boolean;
 }
 
-const STATE_CONFIG: Record<string, { label: string; bg: string; text: string; border: string; dotColor: string }> = {
-  // Booking states (from store)
-  PENDING_ASSIGNMENT: { label: 'Open Request', bg: 'bg-[#FAEDE8]', text: 'text-[#80432E]', border: 'border-[#F4DCD3]', dotColor: 'bg-[#B37055] animate-pulse' },
-  WORKER_ASSIGNED: { label: 'Assigned', bg: 'bg-[#E6ECE4]', text: 'text-[#364A32]', border: 'border-[#CFDDD0]', dotColor: 'bg-[#6E8B67]' },
-  PENDING_WORKER_ACCEPTANCE: { label: 'New Assignment', bg: 'bg-[#FAEDE8]', text: 'text-[#80432E]', border: 'border-[#F4DCD3]', dotColor: 'bg-[#B37055] animate-pulse' },
-  CONFIRMED:  { label: 'Confirmed',       bg: 'bg-[#E6ECE4]', text: 'text-[#364A32]', border: 'border-[#CFDDD0]', dotColor: 'bg-[#6E8B67]' },
-  TRAVELLING: { label: 'En Route',        bg: 'bg-[#E4EDF4]', text: 'text-[#2B4C68]', border: 'border-[#B8CBDD]', dotColor: 'bg-[#537895] animate-pulse' },
-  ARRIVED:    { label: 'Arrived On-Site', bg: 'bg-[#E4EDF4]', text: 'text-[#2B4C68]', border: 'border-[#B8CBDD]', dotColor: 'bg-[#537895]' },
-  IN_PROGRESS:{ label: 'In Progress',     bg: 'bg-[#EFEBF4]', text: 'text-[#3D314C]', border: 'border-[#DFD8E8]', dotColor: 'bg-[#7A6A8E] animate-pulse' },
-  AWAITING_VERIFICATION: { label: 'Awaiting Verification', bg: 'bg-[#E4EDF4]', text: 'text-[#2B4C68]', border: 'border-[#B8CBDD]', dotColor: 'bg-[#537895]' },
-  COMPLETED:  { label: 'Completed',       bg: 'bg-[#E6ECE4]', text: 'text-[#364A32]', border: 'border-[#CFDDD0]', dotColor: 'bg-[#6E8B67]' },
-  PAID:       { label: 'Paid & Settled',  bg: 'bg-[#E6ECE4]', text: 'text-[#364A32]', border: 'border-[#CFDDD0]', dotColor: 'bg-[#6E8B67]' },
-  RATED:      { label: 'Rated ★',         bg: 'bg-[#E6ECE4]', text: 'text-[#364A32]', border: 'border-[#CFDDD0]', dotColor: 'bg-[#6E8B67]' },
-  REVISIT_REQUESTED: { label: 'Revisit Requested', bg: 'bg-[#FAEDE8]', text: 'text-[#80432E]', border: 'border-[#F4DCD3]', dotColor: 'bg-[#B37055]' },
-  REVISIT_SCHEDULED: { label: 'Revisit Scheduled', bg: 'bg-[#EFEBF4]', text: 'text-[#3D314C]', border: 'border-[#DFD8E8]', dotColor: 'bg-[#7A6A8E]' },
-  REJECTED:   { label: 'Rejected',        bg: 'bg-[#FAEBEB]', text: 'text-[#632727]', border: 'border-[#F4D7D7]', dotColor: 'bg-[#B86B6B]' },
-  CANCELLED:  { label: 'Cancelled',       bg: 'bg-[#F3EEE4]', text: 'text-[#524E47]', border: 'border-[#E8E2D5]', dotColor: 'bg-[#9A958B]' },
-  QUALITY_ISSUE: { label: 'Quality Issue', bg: 'bg-[#FAEBEB]', text: 'text-[#632727]', border: 'border-[#F4D7D7]', dotColor: 'bg-[#B86B6B]' },
-  // Mock data states
-  new:        { label: 'New Request',     bg: 'bg-[#FAEDE8]', text: 'text-[#80432E]', border: 'border-[#F4DCD3]', dotColor: 'bg-[#B37055] animate-pulse' },
-  upcoming:   { label: 'Upcoming',        bg: 'bg-[#E4EDF4]', text: 'text-[#2B4C68]', border: 'border-[#B8CBDD]', dotColor: 'bg-[#537895]' },
-  in_progress:{ label: 'In Progress',     bg: 'bg-[#EFEBF4]', text: 'text-[#3D314C]', border: 'border-[#DFD8E8]', dotColor: 'bg-[#7A6A8E] animate-pulse' },
-  completed:  { label: 'Completed',       bg: 'bg-[#E6ECE4]', text: 'text-[#364A32]', border: 'border-[#CFDDD0]', dotColor: 'bg-[#6E8B67]' },
-  cancelled:  { label: 'Cancelled',       bg: 'bg-[#F3EEE4]', text: 'text-[#524E47]', border: 'border-[#E8E2D5]', dotColor: 'bg-[#9A958B]' },
-};
-
-const FALLBACK = { label: 'Unknown', bg: 'bg-[#F3EEE4]', text: 'text-[#524E47]', border: 'border-[#E8E2D5]', dotColor: 'bg-[#9A958B]' };
-
 export const JobStatusBadge: React.FC<JobStatusBadgeProps> = ({ state, size = 'sm', dot = true }) => {
+  const { t } = useTranslation();
+
+  const STATE_CONFIG: Record<string, { label: string; bg: string; text: string; border: string; dotColor: string }> = {
+    PENDING_ASSIGNMENT: { label: t('jobStatus.openRequest', 'Open Request'), bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200', dotColor: 'bg-amber-500 animate-pulse' },
+    WORKER_ASSIGNED: { label: t('jobStatus.assigned', 'Assigned'), bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-200', dotColor: 'bg-emerald-500' },
+    PENDING_WORKER_ACCEPTANCE: { label: t('jobStatus.newAssignment', 'New Assignment'), bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200', dotColor: 'bg-amber-500 animate-pulse' },
+    CONFIRMED:  { label: t('jobStatus.confirmed', 'Confirmed'), bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-200', dotColor: 'bg-emerald-500' },
+    TRAVELLING: { label: t('jobStatus.travelling', 'En Route'), bg: 'bg-sky-50', text: 'text-sky-800', border: 'border-sky-200', dotColor: 'bg-sky-500 animate-pulse' },
+    ARRIVED:    { label: t('jobStatus.arrived', 'Arrived On-Site'), bg: 'bg-sky-50', text: 'text-sky-800', border: 'border-sky-200', dotColor: 'bg-sky-500' },
+    IN_PROGRESS:{ label: t('jobStatus.inProgress', 'In Progress'), bg: 'bg-indigo-50', text: 'text-indigo-800', border: 'border-indigo-200', dotColor: 'bg-indigo-500 animate-pulse' },
+    AWAITING_VERIFICATION: { label: t('jobStatus.awaitingVerification', 'Awaiting Verification'), bg: 'bg-sky-50', text: 'text-sky-800', border: 'border-sky-200', dotColor: 'bg-sky-500' },
+    COMPLETED:  { label: t('jobStatus.completed', 'Completed'), bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-200', dotColor: 'bg-emerald-500' },
+    PAID:       { label: t('jobStatus.paid', 'Paid & Settled'), bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-200', dotColor: 'bg-emerald-500' },
+    RATED:      { label: t('jobStatus.rated', 'Rated ★'), bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-200', dotColor: 'bg-emerald-500' },
+    REVISIT_REQUESTED: { label: t('jobStatus.revisitRequested', 'Revisit Requested'), bg: 'bg-purple-50', text: 'text-purple-800', border: 'border-purple-200', dotColor: 'bg-purple-500' },
+    REVISIT_SCHEDULED: { label: t('jobStatus.revisitScheduled', 'Revisit Scheduled'), bg: 'bg-purple-50', text: 'text-purple-800', border: 'border-purple-200', dotColor: 'bg-purple-500' },
+    REJECTED:   { label: t('jobStatus.rejected', 'Rejected'), bg: 'bg-rose-50', text: 'text-rose-800', border: 'border-rose-200', dotColor: 'bg-rose-500' },
+    CANCELLED:  { label: t('jobStatus.cancelled', 'Cancelled'), bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', dotColor: 'bg-slate-400' },
+    QUALITY_ISSUE: { label: t('jobStatus.qualityIssue', 'Quality Issue'), bg: 'bg-rose-50', text: 'text-rose-800', border: 'border-rose-200', dotColor: 'bg-rose-500' },
+    new:        { label: t('jobStatus.new', 'New Request'), bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200', dotColor: 'bg-amber-500 animate-pulse' },
+    upcoming:   { label: t('jobStatus.upcoming', 'Upcoming'), bg: 'bg-sky-50', text: 'text-sky-800', border: 'border-sky-200', dotColor: 'bg-sky-500' },
+    in_progress:{ label: t('jobStatus.inProgress', 'In Progress'), bg: 'bg-indigo-50', text: 'text-indigo-800', border: 'border-indigo-200', dotColor: 'bg-indigo-500 animate-pulse' },
+    completed:  { label: t('jobStatus.completed', 'Completed'), bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-200', dotColor: 'bg-emerald-500' },
+    cancelled:  { label: t('jobStatus.cancelled', 'Cancelled'), bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', dotColor: 'bg-slate-400' },
+  };
+
+  const FALLBACK = { label: t('jobStatus.unknown', 'Unknown'), bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', dotColor: 'bg-slate-400' };
+
   const cfg = STATE_CONFIG[state] ?? FALLBACK;
   const sizeClasses = size === 'sm'
-    ? 'text-[11px] px-2 py-0.5 rounded-full gap-1'
-    : 'text-xs px-2.5 py-1 rounded-full gap-1.5';
+    ? 'px-2.5 py-0.5 rounded-full text-xs font-semibold gap-1.5'
+    : 'px-3 py-1 rounded-full text-xs font-semibold gap-1.5';
 
   return (
-    <span className={`inline-flex items-center border font-medium tracking-tight ${sizeClasses} ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+    <span className={`inline-flex items-center border tracking-tight ${sizeClasses} ${cfg.bg} ${cfg.text} ${cfg.border}`}>
       {dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dotColor}`} />}
       {cfg.label}
     </span>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart2,
   TrendingUp,
@@ -98,6 +99,7 @@ function CategoryBar({
   maxAmount: number;
   color: string;
 }) {
+  const { t } = useTranslation();
   const pct = maxAmount > 0 ? (amount / maxAmount) * 100 : 0;
   return (
     <div className="space-y-1.5">
@@ -105,7 +107,7 @@ function CategoryBar({
         <span className="text-[#292824] font-medium truncate max-w-[55%]">{label}</span>
         <div className="text-right shrink-0">
           <span className="font-bold font-mono text-[#292824]">₹{fmt(amount)}</span>
-          <span className="text-[11px] text-[#9A958B] ml-1.5">· {jobCount} job{jobCount !== 1 ? 's' : ''}</span>
+          <span className="text-[11px] text-[#9A958B] ml-1.5">· {jobCount} {t('worker.earningsDashboard.jobs', 'jobs')}</span>
         </div>
       </div>
       <div className="h-2 rounded-full bg-[#E8E2D5] overflow-hidden">
@@ -162,6 +164,7 @@ type ActiveView = 'weekly' | 'monthly';
 export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
   workerId = 'w_rahul',
 }) => {
+  const { t } = useTranslation();
   const [activeView, setActiveView] = useState<ActiveView>('weekly');
   const [weekData, setWeekData] = useState<WeeklyEarningsBreakdown | null>(null);
   const [monthData, setMonthData] = useState<MonthlyEarningsBreakdown | null>(null);
@@ -188,11 +191,11 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
       setWeekData(week);
       setMonthData(month);
     } catch {
-      setError('Failed to load earnings breakdown.');
+      setError(t('worker.earningsDashboard.loadErrorBreakdown', 'Failed to load earnings breakdown.'));
     } finally {
       setLoading(false);
     }
-  }, [workerId, monthOffset]);
+  }, [workerId, monthOffset, t]);
 
   useEffect(() => {
     loadData();
@@ -203,9 +206,9 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
         <AlertCircle className="w-8 h-8 text-[#B86B6B]" />
-        <p className="text-sm text-[#80432E] font-medium">{error ?? 'No data.'}</p>
+        <p className="text-sm text-[#80432E] font-medium">{error ?? t('worker.earningsDashboard.noData', 'No data.')}</p>
         <button type="button" onClick={loadData} className="text-xs font-bold text-[#537895] hover:underline cursor-pointer">
-          Retry
+          {t('worker.earningsDashboard.retry', 'Retry')}
         </button>
       </div>
     );
@@ -263,7 +266,7 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
                 : 'text-[#77736B] hover:text-[#292824]'
             }`}
           >
-            {v === 'weekly' ? 'This Week' : 'Monthly'}
+            {v === 'weekly' ? t('worker.earningsDashboard.thisWeek', 'This Week') : t('worker.earningsDashboard.monthly', 'Monthly')}
           </button>
         ))}
       </div>
@@ -277,7 +280,11 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-[#292824]">
-                Week {weekData.weekNumber}, {weekData.year}
+                {t('worker.earningsDashboard.weekNumber', {
+                  week: weekData.weekNumber,
+                  year: weekData.year,
+                  defaultValue: 'Week {{week}}, {{year}}',
+                })}
               </h2>
               <p className="text-xs text-[#77736B] mt-0.5">
                 {new Date(weekData.weekStartDate + 'T00:00:00').toLocaleDateString('en-IN', {
@@ -315,17 +322,17 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
 
             <div className="mt-4 pt-4 border-t border-[#E8E2D5] grid grid-cols-3 gap-3 text-sm">
               <div>
-                <span className="text-[11px] text-[#77736B] block mb-0.5">Net Earned</span>
+                <span className="text-[11px] text-[#77736B] block mb-0.5">{t('worker.earningsDashboard.netEarned', 'Net Earned')}</span>
                 <span className="font-bold font-mono text-[#292824]">₹{fmt(weekData.totalNet)}</span>
               </div>
               <div>
-                <span className="text-[11px] text-[#77736B] block mb-0.5">Deductions</span>
+                <span className="text-[11px] text-[#77736B] block mb-0.5">{t('worker.earningsDashboard.deductions', 'Deductions')}</span>
                 <span className="font-bold font-mono text-[#B86B6B]">
                   {weekData.totalDeductions > 0 ? `₹${fmt(weekData.totalDeductions)}` : '—'}
                 </span>
               </div>
               <div>
-                <span className="text-[11px] text-[#77736B] block mb-0.5">Jobs Done</span>
+                <span className="text-[11px] text-[#77736B] block mb-0.5">{t('worker.earningsDashboard.jobsDone', 'Jobs Done')}</span>
                 <span className="font-bold font-mono text-[#292824]">{weekData.jobsCompleted}</span>
               </div>
             </div>
@@ -334,15 +341,15 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
           {/* Weekly stats grid */}
           <div className="grid grid-cols-2 gap-3">
             <StatBadge
-              label="Best Day"
+              label={t('worker.earningsDashboard.bestDay', 'Best Day')}
               value={weekBars.reduce((a, b) => (b.value > a.value ? b : a), weekBars[0]).day}
               sub={`₹${fmt(Math.max(...weekBars.map((b) => b.value)))}`}
               accent
             />
             <StatBadge
-              label="Active Days"
+              label={t('worker.earningsDashboard.activeDays', 'Active Days')}
               value={`${weekBars.filter((b) => b.value > 0).length}/7`}
-              sub="days with earnings"
+              sub={t('worker.earningsDashboard.daysWithEarnings', 'days with earnings')}
             />
           </div>
         </>
@@ -376,28 +383,28 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
                 <ChevronRight className="w-4 h-4 text-[#77736B]" />
               </button>
             </div>
-            <span className="text-xs text-[#9A958B]">{monthData.jobsCompleted} jobs</span>
+            <span className="text-xs text-[#9A958B]">{monthData.jobsCompleted} {t('worker.earningsDashboard.jobs', 'jobs')}</span>
           </div>
 
           {/* Monthly hero stats */}
           <div className="rounded-3xl bg-gradient-to-br from-[#E4EDF4] to-[#F3F7FA] border border-[#B8CBDD] p-5 shadow-subtle">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="col-span-2 sm:col-span-1">
-                <span className="text-[11px] font-semibold text-[#537895] uppercase tracking-wider">Gross</span>
+                <span className="text-[11px] font-semibold text-[#537895] uppercase tracking-wider">{t('worker.earningsDashboard.gross', 'Gross')}</span>
                 <p className="text-2xl font-bold font-mono text-[#263D50] mt-0.5">₹{fmt(monthData.totalGross)}</p>
               </div>
               <div>
-                <span className="text-[11px] font-semibold text-[#6E8B67] uppercase tracking-wider">Net</span>
+                <span className="text-[11px] font-semibold text-[#6E8B67] uppercase tracking-wider">{t('worker.earningsDashboard.net', 'Net')}</span>
                 <p className="text-2xl font-bold font-mono text-[#2A3927] mt-0.5">₹{fmt(monthData.totalNet)}</p>
               </div>
               <div>
-                <span className="text-[11px] font-semibold text-[#B37055] uppercase tracking-wider">Deductions</span>
+                <span className="text-[11px] font-semibold text-[#B37055] uppercase tracking-wider">{t('worker.earningsDashboard.deductions', 'Deductions')}</span>
                 <p className="text-2xl font-bold font-mono text-[#643222] mt-0.5">
                   {monthData.totalDeductions > 0 ? `₹${fmt(monthData.totalDeductions)}` : '—'}
                 </p>
               </div>
               <div>
-                <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider">Retention</span>
+                <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider">{t('worker.earningsDashboard.retention', 'Retention')}</span>
                 <p className="text-2xl font-bold font-mono text-[#292824] mt-0.5">
                   {(100 - netVsGross).toFixed(0)}%
                 </p>
@@ -407,7 +414,7 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
             {/* Gross vs Net visual bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[11px] text-[#537895]">
-                <span>Gross → Net retention</span>
+                <span>{t('worker.earningsDashboard.retentionLabel', 'Gross → Net retention')}</span>
                 <span className="font-mono">{(100 - netVsGross).toFixed(1)}%</span>
               </div>
               <div className="h-2 rounded-full bg-white/50 overflow-hidden">
@@ -423,10 +430,10 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
           {monthData.totalDeductions > 0 && (
             <div className="rounded-2xl bg-[#FAEDE8] border border-[#F4DCD3] p-4">
               <p className="text-xs font-bold text-[#80432E] uppercase tracking-wider mb-2">
-                Deductions Applied
+                {t('worker.earningsDashboard.deductionsApplied', 'Deductions Applied')}
               </p>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#80432E]">TDS & Penalties</span>
+                <span className="text-sm text-[#80432E]">{t('worker.earningsDashboard.tdsPenalties', 'TDS & Penalties')}</span>
                 <span className="text-sm font-bold font-mono text-[#643222]">
                   ₹{fmt(monthData.totalDeductions)}
                 </span>
@@ -439,7 +446,7 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
             <div className="rounded-3xl bg-[#FCF9F3] border border-[#E8E2D5] p-5 shadow-subtle space-y-4">
               <div className="flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-[#537895]" />
-                <h3 className="text-sm font-bold text-[#292824]">Top Income Categories</h3>
+                <h3 className="text-sm font-bold text-[#292824]">{t('worker.earningsDashboard.topCategories', 'Top Income Categories')}</h3>
               </div>
 
               <div className="space-y-4">
@@ -473,29 +480,29 @@ export const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
           {/* Monthly quick stats */}
           <div className="grid grid-cols-2 gap-3">
             <StatBadge
-              label="Jobs Completed"
+              label={t('worker.earningsDashboard.jobsCompleted', 'Jobs Completed')}
               value={`${monthData.jobsCompleted}`}
-              sub="this month"
+              sub={t('worker.earningsDashboard.thisMonth', 'this month')}
               accent
             />
             <StatBadge
-              label="Avg / Job"
+              label={t('worker.earningsDashboard.avgPerJob', 'Avg / Job')}
               value={
                 monthData.jobsCompleted > 0
                   ? `₹${fmt(Math.round(monthData.totalNet / monthData.jobsCompleted))}`
                   : '—'
               }
-              sub="net per job"
+              sub={t('worker.earningsDashboard.netPerJob', 'net per job')}
             />
           </div>
 
           {/* Type mix legend */}
           <div className="rounded-2xl bg-[#FCF9F3] border border-[#E8E2D5] p-4 flex flex-wrap gap-4">
             {[
-              { icon: <Briefcase className="w-3.5 h-3.5 text-[#537895]" />, label: 'Job Payments', bg: 'bg-[#E4EDF4]' },
-              { icon: <Layers className="w-3.5 h-3.5 text-[#7A6A8E]" />, label: 'Group Booking Share', bg: 'bg-[#EFEBF4]' },
-              { icon: <Zap className="w-3.5 h-3.5 text-[#B37055]" />, label: 'Bonus', bg: 'bg-[#FAEDE8]' },
-              { icon: <Wallet className="w-3.5 h-3.5 text-[#6E8B67]" />, label: 'Advance / Refund', bg: 'bg-[#E6ECE4]' },
+              { icon: <Briefcase className="w-3.5 h-3.5 text-[#537895]" />, label: t('worker.earningsDashboard.jobPayments', 'Job Payments'), bg: 'bg-[#E4EDF4]' },
+              { icon: <Layers className="w-3.5 h-3.5 text-[#7A6A8E]" />, label: t('worker.earningsDashboard.groupBookingShare', 'Group Booking Share'), bg: 'bg-[#EFEBF4]' },
+              { icon: <Zap className="w-3.5 h-3.5 text-[#B37055]" />, label: t('worker.earningsDashboard.bonus', 'Bonus'), bg: 'bg-[#FAEDE8]' },
+              { icon: <Wallet className="w-3.5 h-3.5 text-[#6E8B67]" />, label: t('worker.earningsDashboard.advanceRefund', 'Advance / Refund'), bg: 'bg-[#E6ECE4]' },
             ].map((item) => (
               <span key={item.label} className="flex items-center gap-1.5 text-[11px] text-[#77736B]">
                 <span className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${item.bg}`}>

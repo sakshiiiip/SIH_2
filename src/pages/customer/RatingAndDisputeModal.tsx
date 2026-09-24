@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Booking } from '../../types';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Modal } from '../../components/common/Modal';
@@ -24,6 +25,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
   onClose,
   booking,
 }) => {
+  const { t } = useTranslation();
   const { rateBooking, reportQualityIssue, requestRevisit } = useCooperativeStore();
 
   const [mode, setMode] = useState<'rate' | 'dispute' | 'revisit'>('rate');
@@ -81,16 +83,23 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
     booking.beforeImage || booking.afterImage || (booking.workPhotos && booking.workPhotos.length > 0)
   );
 
+  const complimentTags = [
+    { key: 'tagPunctual', label: t('dispute.tagPunctual', 'Punctual arrival') },
+    { key: 'tagPolite', label: t('dispute.tagPolite', 'Polite behaviour') },
+    { key: 'tagCleanup', label: t('dispute.tagCleanup', 'Spotless cleanup') },
+    { key: 'tagExpert', label: t('dispute.tagExpert', 'Expert repair') },
+  ];
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={
         mode === 'revisit'
-          ? 'Request Service Revisit'
+          ? t('dispute.revisitTitle', 'Request Service Revisit')
           : mode === 'dispute'
-          ? 'Report Quality Concern'
-          : 'How was your service?'
+          ? t('dispute.disputeTitle', 'Report Quality Concern')
+          : t('dispute.rateTitle', 'How was your service?')
       }
       subtitle={
         <span>
@@ -106,7 +115,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
           <div className="p-3 bg-[#F3EEE4] border border-[#E8E2D5] rounded-2xl space-y-2">
             <span className="text-xs font-semibold text-[#524E47] flex items-center gap-1">
               <ImageIcon className="w-3.5 h-3.5 text-[#6E8B67]" />
-              Work Execution Proof (Before & After)
+              {t('dispute.workProof', 'Work Execution Proof (Before & After)')}
             </span>
             <div className="grid grid-cols-2 gap-2">
               <div className="relative rounded-xl overflow-hidden border border-[#E8E2D5] bg-white h-24">
@@ -118,11 +127,11 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[10px] text-[#77736B]">
-                    No Before Photo
+                    {t('dispute.noBefore', 'No Before Photo')}
                   </div>
                 )}
                 <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
-                  Before
+                  {t('dispute.before', 'Before')}
                 </span>
               </div>
               <div className="relative rounded-xl overflow-hidden border border-[#6E8B67] bg-white h-24">
@@ -134,11 +143,11 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[10px] text-[#77736B]">
-                    No After Photo
+                    {t('dispute.noAfter', 'No After Photo')}
                   </div>
                 )}
                 <span className="absolute bottom-1 left-1 bg-[#445D3E] text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
-                  After ✓
+                  {t('dispute.after', 'After ✓')}
                 </span>
               </div>
             </div>
@@ -168,24 +177,24 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
                 ))}
               </div>
               <span className="text-sm font-semibold text-slate-700">
-                {rating === 5 && 'Excellent — Highly recommended!'}
-                {rating === 4 && 'Good — Satisfactory work.'}
-                {rating === 3 && 'Average — Met expectations.'}
-                {rating === 2 && 'Below expectation.'}
-                {rating === 1 && 'Unsatisfactory.'}
+                {rating === 5 && t('dispute.excellent', 'Excellent — Highly recommended!')}
+                {rating === 4 && t('dispute.good', 'Good — Satisfactory work.')}
+                {rating === 3 && t('dispute.average', 'Average — Met expectations.')}
+                {rating === 2 && t('dispute.below', 'Below expectation.')}
+                {rating === 1 && t('dispute.unsatisfactory', 'Unsatisfactory.')}
               </span>
             </div>
 
             {/* Quick compliment tags */}
             <div className="flex flex-wrap gap-1.5 justify-center">
-              {['Punctual arrival', 'Polite behaviour', 'Spotless cleanup', 'Expert repair'].map(
-                (tag) => (
+              {complimentTags.map(
+                (item) => (
                   <button
-                    key={tag}
-                    onClick={() => setFeedback((prev) => (prev ? `${prev}, ${tag}` : tag))}
+                    key={item.key}
+                    onClick={() => setFeedback((prev) => (prev ? `${prev}, ${item.label}` : item.label))}
                     className="text-xs bg-slate-100 hover:bg-slate-200/80 text-slate-700 px-3 py-1.5 rounded-full transition-colors cursor-pointer"
                   >
-                    + {tag}
+                    + {item.label}
                   </button>
                 )
               )}
@@ -194,11 +203,11 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
             {/* Textarea */}
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Detailed Feedback (Optional)
+                {t('dispute.detailedFeedback', 'Detailed Feedback (Optional)')}
               </label>
               <textarea
                 rows={3}
-                placeholder="Share your experience to help the cooperative maintain quality..."
+                placeholder={t('dispute.feedbackPlaceholder', 'Share your experience to help the cooperative maintain quality...')}
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 resize-none bg-white"
@@ -213,7 +222,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
               onClick={handleSubmitRating}
               isLoading={isSubmitting}
             >
-              Submit Rating
+              {t('dispute.submitRating', 'Submit Rating')}
             </Button>
 
             {/* Quality Dispute / Revisit Options */}
@@ -223,7 +232,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
                 className="text-amber-800 hover:text-amber-950 font-bold inline-flex items-center gap-1 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Need follow-up? Request Revisit</span>
+                <span>{t('dispute.needFollowup', 'Need follow-up? Request Revisit')}</span>
               </button>
 
               <button
@@ -231,7 +240,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
                 className="text-rose-600 hover:text-rose-800 font-medium inline-flex items-center gap-1 cursor-pointer"
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Report quality dispute</span>
+                <span>{t('dispute.reportDispute', 'Report quality dispute')}</span>
               </button>
             </div>
           </>
@@ -241,19 +250,19 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
         {mode === 'revisit' && (
           <div className="space-y-4 animate-fade-in">
             <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
-              <strong className="block font-bold">Complimentary Cooperative Revisit</strong>
+              <strong className="block font-bold">{t('dispute.revisitNoticeTitle', 'Complimentary Cooperative Revisit')}</strong>
               <p>
-                If the service requires follow-up, our society manager will coordinate a free revisit with the technician.
+                {t('dispute.revisitNoticeDesc', 'If the service requires follow-up, our society manager will coordinate a free revisit with the technician.')}
               </p>
             </div>
 
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Reason for Revisit:
+                {t('dispute.reasonForRevisit', 'Reason for Revisit:')}
               </label>
               <textarea
                 rows={3}
-                placeholder="e.g. Joint slightly dripping under heavy water pressure. Needs second inspection..."
+                placeholder={t('dispute.revisitPlaceholder', 'e.g. Joint slightly dripping under heavy water pressure. Needs second inspection...')}
                 value={revisitReason}
                 onChange={(e) => setRevisitReason(e.target.value)}
                 className="w-full p-3 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-600 resize-none bg-white"
@@ -262,7 +271,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
 
             <div className="flex items-center justify-between pt-2 border-t border-slate-100">
               <Button variant="subtle" size="md" onClick={() => setMode('rate')}>
-                Back to Rating
+                {t('dispute.backToRating', 'Back to Rating')}
               </Button>
               <Button
                 variant="primary"
@@ -271,7 +280,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
                 isLoading={isSubmitting}
                 leftIcon={<RotateCcw className="w-4 h-4" />}
               >
-                Submit Revisit Request
+                {t('dispute.submitRevisit', 'Submit Revisit Request')}
               </Button>
             </div>
           </div>
@@ -281,20 +290,20 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
         {mode === 'dispute' && (
           <div className="space-y-4 animate-fade-in">
             <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
-              Cooperative Guarantee: If work is defective or incomplete, our society coordinator will review and assign a complimentary revisit at zero additional charge.
+              {t('dispute.disputeGuarantee', 'Cooperative Guarantee: If work is defective or incomplete, our society coordinator will review and assign a complimentary revisit at zero additional charge.')}
             </div>
 
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-2">
-                Issue Category:
+                {t('dispute.issueCategory', 'Issue Category:')}
               </label>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {[
-                  { id: 'incomplete_work', label: 'Incomplete work' },
-                  { id: 'poor_quality', label: 'Poor quality / recurring leak' },
-                  { id: 'worker_issue', label: 'Worker conduct / delay' },
-                  { id: 'damage', label: 'Accidental damage' },
-                  { id: 'other', label: 'Other concern' },
+                  { id: 'incomplete_work', label: t('dispute.incompleteWork', 'Incomplete work') },
+                  { id: 'poor_quality', label: t('dispute.poorQuality', 'Poor quality / recurring leak') },
+                  { id: 'worker_issue', label: t('dispute.workerIssue', 'Worker conduct / delay') },
+                  { id: 'damage', label: t('dispute.damage', 'Accidental damage') },
+                  { id: 'other', label: t('dispute.otherConcern', 'Other concern') },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -313,11 +322,11 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
 
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Describe the specific issue:
+                {t('dispute.describeIssue', 'Describe the specific issue:')}
               </label>
               <textarea
                 rows={3}
-                placeholder="e.g. The tap joint started dripping again within 2 hours of repair..."
+                placeholder={t('dispute.disputePlaceholder', 'e.g. The tap joint started dripping again within 2 hours of repair...')}
                 value={disputeDescription}
                 onChange={(e) => setDisputeDescription(e.target.value)}
                 className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-600 resize-none bg-white"
@@ -326,7 +335,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
 
             <div className="flex items-center justify-between pt-3 border-t border-slate-100">
               <Button variant="subtle" size="md" onClick={() => setMode('rate')}>
-                Back to Rating
+                {t('dispute.backToRating', 'Back to Rating')}
               </Button>
               <Button
                 variant="danger"
@@ -334,7 +343,7 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
                 onClick={handleReportDispute}
                 isLoading={isSubmitting}
               >
-                Submit Quality Dispute
+                {t('dispute.submitDispute', 'Submit Quality Dispute')}
               </Button>
             </div>
           </div>

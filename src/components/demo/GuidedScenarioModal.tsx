@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
@@ -33,6 +34,7 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
   onClose,
   onNavigateTab,
 }) => {
+  const { t } = useTranslation();
   const {
     createBooking,
     bookings,
@@ -62,12 +64,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
   const steps = [
     {
       step: 1,
-      title: 'Customer Requests Emergency Plumbing',
-      actor: 'Customer (Ananya)',
+      title: t('scenario.step1Title', { defaultValue: 'Customer Requests Emergency Plumbing' }),
+      actor: t('scenario.step1Actor', { defaultValue: 'Customer (Ananya)' }),
       badge: 'emergency',
-      description:
-        'Customer triggers an immediate emergency plumbing request for severe pipe burst at Green Residency.',
-      actionLabel: '1. Dispatch Emergency Request',
+      description: t('scenario.step1Desc', { defaultValue: 'Customer triggers an immediate emergency plumbing request for severe pipe burst at Green Residency.' }),
+      actionLabel: t('scenario.step1Action', { defaultValue: '1. Dispatch Emergency Request' }),
       action: () => {
         setRole('customer');
         const newBooking = createBooking({
@@ -84,12 +85,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 2,
-      title: 'Request Enters Priority Queue & Matching',
-      actor: 'AI Fair Allocation Engine',
+      title: t('scenario.step2Title', { defaultValue: 'Request Enters Priority Queue & Matching' }),
+      actor: t('scenario.step2Actor', { defaultValue: 'AI Fair Allocation Engine' }),
       badge: 'coop',
-      description:
-        'Algorithmic match engine evaluates certified local plumbers on skill compatibility, proximity, and current workload balance. Candidate 1 (Amit Kumar) is selected.',
-      actionLabel: '2. Inspect Matching & Alert Candidate 1',
+      description: t('scenario.step2Desc', { defaultValue: 'Algorithmic match engine evaluates certified local plumbers on skill compatibility, proximity, and current workload balance. Candidate 1 (Amit Kumar) is selected.' }),
+      actionLabel: t('scenario.step2Action', { defaultValue: '2. Inspect Matching & Alert Candidate 1' }),
       action: () => {
         setRole('society_manager');
         if (onNavigateTab) onNavigateTab('soc_dashboard');
@@ -97,12 +97,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 3,
-      title: 'Candidate Worker 1 Rejects the Job',
-      actor: 'Worker 1 (Amit Kumar)',
+      title: t('scenario.step3Title', { defaultValue: 'Candidate Worker 1 Rejects the Job' }),
+      actor: t('scenario.step3Actor', { defaultValue: 'Worker 1 (Amit Kumar)' }),
       badge: 'danger',
-      description:
-        'Candidate 1 (Amit Kumar) is currently in another task and declines the job offer.',
-      actionLabel: '3. Simulate Worker 1 Rejecting Job',
+      description: t('scenario.step3Desc', { defaultValue: 'Candidate 1 (Amit Kumar) is currently in another task and declines the job offer.' }),
+      actionLabel: t('scenario.step3Action', { defaultValue: '3. Simulate Worker 1 Rejecting Job' }),
       action: () => {
         const bId = createdBookingId || currentBooking.id;
         rejectBookingByWorker(bId, 'w_amit');
@@ -112,12 +111,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 4,
-      title: 'System Triggers Automatic Fair Re-Matching',
-      actor: 'System Re-matching Engine',
+      title: t('scenario.step4Title', { defaultValue: 'System Triggers Automatic Fair Re-Matching' }),
+      actor: t('scenario.step4Actor', { defaultValue: 'System Re-matching Engine' }),
       badge: 'urgent',
-      description:
-        'The platform automatically re-scores remaining eligible candidates excluding Amit. Candidate 2 (Rahul Sharma, 96% match score) is immediately matched without customer restart.',
-      actionLabel: '4. Re-match with Candidate 2 (Rahul)',
+      description: t('scenario.step4Desc', { defaultValue: 'The platform automatically re-scores remaining eligible candidates excluding Amit. Candidate 2 (Rahul Sharma, 96% match score) is immediately matched without customer restart.' }),
+      actionLabel: t('scenario.step4Action', { defaultValue: '4. Re-match with Candidate 2 (Rahul)' }),
       action: () => {
         setRole('customer');
         if (onNavigateTab) onNavigateTab('home');
@@ -125,12 +123,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 5,
-      title: 'Worker 2 (Rahul) Accepts the Job',
-      actor: 'Worker 2 (Rahul Sharma)',
+      title: t('scenario.step5Title', { defaultValue: 'Worker 2 (Rahul) Accepts the Job' }),
+      actor: t('scenario.step5Actor', { defaultValue: 'Worker 2 (Rahul Sharma)' }),
       badge: 'verified',
-      description:
-        'Rahul Sharma reviews the emergency job details and accepts. The booking moves to CONFIRMED.',
-      actionLabel: '5. Rahul Accepts Job',
+      description: t('scenario.step5Desc', { defaultValue: 'Rahul Sharma reviews the emergency job details and accepts. The booking moves to CONFIRMED.' }),
+      actionLabel: t('scenario.step5Action', { defaultValue: '5. Rahul Accepts Job' }),
       action: () => {
         const bId = createdBookingId || currentBooking.id;
         acceptBookingByWorker(bId, 'w_rahul');
@@ -140,12 +137,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 6,
-      title: 'Worker Travels & Arrives at Customer',
-      actor: 'Worker (Rahul Sharma)',
+      title: t('scenario.step6Title', { defaultValue: 'Worker Travels & Arrives at Customer' }),
+      actor: t('scenario.step6Actor', { defaultValue: 'Worker (Rahul Sharma)' }),
       badge: 'coop',
-      description:
-        'Rahul updates status to TRAVELLING (notifying resident) and subsequently marks ARRIVED at Green Residency.',
-      actionLabel: '6. Travel & Confirm Arrival',
+      description: t('scenario.step6Desc', { defaultValue: 'Rahul updates status to TRAVELLING (notifying resident) and subsequently marks ARRIVED at Green Residency.' }),
+      actionLabel: t('scenario.step6Action', { defaultValue: '6. Travel & Confirm Arrival' }),
       action: () => {
         const bId = createdBookingId || currentBooking.id;
         updateBookingState(bId, 'TRAVELLING');
@@ -156,12 +152,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 7,
-      title: 'Customer OTP Verification & Job Starts',
-      actor: 'Customer + Worker',
+      title: t('scenario.step7Title', { defaultValue: 'Customer OTP Verification & Job Starts' }),
+      actor: t('scenario.step7Actor', { defaultValue: 'Customer + Worker' }),
       badge: 'verified',
-      description:
-        `Customer shares the secure 4-digit code (${currentBooking?.otp || '4829'}) with Rahul. OTP is verified and status advances to IN_PROGRESS.`,
-      actionLabel: '7. Verify OTP & Start Job',
+      description: t('scenario.step7Desc', { defaultValue: 'Customer shares the secure 4-digit code ({{otp}}) with Rahul. OTP is verified and status advances to IN_PROGRESS.', otp: currentBooking?.otp || '4829' }),
+      actionLabel: t('scenario.step7Action', { defaultValue: '7. Verify OTP & Start Job' }),
       action: () => {
         const bId = createdBookingId || currentBooking.id;
         verifyBookingOTP(bId, currentBooking?.otp || '4829');
@@ -169,12 +164,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 8,
-      title: 'Worker Completes Repair Job',
-      actor: 'Worker (Rahul Sharma)',
+      title: t('scenario.step8Title', { defaultValue: 'Worker Completes Repair Job' }),
+      actor: t('scenario.step8Actor', { defaultValue: 'Worker (Rahul Sharma)' }),
       badge: 'completed',
-      description:
-        'Rahul replaces the cracked inlet gasket, checks water pressure, attaches post-work photo, and marks job as COMPLETED.',
-      actionLabel: '8. Complete Job & Notes',
+      description: t('scenario.step8Desc', { defaultValue: 'Rahul replaces the cracked inlet gasket, checks water pressure, attaches post-work photo, and marks job as COMPLETED.' }),
+      actionLabel: t('scenario.step8Action', { defaultValue: '8. Complete Job & Notes' }),
       action: () => {
         const bId = createdBookingId || currentBooking.id;
         completeBooking(
@@ -187,12 +181,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 9,
-      title: 'Transparent Payment & Fund Credit',
-      actor: 'Customer Settlement',
+      title: t('scenario.step9Title', { defaultValue: 'Transparent Payment & Fund Credit' }),
+      actor: t('scenario.step9Actor', { defaultValue: 'Customer Settlement' }),
       badge: 'coop',
-      description:
-        'Customer settles ₹600: Worker receives ₹420 (70%), Green Residency society receives ₹30 (5%), and Cooperative Fund receives ₹150 (25%).',
-      actionLabel: '9. Settle Payment',
+      description: t('scenario.step9Desc', { defaultValue: 'Customer settles ₹600: Worker receives ₹420 (70%), Green Residency society receives ₹30 (5%), and Cooperative Fund receives ₹150 (25%).' }),
+      actionLabel: t('scenario.step9Action', { defaultValue: '9. Settle Payment' }),
       action: () => {
         const bId = createdBookingId || currentBooking.id;
         payBooking(bId);
@@ -201,12 +194,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 10,
-      title: 'Customer Rates & Flags Quality Dispute',
-      actor: 'Customer (Ananya)',
+      title: t('scenario.step10Title', { defaultValue: 'Customer Rates & Flags Quality Dispute' }),
+      actor: t('scenario.step10Actor', { defaultValue: 'Customer (Ananya)' }),
       badge: 'danger',
-      description:
-        'Customer rates service and reports minor seepage fitting issue: "Minor seep from cold line connection."',
-      actionLabel: '10. Report Quality Dispute',
+      description: t('scenario.step10Desc', { defaultValue: 'Customer rates service and reports minor seepage fitting issue: "Minor seep from cold line connection."' }),
+      actionLabel: t('scenario.step10Action', { defaultValue: '10. Report Quality Dispute' }),
       action: () => {
         const bId = createdBookingId || currentBooking.id;
         rateBooking(bId, 4, 'Very fast arrival, but slight moisture dripping from the cold connector.');
@@ -219,12 +211,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 11,
-      title: 'Admin Reviews Dispute & Assigns Revisit',
-      actor: 'Society Manager (Suresh Menon)',
+      title: t('scenario.step11Title', { defaultValue: 'Admin Reviews Dispute & Assigns Revisit' }),
+      actor: t('scenario.step11Actor', { defaultValue: 'Society Manager (Suresh Menon)' }),
       badge: 'urgent',
-      description:
-        'Society Manager reviews customer claim in Quality Disputes desk and dispatches a complimentary senior revisit ticket.',
-      actionLabel: '11. Society Manager Reassigns Revisit',
+      description: t('scenario.step11Desc', { defaultValue: 'Society Manager reviews customer claim in Quality Disputes desk and dispatches a complimentary senior revisit ticket.' }),
+      actionLabel: t('scenario.step11Action', { defaultValue: '11. Society Manager Reassigns Revisit' }),
       action: () => {
         setRole('society_manager');
         const bId = createdBookingId || currentBooking.id;
@@ -235,12 +226,11 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     },
     {
       step: 12,
-      title: 'Revisit Completed & Dispute Resolved',
-      actor: 'Cooperative Resolution',
+      title: t('scenario.step12Title', { defaultValue: 'Revisit Completed & Dispute Resolved' }),
+      actor: t('scenario.step12Actor', { defaultValue: 'Cooperative Resolution' }),
       badge: 'completed',
-      description:
-        'Senior specialist completes the complimentary inspection and secures the fitting. Customer dispute is resolved successfully!',
-      actionLabel: '12. Finalize Revisit & Complete Flow',
+      description: t('scenario.step12Desc', { defaultValue: 'Senior specialist completes the complimentary inspection and secures the fitting. Customer dispute is resolved successfully!' }),
+      actionLabel: t('scenario.step12Action', { defaultValue: '12. Finalize Revisit & Complete Flow' }),
       action: () => {
         const bId = createdBookingId || currentBooking.id;
         completeRevisit(bId);
@@ -266,8 +256,8 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Section 44: End-to-End Demonstration Walkthrough"
-      subtitle={`Interactive Scripted Scenario · Step ${currentStepIndex + 1} of ${steps.length}`}
+      title={t('scenario.modalTitle', { defaultValue: 'Section 44: End-to-End Demonstration Walkthrough' })}
+      subtitle={t('scenario.modalSubtitle', { defaultValue: 'Interactive Scripted Scenario · Step {{current}} of {{total}}', current: currentStepIndex + 1, total: steps.length })}
       maxWidth="lg"
     >
       <div className="space-y-6">
@@ -276,10 +266,10 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs bg-[#6E8B67]/30 text-[#CFDDD0] px-2 py-0.5 rounded font-mono font-bold">
-                STEP {currentStepIndex + 1}/{steps.length}
+                {t('scenario.stepBadge', { defaultValue: 'STEP {{current}}/{{total}}', current: currentStepIndex + 1, total: steps.length })}
               </span>
               <span className="text-xs text-[#BCB7AD] font-semibold">
-                Perspective: {currentStep.actor}
+                {t('scenario.perspective', { defaultValue: 'Perspective: ' })}{currentStep.actor}
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-bold text-[#FAF7F2]">
@@ -295,7 +285,7 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
         {/* Step Description */}
         <div className="p-4 border border-[#E8E2D5] rounded-2xl bg-[#FCF9F3] space-y-2">
           <span className="text-xs font-semibold text-[#9A958B] uppercase tracking-wider block">
-            What Happens at this Step:
+            {t('scenario.whatHappens', { defaultValue: 'What Happens at this Step:' })}
           </span>
           <p className="text-sm text-[#524E47] leading-relaxed">
             {currentStep.description}
@@ -305,7 +295,7 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
         {/* Action Trigger */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#E8E2D5]">
           <div className="flex items-center gap-2 text-xs text-[#77736B]">
-            <span>Booking ID:</span>
+            <span>{t('scenario.bookingId', { defaultValue: 'Booking ID:' })}</span>
             <span className="font-mono font-bold text-[#292824]">
               {createdBookingId || currentBooking.id}
             </span>
@@ -318,7 +308,7 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
                 size="md"
                 onClick={() => setCurrentStepIndex(currentStepIndex - 1)}
               >
-                Previous
+                {t('common.previous', { defaultValue: 'Previous' })}
               </Button>
             )}
 
@@ -338,7 +328,7 @@ export const GuidedScenarioModal: React.FC<GuidedScenarioModalProps> = ({
         {/* Complete Overview List */}
         <div className="pt-4 border-t border-[#E8E2D5]">
           <span className="text-xs font-semibold text-[#77736B] uppercase tracking-wider block mb-2">
-            Scenario Steps Outline:
+            {t('scenario.stepsOutline', { defaultValue: 'Scenario Steps Outline:' })}
           </span>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
             {steps.map((s, idx) => (

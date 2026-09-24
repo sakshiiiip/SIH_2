@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { UserRole } from '../../types';
 import { User, HardHat, ShieldCheck, Building2, Network, PlayCircle, RotateCcw, LogOut, Lock } from 'lucide-react';
@@ -9,6 +10,7 @@ interface DemoControlBarProps {
 
 export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScenario }) => {
   const { currentRole, currentUser, bookings, resetToDemoData, logout } = useCooperativeStore();
+  const { t } = useTranslation();
 
   const activeBookingsCount = bookings.filter(
     (b) => !['COMPLETED', 'PAID', 'RATED'].includes(b.state)
@@ -33,36 +35,37 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
   const getRoleLabel = () => {
     switch (currentRole) {
       case 'platform_admin':
-        return 'Platform Admin';
+        return t('roles.platform_admin', 'Platform Admin');
       case 'worker':
-        return 'Worker';
+        return t('roles.worker', 'Worker');
       case 'society_manager':
-        return 'Society Manager';
+        return t('roles.society_manager', 'Society Manager');
       case 'federation_admin':
+        return t('roles.federation_admin', 'Federation Admin');
       case 'federation_manager':
-        return 'Federation Admin';
+        return t('roles.federation_manager', 'Federation Manager');
       default:
-        return 'Customer';
+        return t('roles.customer', 'Customer');
     }
   };
 
   return (
-    <div className="bg-[#292824] text-[#FAF7F2] border-b border-[#383530] text-xs py-2 px-4 sm:px-6 relative z-40 shadow-xs">
-      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
+    <div className="bg-slate-900 text-slate-100 border-b border-slate-800 text-xs py-2 px-4 sm:px-6 lg:px-8 relative z-40 shadow-xs">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
         {/* Left: Role Info Badge (Role Locked - No in-session switcher) */}
         <div className="flex items-center gap-2">
-          <span className="text-[11px] uppercase tracking-wider text-[#9A958B] font-semibold hidden sm:inline">
-            Active Role:
+          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold hidden sm:inline">
+            {t('demoBar.activeRole', 'Active Role:')}
           </span>
-          <div className="flex items-center gap-2 bg-[#383530] px-3 py-1 rounded-xl border border-[#524E47]/70 text-[#FAF7F2] font-medium">
+          <div className="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-xl border border-slate-700 text-slate-100 font-medium">
             {getRoleIcon()}
             <span className="text-xs font-semibold">{getRoleLabel()}</span>
-            <span className="text-[11px] text-[#9A958B] font-normal">
+            <span className="text-[11px] text-slate-400 font-normal">
               ({currentUser.name.split(' ')[0]})
             </span>
-            <span className="inline-flex items-center gap-1 text-[10px] bg-[#292824] text-[#A8B9A3] px-1.5 py-0.2 rounded font-mono">
-              <Lock className="w-2.5 h-2.5 text-[#A8B9A3]" />
-              Locked
+            <span className="inline-flex items-center gap-1 text-[10px] bg-slate-900 text-emerald-400 px-1.5 py-0.5 rounded font-mono">
+              <Lock className="w-2.5 h-2.5 text-emerald-400" />
+              {t('demoBar.locked', 'Locked')}
             </span>
           </div>
         </div>
@@ -71,20 +74,20 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
         <div className="flex items-center gap-2">
           {/* Active indicator */}
           {activeBookingsCount > 0 && (
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-[#364A32]/60 border border-[#587352]/70 text-[#CFDDD0] rounded-lg text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#A8B9A3] animate-pulse" />
-              <span>{activeBookingsCount} active job{activeBookingsCount > 1 ? 's' : ''}</span>
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/80 border border-emerald-700/60 text-emerald-200 rounded-lg text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{t('demoBar.activeJobs', { count: activeBookingsCount, defaultValue: `${activeBookingsCount} active jobs` })}</span>
             </div>
           )}
 
           {/* Guided Scenario Demo Runner Button */}
           <button
             onClick={onOpenGuidedScenario}
-            className="flex items-center gap-1.5 bg-[#B37055]/20 hover:bg-[#B37055]/30 text-[#E9C5B5] border border-[#B37055]/50 px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer text-xs"
+            className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1 rounded-xl font-medium transition-all shadow-xs cursor-pointer text-xs active:scale-[0.98]"
             title="Launch step-by-step interactive demonstration of Section 44 flow"
           >
-            <PlayCircle className="w-3.5 h-3.5 text-[#E9C5B5] shrink-0" />
-            <span className="font-semibold text-[#FAEDE8]">Interactive Demo Walkthrough</span>
+            <PlayCircle className="w-3.5 h-3.5 text-white shrink-0" />
+            <span className="font-semibold">{t('demoBar.interactiveDemoWalkthrough', 'Interactive Demo Walkthrough')}</span>
           </button>
 
           {/* Reset Demo Data */}
@@ -94,7 +97,7 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
                 resetToDemoData();
               }
             }}
-            className="text-[#BCB7AD] hover:text-[#FAF7F2] p-1.5 rounded-lg hover:bg-[#383530] transition-colors cursor-pointer"
+            className="text-slate-400 hover:text-slate-100 p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
             title="Reset to clean demo data"
             aria-label="Reset demo data"
           >
@@ -104,12 +107,12 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
           {/* Sign Out / Change Role */}
           <button
             onClick={logout}
-            className="text-[#BCB7AD] hover:text-[#D9A7A7] p-1.5 rounded-lg hover:bg-[#383530] transition-colors cursor-pointer flex items-center gap-1"
-            title="Sign out / Change role"
-            aria-label="Sign out"
+            className="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer flex items-center gap-1"
+            title={t('nav.signOut', 'Sign out / Change role')}
+            aria-label={t('nav.signOut', 'Sign out')}
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span className="text-[11px] hidden sm:inline">Sign Out</span>
+            <span className="text-[11px] hidden sm:inline">{t('nav.signOut', 'Sign Out')}</span>
           </button>
         </div>
       </div>

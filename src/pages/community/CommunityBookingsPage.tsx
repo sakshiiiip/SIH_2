@@ -1,31 +1,21 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
-import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import {
   Users,
   Calendar,
-  Sparkles,
-  ArrowRight,
   CheckCircle2,
-  Percent,
   Plus,
-  Building2,
-  ShieldCheck,
-  UserCheck,
   MessageSquare,
   Send,
-  Radio,
-  HardHat,
   Hash,
-  Share2,
-  AlertCircle,
-  HelpCircle,
 } from 'lucide-react';
 
 export const CommunityBookingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const {
     currentUser,
     communityBookings,
@@ -83,15 +73,15 @@ export const CommunityBookingsPage: React.FC = () => {
   const handleJoin = (batchId: string) => {
     joinCommunityBooking(batchId, currentUser.name, flatNumber);
     showToast({
-      title: 'Joined Group Booking',
-      message: 'Added to community bulk request with 20% savings.',
+      title: t('groupBooking.joinedGroupSuccess', 'Joined Group Booking'),
+      message: t('groupBooking.joinedGroupMsg', 'Added to community bulk request with 20% savings.'),
       type: 'success',
     });
   };
 
   const handleCreateBatch = () => {
     if (!newDescription.trim()) {
-      alert('Please enter a brief description of the group requirement.');
+      alert(t('groupBooking.enterBriefDesc', 'Please enter a brief description of the group requirement.'));
       return;
     }
     createCommunityBooking({
@@ -103,8 +93,8 @@ export const CommunityBookingsPage: React.FC = () => {
     setShowCreateModal(false);
     setNewDescription('');
     showToast({
-      title: 'Group Booking Created',
-      message: 'Neighbors in your society can now join this request.',
+      title: t('groupBooking.groupCreatedTitle', 'Group Booking Created'),
+      message: t('groupBooking.groupCreatedMsg', 'Neighbors in your society can now join this request.'),
       type: 'success',
     });
   };
@@ -116,17 +106,17 @@ export const CommunityBookingsPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-bold uppercase tracking-wider text-[#445D3E] bg-[#E6ECE4] px-2.5 py-0.5 rounded-md border border-[#CFDDD0]">
-              {isWorker ? 'My Professional Community' : 'Your Community'}
+              {isWorker ? t('community.workerCommunityBadge', 'My Professional Community') : t('community.customerCommunityBadge', 'Your Community')}
             </span>
             <Badge variant="coop" size="sm">{currentUser.societyName || 'Green Residency'}</Badge>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-semibold text-[#292824] tracking-tight leading-tight">
-            {isWorker ? 'Professional Trade Guilds' : 'Your Community Hub'}
+            {isWorker ? t('community.workerHubTitle', 'Professional Trade Guilds') : t('community.hubTitle', 'Your Community Hub')}
           </h1>
           <p className="text-xs sm:text-sm text-[#77736B] mt-0.5 font-normal leading-relaxed">
             {isWorker
-              ? 'Connect with certified trade peers, share tool tips, coordinate emergency aid, and discuss technical standards.'
-              : 'Society maintenance updates, neighbor discussions, and collective group bookings with 20% savings.'}
+              ? t('community.workerHubSubtitle', 'Connect with certified trade peers, share tool tips, coordinate emergency aid, and discuss technical standards.')
+              : t('community.hubSubtitle', 'Society maintenance updates, neighbor discussions, and collective group bookings with 20% savings.')}
           </p>
         </div>
 
@@ -138,7 +128,7 @@ export const CommunityBookingsPage: React.FC = () => {
               onClick={() => setShowCreateModal(true)}
               leftIcon={<Plus className="w-4 h-4" />}
             >
-              Start Group Booking
+              {t('groupBooking.startGroupBooking', 'Start Group Booking')}
             </Button>
           )}
         </div>
@@ -156,7 +146,7 @@ export const CommunityBookingsPage: React.FC = () => {
         >
           <div className="flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>{isWorker ? 'Trade Guild Channels' : 'Community Discussions'}</span>
+            <span>{isWorker ? t('community.guildChannels', 'Trade Guild Channels') : t('community.discussions', 'Community Discussions')}</span>
           </div>
         </button>
 
@@ -170,7 +160,7 @@ export const CommunityBookingsPage: React.FC = () => {
         >
           <div className="flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5" />
-            <span>Your neighbors are booking ({communityBookings.length})</span>
+            <span>{t('community.neighborsBooking', 'Your neighbors are booking')} ({communityBookings.length})</span>
             <span className="text-[10px] bg-[#FAEDE8] text-[#80432E] px-1.5 py-0.2 rounded font-black">20% OFF</span>
           </div>
         </button>
@@ -182,7 +172,7 @@ export const CommunityBookingsPage: React.FC = () => {
           {/* Channel Sidebar */}
           <div className="space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-[#77736B] block">
-              {isWorker ? 'My Professional Guilds' : 'Community Channels'}
+              {isWorker ? t('community.myGuilds', 'My Professional Guilds') : t('community.channels', 'Community Channels')}
             </span>
             <div className="space-y-1.5">
               {availableChannels.map((channel) => {
@@ -223,7 +213,7 @@ export const CommunityBookingsPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-[#77736B] mt-0.5">{selectedChannel?.description}</p>
               </div>
-              <Badge variant="verified" size="sm">Cooperative Verified</Badge>
+              <Badge variant="verified" size="sm">{t('community.coopVerified', 'Cooperative Verified')}</Badge>
             </div>
 
             {/* Messages container */}
@@ -231,8 +221,8 @@ export const CommunityBookingsPage: React.FC = () => {
               {channelMessages.length === 0 ? (
                 <div className="text-center py-16 text-[#77736B]">
                   <MessageSquare className="w-8 h-8 text-[#9A958B] mx-auto mb-2 opacity-50" />
-                  <p className="text-sm font-medium">No messages yet in #{selectedChannel?.name}.</p>
-                  <p className="text-xs text-[#9A958B] mt-1">Start the conversation with your community below.</p>
+                  <p className="text-sm font-medium">{t('community.noMessages', 'No messages yet in #{{name}}.', { name: selectedChannel?.name })}</p>
+                  <p className="text-xs text-[#9A958B] mt-1">{t('community.startConversation', 'Start the conversation with your community below.')}</p>
                 </div>
               ) : (
                 channelMessages.map((msg) => (
@@ -257,7 +247,7 @@ export const CommunityBookingsPage: React.FC = () => {
                       )}
                       {msg.isOfficial && (
                         <span className="text-[10px] font-bold text-[#6E8B67] bg-[#E6ECE4] px-1.5 py-0.2 rounded">
-                          Official Notice
+                          {t('community.officialNotice', 'Official Notice')}
                         </span>
                       )}
                       <span className="text-[10px] text-[#9A958B] ml-auto">{msg.timestamp}</span>
@@ -274,7 +264,7 @@ export const CommunityBookingsPage: React.FC = () => {
             <form onSubmit={handleSendMessage} className="pt-3 border-t border-[#E8E2D5] flex items-center gap-2">
               <input
                 type="text"
-                placeholder={`Post update to #${selectedChannel?.name || 'channel'}...`}
+                placeholder={t('community.postUpdatePlaceholder', 'Post update to #{{name}}...', { name: selectedChannel?.name || 'channel' })}
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
                 className="flex-1 py-2.5 px-4 bg-white border border-[#E8E2D5] rounded-xl text-xs font-medium text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#6E8B67]"
@@ -282,7 +272,7 @@ export const CommunityBookingsPage: React.FC = () => {
               <button
                 type="submit"
                 className="p-2.5 bg-[#6E8B67] hover:bg-[#587352] text-white rounded-xl transition-colors cursor-pointer"
-                aria-label="Send message"
+                aria-label={t('common.send', 'Send message')}
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -299,9 +289,9 @@ export const CommunityBookingsPage: React.FC = () => {
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-xs text-[#2A3927]">How Cooperative Group Bookings Work</h4>
+              <h4 className="font-bold text-xs text-[#2A3927]">{t('community.howGroupBookingsWork', 'How Cooperative Group Bookings Work')}</h4>
               <p className="text-[11px] text-[#364A32] mt-0.5 leading-relaxed">
-                When multiple households in the same society book identical services together on the same scheduled day, cooperative workers optimize travel time. You unlock direct 20% discounts while specialists earn uninterrupted bulk wages.
+                {t('community.howGroupBookingsWorkDesc', 'When multiple households in the same society book identical services together on the same scheduled day, cooperative workers optimize travel time. You unlock direct 20% discounts while specialists earn uninterrupted bulk wages.')}
               </p>
             </div>
           </div>
@@ -333,25 +323,25 @@ export const CommunityBookingsPage: React.FC = () => {
 
                     <div className="p-3 bg-[#FAF7F2] rounded-xl border border-[#E8E2D5] space-y-2 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="text-[#77736B]">Group Discount Target:</span>
+                        <span className="text-[#77736B]">{t('community.groupDiscountTarget', 'Group Discount Target:')}</span>
                         <strong className="text-[#445D3E] font-black">{batch.targetDiscountPercent}% OFF</strong>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[#77736B]">Participating Households:</span>
-                        <strong className="text-[#292824] font-bold">{batch.participantCount} Homes Joined</strong>
+                        <span className="text-[#77736B]">{t('community.participatingHouseholds', 'Participating Households:')}</span>
+                        <strong className="text-[#292824] font-bold">{batch.participantCount} {t('community.homesJoined', 'Homes Joined')}</strong>
                       </div>
                     </div>
                   </div>
 
                   <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
                     <span className="text-xs text-[#77736B] font-medium">
-                      Status: <strong className="text-[#6E8B67] capitalize">{batch.status}</strong>
+                      {t('common.status', 'Status:')} <strong className="text-[#6E8B67] capitalize">{batch.status}</strong>
                     </span>
 
                     {hasJoined ? (
                       <span className="px-3 py-1.5 bg-[#E6ECE4] text-[#364A32] text-xs font-bold rounded-xl border border-[#CFDDD0] flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67]" />
-                        <span>Joined Batch</span>
+                        <span>{t('community.joinedBatch', 'Joined Batch')}</span>
                       </span>
                     ) : (
                       <button
@@ -359,7 +349,7 @@ export const CommunityBookingsPage: React.FC = () => {
                         onClick={() => handleJoin(batch.id)}
                         className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
                       >
-                        Join Group Booking
+                        {t('groupBooking.joinGroup', 'Join Group Booking')}
                       </button>
                     )}
                   </div>
@@ -374,13 +364,13 @@ export const CommunityBookingsPage: React.FC = () => {
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Start Society Group Booking"
-        subtitle="Invite neighbors in your society to save together"
+        title={t('groupBooking.startSocietyGroupBooking', 'Start Society Group Booking')}
+        subtitle={t('groupBooking.inviteNeighborsDesc', 'Invite neighbors in your society to save together')}
         maxWidth="md"
       >
         <div className="space-y-4 text-xs">
           <div>
-            <label className="font-bold text-[#292824] block mb-1">Service Category</label>
+            <label className="font-bold text-[#292824] block mb-1">{t('wizard.serviceCategory', 'Service Category')}</label>
             <select
               value={newService}
               onChange={(e) => setNewService(e.target.value)}
@@ -396,10 +386,10 @@ export const CommunityBookingsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="font-bold text-[#292824] block mb-1">Description / Goal</label>
+            <label className="font-bold text-[#292824] block mb-1">{t('community.descGoal', 'Description / Goal')}</label>
             <input
               type="text"
-              placeholder="e.g. Society-wide AC deep cleaning & filter wash before summer"
+              placeholder={t('community.descGoalPlaceholder', 'e.g. Society-wide AC deep cleaning & filter wash before summer')}
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
               className="w-full p-2.5 bg-[#FCF9F3] border border-[#E8E2D5] rounded-xl text-xs text-[#292824] placeholder:text-[#9A958B] focus:outline-none focus:ring-2 focus:ring-[#6E8B67]"
@@ -407,7 +397,7 @@ export const CommunityBookingsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="font-bold text-[#292824] block mb-1">Target Date</label>
+            <label className="font-bold text-[#292824] block mb-1">{t('groupBooking.targetDate', 'Target Date')}</label>
             <input
               type="text"
               value={newDate}
@@ -422,14 +412,14 @@ export const CommunityBookingsPage: React.FC = () => {
               onClick={() => setShowCreateModal(false)}
               className="px-4 py-2 text-xs font-bold text-[#77736B] hover:text-[#292824] cursor-pointer"
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </button>
             <button
               type="button"
               onClick={handleCreateBatch}
               className="px-5 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer"
             >
-              Create Group Request
+              {t('community.createGroupRequest', 'Create Group Request')}
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Worker, WorkerDocument, DocumentStatus, WorkerSkillEntry } from '../../types';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Modal } from '../../components/common/Modal';
@@ -11,22 +12,13 @@ import {
   CheckCircle2,
   ShieldCheck,
   Phone,
-  Award,
   Briefcase,
-  FileCheck,
   FileText,
   Clock,
-  ExternalLink,
-  ChevronRight,
-  AlertCircle,
-  Eye,
   Plus,
   Check,
   X,
-  MapPin,
-  Calendar,
   User,
-  ShieldAlert,
   AlertTriangle,
 } from 'lucide-react';
 
@@ -43,6 +35,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
   worker,
   onRequestWithWorker,
 }) => {
+  const { t } = useTranslation();
   const {
     currentRole,
     reviewWorkerDocument,
@@ -73,8 +66,8 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
   const handleDocumentReview = (docId: string, status: DocumentStatus, notes?: string) => {
     reviewWorkerDocument(worker.id, docId, status, notes);
     showToast({
-      title: `Document ${status === 'APPROVED' ? 'Approved' : 'Updated'}`,
-      message: `Updated verification for ${worker.name}.`,
+      title: t('admin.verification.docUpdatedTitle', 'Document {{status}}', { status: status === 'APPROVED' ? t('common.approved', 'Approved') : t('common.updated', 'Updated') }),
+      message: t('admin.verification.docUpdatedMsg', 'Updated verification for {{name}}.', { name: worker.name }),
       type: status === 'APPROVED' ? 'success' : 'info',
     });
   };
@@ -91,13 +84,13 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
   const getDocStatusBadge = (status: DocumentStatus) => {
     switch (status) {
       case 'APPROVED':
-        return <Badge variant="verified" size="sm">✓ Approved</Badge>;
+        return <Badge variant="verified" size="sm">{t('admin.verification.approvedBadge', '✓ Approved')}</Badge>;
       case 'REJECTED':
-        return <Badge variant="danger" size="sm">Rejected</Badge>;
+        return <Badge variant="danger" size="sm">{t('common.rejected', 'Rejected')}</Badge>;
       case 'CORRECTION_REQUIRED':
-        return <Badge variant="urgent" size="sm">Needs Correction</Badge>;
+        return <Badge variant="urgent" size="sm">{t('admin.verification.needsCorrection', 'Needs Correction')}</Badge>;
       default:
-        return <Badge variant="pending" size="sm">Pending Review</Badge>;
+        return <Badge variant="pending" size="sm">{t('admin.verification.pendingReview', 'Pending Review')}</Badge>;
     }
   };
 
@@ -107,21 +100,21 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
         return (
           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#364A32] bg-[#E6ECE4] px-2 py-0.5 rounded-md border border-[#CFDDD0]">
             <CheckCircle2 className="w-3 h-3 text-[#6E8B67]" />
-            <span>Verified</span>
+            <span>{t('common.verified', 'Verified')}</span>
           </span>
         );
       case 'REJECTED':
         return (
           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
             <X className="w-3 h-3 text-rose-600" />
-            <span>Rejected</span>
+            <span>{t('common.rejected', 'Rejected')}</span>
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
             <Clock className="w-3 h-3 text-amber-600" />
-            <span>Pending Check</span>
+            <span>{t('admin.verification.pendingCheck', 'Pending Check')}</span>
           </span>
         );
     }
@@ -147,11 +140,11 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                   {isFullyEligible ? (
                     <Badge variant="verified" size="sm">
                       <CheckCircle2 className="w-3 h-3 text-[#445D3E] mr-1" />
-                      Verified & Active
+                      {t('admin.verification.verifiedActive', 'Verified & Active')}
                     </Badge>
                   ) : (
                     <Badge variant="pending" size="sm">
-                      Pending Manager Verification
+                      {t('admin.verification.pendingManager', 'Pending Manager Verification')}
                     </Badge>
                   )}
                 </div>
@@ -167,9 +160,9 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                     <Star className="w-3.5 h-3.5 fill-[#B37055] text-[#B37055]" />
                     <span className="font-mono">{worker.rating > 0 ? worker.rating : '4.9'}</span>
                   </span>
-                  <span className="text-[#77736B]">(<span className="font-mono">{worker.totalReviews}</span> reviews)</span>
+                  <span className="text-[#77736B]">(<span className="font-mono">{worker.totalReviews}</span> {t('common.reviews', 'reviews')})</span>
                   <span>·</span>
-                  <span className="text-[#524E47] font-medium"><span className="font-mono font-bold">{worker.completedJobs}</span> jobs</span>
+                  <span className="text-[#524E47] font-medium"><span className="font-mono font-bold">{worker.completedJobs}</span> {t('customer.jobsDone', 'jobs')}</span>
                 </div>
               </div>
             </div>
@@ -180,7 +173,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                 className="px-3 py-2 rounded-xl border border-[#E8E2D5] bg-[#FAF7F2] hover:bg-[#E8E2D5] text-[#524E47] text-xs font-bold transition-colors flex items-center gap-1.5"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>Call</span>
+                <span>{t('worker.callCustomer', 'Call')}</span>
               </a>
             </div>
           </div>
@@ -205,23 +198,23 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                   <div>
                     <strong className="font-bold block">
                       {isFullyEligible
-                        ? 'Eligible for Customer Job Matching'
-                        : 'Not Yet Visible to Customers'}
+                        ? t('admin.verification.eligibleMatching', 'Eligible for Customer Job Matching')
+                        : t('admin.verification.notYetVisible', 'Not Yet Visible to Customers')}
                     </strong>
                     <span className="text-[11px] opacity-90 block">
                       {isFullyEligible
-                        ? 'Personal KYC is verified and at least 1 trade skill is verified.'
-                        : 'Requires Personal KYC verified + at least 1 trade skill verified by Society Manager.'}
+                        ? t('admin.verification.eligibleDesc', 'Personal KYC is verified and at least 1 trade skill is verified.')
+                        : t('admin.verification.notEligibleDesc', 'Requires Personal KYC verified + at least 1 trade skill verified by Society Manager.')}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-[11px] font-bold px-2.5 py-1 bg-white rounded-lg border border-[#E8E2D5]">
-                    Personal KYC: {isPersonalKycVerified ? '✓ Verified' : 'Pending'}
+                    {t('admin.verification.personalKycLabel', 'Personal KYC:')} {isPersonalKycVerified ? t('admin.verification.verifiedBadge', '✓ Verified') : t('common.pending', 'Pending')}
                   </span>
                   <span className="text-[11px] font-bold px-2.5 py-1 bg-white rounded-lg border border-[#E8E2D5]">
-                    Verified Skills: {verifiedSkillsCount}/{skillEntries.length || worker.skills.length}
+                    {t('admin.verification.verifiedSkillsLabel', 'Verified Skills:')} {verifiedSkillsCount}/{skillEntries.length || worker.skills.length}
                   </span>
                 </div>
               </div>
@@ -232,7 +225,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-[#80432E]" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#80432E]">
-                      Level 1: Personal KYC Details
+                      {t('admin.verification.level1Title', 'Level 1: Personal KYC Details')}
                     </h4>
                   </div>
                   <span
@@ -242,21 +235,21 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                         : 'bg-amber-50 text-amber-900 border border-amber-200'
                     }`}
                   >
-                    {isPersonalKycVerified ? '✓ Personal KYC Verified' : 'Pending Manager Review'}
+                    {isPersonalKycVerified ? t('admin.verification.personalKycVerifiedBadge', '✓ Personal KYC Verified') : t('admin.verification.pendingManagerReview', 'Pending Manager Review')}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                   <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5]">
-                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Phone & Email</span>
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">{t('admin.verification.phoneEmail', 'Phone & Email')}</span>
                     <strong className="text-[#292824] block">{worker.phone}</strong>
                     <span className="text-[11px] text-[#77736B] block truncate">{worker.email || 'N/A'}</span>
                   </div>
 
                   <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5]">
-                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Aadhaar Number</span>
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">{t('admin.verification.aadhaarNumber', 'Aadhaar Number')}</span>
                     <strong className="text-[#292824] font-mono block">
-                      {worker.aadhaarNumber ? `XXXX-XXXX-${worker.aadhaarNumber.slice(-4)}` : 'Verified on File'}
+                      {worker.aadhaarNumber ? `XXXX-XXXX-${worker.aadhaarNumber.slice(-4)}` : t('admin.verification.verifiedOnFile', 'Verified on File')}
                     </strong>
                     {worker.aadhaarCardUrl && (
                       <a
@@ -266,26 +259,26 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                         className="text-[10px] text-[#80432E] underline flex items-center gap-0.5 mt-0.5"
                       >
                         <FileText className="w-3 h-3" />
-                        <span>View Aadhaar Document</span>
+                        <span>{t('admin.verification.viewAadhaarDoc', 'View Aadhaar Document')}</span>
                       </a>
                     )}
                   </div>
 
                   <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5]">
-                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Gender & DOB</span>
-                    <strong className="text-[#292824] block capitalize">{worker.gender || 'Not specified'}</strong>
-                    <span className="text-[11px] text-[#77736B]">{worker.dob || 'DOB on record'}</span>
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">{t('admin.verification.genderDob', 'Gender & DOB')}</span>
+                    <strong className="text-[#292824] block capitalize">{worker.gender || t('admin.verification.notSpecified', 'Not specified')}</strong>
+                    <span className="text-[11px] text-[#77736B]">{worker.dob || t('admin.verification.dobOnRecord', 'DOB on record')}</span>
                   </div>
 
                   <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5] sm:col-span-2">
-                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Residential Address & PIN</span>
-                    <p className="text-[#292824]">{worker.address || 'Address provided during onboarding'}</p>
-                    <span className="text-[10px] text-[#77736B]">PIN Code: {worker.pinCode || '411045'}</span>
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">{t('admin.verification.resAddressPin', 'Residential Address & PIN')}</span>
+                    <p className="text-[#292824]">{worker.address || t('admin.verification.addressProvided', 'Address provided during onboarding')}</p>
+                    <span className="text-[10px] text-[#77736B]">{t('admin.verification.pinCode', 'PIN Code:')} {worker.pinCode || '411045'}</span>
                   </div>
 
                   <div className="p-2.5 bg-white rounded-xl border border-[#E8E2D5]">
-                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">Emergency Contact</span>
-                    <strong className="text-[#292824] block">{worker.emergencyContactName || 'Family Member'}</strong>
+                    <span className="text-[10px] font-bold text-[#77736B] block uppercase">{t('admin.verification.emergencyContact', 'Emergency Contact')}</span>
+                    <strong className="text-[#292824] block">{worker.emergencyContactName || t('admin.verification.familyMember', 'Family Member')}</strong>
                     <span className="text-[11px] text-[#77736B]">{worker.emergencyContactNumber || worker.phone}</span>
                   </div>
                 </div>
@@ -294,7 +287,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                 {!isPersonalKycVerified && (
                   <div className="pt-2 border-t border-[#E8E2D5] flex items-center justify-between gap-2">
                     <span className="text-[11px] text-[#77736B]">
-                      Check identity and Aadhaar details to verify worker's personal record.
+                      {t('admin.verification.checkIdentityPrompt', 'Check identity and Aadhaar details to verify worker\'s personal record.')}
                     </span>
                     <div className="flex items-center gap-2">
                       <Button
@@ -304,7 +297,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                         className="text-xs"
                       >
                         <Check className="w-3 h-3 mr-1" />
-                        Verify Personal KYC
+                        {t('admin.verification.verifyPersonalKyc', 'Verify Personal KYC')}
                       </Button>
                       <Button
                         size="sm"
@@ -313,7 +306,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                         className="text-xs text-rose-700 border-rose-300 hover:bg-rose-50"
                       >
                         <X className="w-3 h-3 mr-1" />
-                        Reject
+                        {t('common.reject', 'Reject')}
                       </Button>
                     </div>
                   </div>
@@ -327,10 +320,10 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                     <Briefcase className="w-4 h-4 text-[#80432E]" />
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-[#80432E]">
-                        Level 2: Skill Information Records
+                        {t('admin.verification.level2Title', 'Level 2: Skill Information Records')}
                       </h4>
                       <p className="text-[11px] text-[#77736B]">
-                        Workers can have multiple trade skills. Each skill is verified individually.
+                        {t('admin.verification.level2Subtitle', 'Workers can have multiple trade skills. Each skill is verified individually.')}
                       </p>
                     </div>
                   </div>
@@ -343,7 +336,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                     className="text-xs font-bold text-[#80432E] border-[#80432E] hover:bg-[#FAF7F2] shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
-                    + Add Skill
+                    {t('addSkill.title', '+ Add Skill')}
                   </Button>
                 </div>
 
@@ -364,7 +357,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                               {getSkillStatusBadge(skill.status)}
                             </div>
                             <span className="text-[11px] text-[#77736B]">
-                              Experience: <strong>{skill.experienceYears} Years</strong> · Area: {skill.serviceArea}
+                              {t('admin.verification.experienceLabel', 'Experience:')} <strong>{skill.experienceYears} {t('common.years', 'Years')}</strong> · {t('admin.verification.areaLabel', 'Area:')} {skill.serviceArea}
                             </span>
                           </div>
 
@@ -378,7 +371,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                                 className="text-xs py-1 px-2.5"
                               >
                                 <Check className="w-3 h-3 mr-1" />
-                                Verify Skill
+                                {t('admin.verification.verifySkill', 'Verify Skill')}
                               </Button>
                               <Button
                                 size="sm"
@@ -401,14 +394,14 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                         {skill.certificateUrl && (
                           <div className="flex items-center gap-2 pt-1 text-[11px] text-[#80432E]">
                             <FileText className="w-3.5 h-3.5" />
-                            <span>Certificate: <strong>{skill.certificateName || 'Skill_Certificate.pdf'}</strong></span>
+                            <span>{t('admin.verification.certificateLabel', 'Certificate:')} <strong>{skill.certificateName || 'Skill_Certificate.pdf'}</strong></span>
                             <a
                               href={skill.certificateUrl}
                               target="_blank"
                               rel="noreferrer"
                               className="underline ml-1 font-semibold"
                             >
-                              View File
+                              {t('admin.verification.viewFile', 'View File')}
                             </a>
                           </div>
                         )}
@@ -417,7 +410,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                   ) : (
                     <div className="p-4 bg-white rounded-xl border border-dashed border-[#E8E2D5] text-center space-y-2">
                       <p className="text-xs text-[#77736B]">
-                        No structured skill entries added yet for {worker.name}.
+                        {t('admin.verification.noStructuredSkills', 'No structured skill entries added yet for {{name}}.', { name: worker.name })}
                       </p>
                       <Button
                         size="sm"
@@ -426,7 +419,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                         className="text-xs"
                       >
                         <Plus className="w-3.5 h-3.5 mr-1" />
-                        + Add Skill Now
+                        {t('addSkill.title', '+ Add Skill Now')}
                       </Button>
                     </div>
                   )}
@@ -442,15 +435,15 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                 </div>
                 <div>
                   <div className="text-xs font-bold text-[#2A3927]">
-                    100% Cooperative KYC Verified
+                    {t('customer.coopKycVerified', '100% Cooperative KYC Verified')}
                   </div>
                   <div className="text-[11px] text-[#524E47] mt-0.5">
-                    Physical address, police clearance, and skill assessment verified by society manager.
+                    {t('customer.coopKycVerifiedDesc', 'Physical address, police clearance, and skill assessment verified by society manager.')}
                   </div>
                 </div>
               </div>
               <Badge variant="verified" size="sm">
-                KYC & Skill Verified ✓
+                {t('customer.kycSkillVerifiedBadge', 'KYC & Skill Verified ✓')}
               </Badge>
             </div>
           )}
@@ -459,7 +452,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
           {worker.bio && (
             <div className="p-3.5 bg-[#FCF9F3] rounded-2xl border border-[#E8E2D5] text-xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#77736B] block mb-1">
-                Professional Bio
+                {t('customer.professionalBio', 'Professional Bio')}
               </span>
               <p className="text-[#524E47] leading-relaxed">{worker.bio}</p>
             </div>
@@ -474,7 +467,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
               className="text-xs text-[#80432E] border-[#80432E]"
             >
               <Plus className="w-3.5 h-3.5 mr-1" />
-              + Add Another Skill
+              {t('addSkill.addAnotherSkill', '+ Add Another Skill')}
             </Button>
 
             <div className="flex items-center gap-2">
@@ -483,7 +476,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 text-xs font-bold text-[#77736B] hover:text-[#292824] cursor-pointer"
               >
-                Close
+                {t('common.close', 'Close')}
               </button>
               {onRequestWithWorker && (
                 <button
@@ -494,7 +487,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
                   }}
                   className="px-5 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
-                  Request Service with {worker.name.split(' ')[0]}
+                  {t('customer.requestServiceWithWorker', 'Request Service with {{name}}', { name: worker.name.split(' ')[0] })}
                 </button>
               )}
             </div>
@@ -522,8 +515,8 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
           workerName={worker.name}
           onSkillAdded={(skillName) => {
             showToast({
-              title: 'Skill Added',
-              message: `${skillName} added for ${worker.name}.`,
+              title: t('addSkill.skillAddedTitle', 'Skill Added'),
+              message: t('addSkill.skillAddedMsg', '{{skill}} added for {{name}}.', { skill: skillName, name: worker.name }),
               type: 'success',
             });
           }}
