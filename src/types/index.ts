@@ -228,6 +228,8 @@ export type BookingState =
   | 'WORKER_ON_BREAK'
   | 'WORKER_ON_BREAK'
   | 'AWAITING_VERIFICATION'
+  | 'WORKER_ON_BREAK'
+  | 'WORKER_ON_BREAK'
   | 'COMPLETED'
   | 'PAID'
   | 'RATED'

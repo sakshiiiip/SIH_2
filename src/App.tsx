@@ -255,6 +255,7 @@ function AppContent() {
                 onOpenCommunity={() => setCurrentTab('worker_community')}
                 onOpenMyWork={() => setCurrentTab('worker_work')}
                 onOpenPayments={() => setCurrentTab('worker_payments')}
+                onOpenPayments={() => setCurrentTab('worker_payments')}
                 onOpenNotifications={() => setCurrentTab('worker_notifications')}
                 onOpenProfile={() => setCurrentTab('worker_profile')}
                 onOpenEarnings={() => setCurrentTab('worker_earnings')}

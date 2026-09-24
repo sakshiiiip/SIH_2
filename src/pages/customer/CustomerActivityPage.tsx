@@ -15,10 +15,6 @@ import {
   Coffee,
   Timer,
   Wrench,
-  RotateCcw,
-  ImageIcon,
-  Check,
-  Filter,
 } from 'lucide-react';
 
 // ─── Break countdown timer hook ───────────────────────────────────────────────
@@ -27,10 +23,7 @@ function useBreakCountdown(breakDetails: Booking['breakDetails']) {
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!breakDetails) {
-      setRemaining(null);
-      return;
-    }
+    if (!breakDetails) { setRemaining(null); return; }
 
     const tick = () => {
       const elapsed = (Date.now() - new Date(breakDetails.startedAt).getTime()) / 1000 / 60;
@@ -60,31 +53,25 @@ function BreakBanner({ booking }: BreakBannerProps) {
   if (!bd) return null;
 
   const startTime = new Date(bd.startedAt).toLocaleTimeString('en-IN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
+    hour: '2-digit', minute: '2-digit', hour12: true,
   });
-  const resumeMs = new Date(bd.startedAt).getTime() + bd.estimatedDurationMins * 60_000;
+  const resumeMs   = new Date(bd.startedAt).getTime() + bd.estimatedDurationMins * 60_000;
   const resumeTime = new Date(resumeMs).toLocaleTimeString('en-IN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
+    hour: '2-digit', minute: '2-digit', hour12: true,
   });
 
-  const remMins = remaining !== null ? Math.floor(remaining) : '--';
-  const remSecs = remaining !== null ? Math.floor((remaining % 1) * 60) : '--';
-  const overdue = remaining !== null && remaining === 0;
+  const remMins  = remaining !== null ? Math.floor(remaining)       : '--';
+  const remSecs  = remaining !== null ? Math.floor((remaining % 1) * 60) : '--';
+  const overdue  = remaining !== null && remaining === 0;
 
   const reasonIcons: Record<string, React.ReactNode> = {
-    'Lunch Break': <Coffee className="w-4 h-4" />,
-    'Sourcing Materials': <Wrench className="w-4 h-4" />,
-    'Sourcing Parts': <Wrench className="w-4 h-4" />,
-    'Prayer Break': <Star className="w-4 h-4" />,
-    'Personal Break': <Coffee className="w-4 h-4" />,
+    'Lunch Break':           <Coffee className="w-4 h-4" />,
+    'Sourcing Materials':    <Wrench  className="w-4 h-4" />,
+    'Sourcing Parts':        <Wrench  className="w-4 h-4" />,
+    'Prayer Break':          <Star    className="w-4 h-4" />,
+    'Personal Break':        <Coffee  className="w-4 h-4" />,
   };
-  const reasonIcon = bd.reason
-    ? reasonIcons[bd.reason] ?? <Timer className="w-4 h-4" />
-    : <Timer className="w-4 h-4" />;
+  const reasonIcon = bd.reason ? (reasonIcons[bd.reason] ?? <Timer className="w-4 h-4" />) : <Timer className="w-4 h-4" />;
 
   return (
     <div className="p-4 rounded-2xl border-2 border-amber-300 bg-amber-50 shadow-card space-y-3 animate-fade-in">
@@ -129,14 +116,8 @@ function BreakBanner({ booking }: BreakBannerProps) {
           >
             {overdue ? t('customer.overdue', 'Overdue') : t('customer.remaining', 'Remaining')}
           </p>
-          <p
-            className={`text-xs font-extrabold font-mono mt-0.5 ${
-              overdue ? 'text-red-700' : 'text-amber-900'
-            }`}
-          >
-            {overdue
-              ? '0:00'
-              : `${remMins}:${typeof remSecs === 'number' ? remSecs.toString().padStart(2, '0') : '--'}`}
+          <p className={`text-xs font-extrabold font-mono mt-0.5 ${overdue ? 'text-red-700' : 'text-amber-900'}`}>
+            {overdue ? '0:00' : `${remMins}:${typeof remSecs === 'number' ? remSecs.toString().padStart(2, '0') : '--'}`}
           </p>
         </div>
       </div>
@@ -154,34 +135,13 @@ function BreakBanner({ booking }: BreakBannerProps) {
   );
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const ACTIVE_STATES = [
-  'PENDING_ASSIGNMENT',
-  'WORKER_ASSIGNED',
-  'PENDING_WORKER_ACCEPTANCE',
-  'CONFIRMED',
-  'TRAVELLING',
-  'ARRIVED',
-  'IN_PROGRESS',
-  'WORKER_ON_BREAK',
-  'AWAITING_VERIFICATION',
-  'RE_MATCHING',
-];
-
-const COMPLETED_STATES = ['COMPLETED', 'PAID', 'RATED'];
-const REVISIT_STATES = ['REVISIT', 'REVISIT_REQUESTED', 'REVISIT_SCHEDULED'];
-const ISSUE_STATES = ['QUALITY_ISSUE', ...REVISIT_STATES];
-const HISTORY_STATES = [...COMPLETED_STATES, ...REVISIT_STATES, 'CANCELLED'];
-const SOS_STATES = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'WORKER_ON_BREAK'];
-
 // ─── Props & component ────────────────────────────────────────────────────────
 
 interface CustomerActivityPageProps {
   onTrackBooking: (booking: Booking) => void;
-  onPayBooking: (booking: Booking) => void;
-  onRateBooking: (booking: Booking) => void;
-  onRequestNew: () => void;
+  onPayBooking:   (booking: Booking) => void;
+  onRateBooking:  (booking: Booking) => void;
+  onRequestNew:   () => void;
 }
 
 type TabType = 'all' | 'active' | 'completed' | 'issues' | 'history';
@@ -197,15 +157,24 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
   const { currentUser, bookings, confirmCustomerJob } = useCooperativeStore();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
-  const [sosJob, setSosJob] = useState<Booking | null>(null);
   const [revisitModalJob, setRevisitModalJob] = useState<Booking | null>(null);
+  const [sosJob, setSosJob]       = useState<Booking | null>(null);
 
   const customerBookings = bookings.filter((b) => b.customerId === currentUser.id);
 
-  const activeBookings = customerBookings.filter((b) => ACTIVE_STATES.includes(b.state));
-  const completedBookings = customerBookings.filter((b) => COMPLETED_STATES.includes(b.state));
-  const qualityBookings = customerBookings.filter((b) => ISSUE_STATES.includes(b.state));
-  const historyBookings = customerBookings.filter((b) => HISTORY_STATES.includes(b.state));
+  // Filter lists — include WORKER_ON_BREAK in active
+  const activeBookings = customerBookings.filter((b) =>
+    ['PENDING_WORKER_ACCEPTANCE', 'CONFIRMED', 'TRAVELLING', 'ARRIVED',
+     'IN_PROGRESS', 'WORKER_ON_BREAK', 'RE_MATCHING'].includes(b.state)
+  );
+
+  const completedBookings = customerBookings.filter((b) =>
+    ['COMPLETED', 'PAID', 'RATED'].includes(b.state)
+  );
+
+  const qualityBookings = customerBookings.filter((b) =>
+    ['QUALITY_ISSUE', 'REVISIT'].includes(b.state)
+  );
 
   const totalSpent = completedBookings.reduce((sum, b) => sum + (b.pricing?.total || 0), 0);
 
@@ -224,16 +193,10 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
 
   const getFilteredBookings = () => {
     switch (activeTab) {
-      case 'active':
-        return activeBookings;
-      case 'completed':
-        return completedBookings;
-      case 'issues':
-        return qualityBookings;
-      case 'history':
-        return getHistoryList();
-      default:
-        return customerBookings;
+      case 'active':    return activeBookings;
+      case 'completed': return completedBookings;
+      case 'issues':    return qualityBookings;
+      default:          return customerBookings;
     }
   };
 
@@ -318,19 +281,19 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
       {/* Bookings List */}
       <div className="space-y-3">
         {filteredList.map((b) => {
-          const statusInfo = mapBookingStatus(b.state);
-          const isOnBreak = b.state === 'WORKER_ON_BREAK';
-          const isSOSApplicable = SOS_STATES.includes(b.state);
-          const isAwaitingVerification = b.state === 'AWAITING_VERIFICATION';
-          // Disable payment-type actions while worker is on break
+          const statusInfo    = mapBookingStatus(b.state);
+          const isOnBreak     = b.state === 'WORKER_ON_BREAK';
+          const isSOSApplicable = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'WORKER_ON_BREAK'].includes(b.state);
+          // Disable "Mark Completed" actions while worker is on break
           const actionsDisabled = isOnBreak;
-          const afterSrc = b.afterImage || b.workPhotos?.[0];
 
           return (
             <div
               key={b.id}
               className={`bg-[#FCF9F3] border rounded-2xl shadow-card flex flex-col gap-3 relative transition-all ${
-                isOnBreak ? 'border-amber-300 ring-1 ring-amber-200' : 'border-[#E8E2D5]'
+                isOnBreak
+                  ? 'border-amber-300 ring-1 ring-amber-200'
+                  : 'border-[#E8E2D5]'
               }`}
             >
               {/* Main info row */}
@@ -361,14 +324,15 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                   </div>
                 </div>
 
-                {/* Top action buttons */}
-                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 shrink-0">
                   {isSOSApplicable && (
                     <button
                       type="button"
                       onClick={() => setSosJob(b)}
                       title={t('sos.title', 'Emergency SOS')}
                       className="px-2.5 py-1.5 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                      title="Emergency SOS — always available"
                     >
                       <ShieldAlert className="w-3.5 h-3.5 text-[#C93B2B]" />
                       <span>{t('common.sos', 'SOS')}</span>
@@ -407,7 +371,7 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                 </div>
               </div>
 
-              {/* Break banner — only shown when WORKER_ON_BREAK */}
+              {/* ── Break banner — only shown when WORKER_ON_BREAK ── */}
               {isOnBreak && (
                 <div className="px-4 pb-4">
                   <BreakBanner booking={b} />
