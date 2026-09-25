@@ -5,6 +5,7 @@ import { INITIAL_SERVICES } from '../../store/initialData';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
+import { SahaAILogo } from '../../components/common/SahaAILogo';
 import {
   CheckCircle2,
   ShieldCheck,
@@ -69,10 +70,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     <div className="space-y-16 sm:space-y-24 pb-16">
       {/* HERO SECTION */}
       <section className="pt-8 sm:pt-14 text-center max-w-4xl mx-auto px-4">
+        <SahaAILogo variant="full" size="lg" className="mx-auto mb-5" />
+
         {/* Subtle trust pill */}
         <div className="inline-flex items-center gap-2 bg-teal-50/90 border border-teal-200/80 px-3.5 py-1.5 rounded-full text-xs font-medium text-teal-900 mb-6 shadow-xs animate-fade-in">
           <span className="w-2 h-2 rounded-full bg-teal-600 animate-pulse" />
-          <span>{t('landing.trustPill', { defaultValue: 'India’s First Democratic Worker Cooperative Gig Platform' })}</span>
+          <span>{t('landing.trustPill', { defaultValue: 'सहाAI — India’s First Democratic Worker Cooperative Gig Platform' })}</span>
         </div>
 
         {/* Editorial Heading */}

@@ -277,7 +277,7 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-[#80432E] bg-[#FAEDE8] border border-[#F3C5B8] px-3 py-1.5 rounded-xl flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Local Governance Active</span>
+            <span>{t('admin.localGovActive', 'Local Governance Active')}</span>
           </span>
         </div>
       </div>
@@ -290,47 +290,47 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
           onClick={() => setActiveTab('workers')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Workers</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.workers', 'Workers')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{societyWorkersCount}</span>
-          <span className="text-[10px] text-[#537895] font-semibold">Stationed</span>
+          <span className="text-[10px] text-[#537895] font-semibold">{t('admin.stats.stationed', 'Stationed')}</span>
         </div>
 
         <div
           onClick={() => setActiveTab('locations')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Locations</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.locations', 'Locations')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{societyWorkers.filter(w => w.locationStatus === 'AVAILABLE').length}</span>
-          <span className="text-[10px] text-[#6E8B67] font-semibold">● Available Now</span>
+          <span className="text-[10px] text-[#6E8B67] font-semibold">{t('admin.stats.availableNow', '● Available Now')}</span>
         </div>
 
         <div
           onClick={() => setActiveTab('verification')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Verification</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.verification', 'Verification')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{pendingWorkers.length}</span>
-          <span className="text-[10px] text-[#80432E] font-semibold">Docs Pending</span>
+          <span className="text-[10px] text-[#80432E] font-semibold">{t('admin.stats.docsPending', 'Docs Pending')}</span>
         </div>
 
         <div
           onClick={() => setActiveTab('bookings')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Active Jobs</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.activeJobs', 'Active Jobs')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{activeJobsCount}</span>
-          <span className="text-[10px] text-[#6E8B67] font-semibold">In Progress</span>
+          <span className="text-[10px] text-[#6E8B67] font-semibold">{t('admin.stats.inProgress', 'In Progress')}</span>
         </div>
 
         <div
           onClick={() => setActiveTab('quality')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card col-span-2 sm:col-span-1"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Service Issues</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.serviceIssues', 'Service Issues')}</span>
           <span className={`text-2xl font-bold font-mono block mt-1 tracking-tight ${qualityDisputes.length > 0 ? 'text-[#B86B6B]' : 'text-[#6E8B67]'}`}>
             {qualityDisputes.length}
           </span>
-          <span className="text-[10px] text-[#C93B2B] font-semibold">Review Required</span>
+          <span className="text-[10px] text-[#C93B2B] font-semibold">{t('admin.stats.reviewRequired', 'Review Required')}</span>
         </div>
       </div>
 
@@ -342,31 +342,31 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold uppercase tracking-wider text-[#C93B2B] flex items-center gap-1.5">
               <ShieldAlert className="w-4 h-4 animate-pulse" />
-              <span>Active SOS Incident Alert ({activeSOSTickets.length})</span>
+              <span>{t('admin.sosIncidentAlert', 'Active SOS Incident Alert ({{count}})', { count: activeSOSTickets.length })}</span>
             </span>
-            <Badge variant="emergency" size="sm">Urgent Intervention</Badge>
+            <Badge variant="emergency" size="sm">{t('admin.urgentIntervention', 'Urgent Intervention')}</Badge>
           </div>
 
           <div className="space-y-2">
-            {activeSOSTickets.map((t) => (
-              <div key={t.id} className="p-3 bg-white rounded-xl border border-[#F3C5B8] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            {activeSOSTickets.map((sosTicket) => (
+              <div key={sosTicket.id} className="p-3 bg-white rounded-xl border border-[#F3C5B8] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                 <div>
-                  <strong className="text-[#292824] block">{t.reportedBy === 'customer' ? 'Resident Escalation' : 'Worker Safety Alert'}: {t.reason}</strong>
-                  <span className="text-[11px] text-[#77736B]">Reported by {t.reporterName} · Booking #{t.bookingId}</span>
+                  <strong className="text-[#292824] block">{sosTicket.reportedBy === 'customer' ? t('admin.residentEscalation', 'Resident Escalation') : t('admin.workerSafetyAlert', 'Worker Safety Alert')}: {sosTicket.reason}</strong>
+                  <span className="text-[11px] text-[#77736B]">{t('admin.reportedByInfo', 'Reported by {{name}} · Booking #{{id}}', { name: sosTicket.reporterName, id: sosTicket.bookingId })}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    resolveSOSTicket(t.id, 'Resolved and verified by Society Manager.');
+                    resolveSOSTicket(sosTicket.id, 'Resolved and verified by Society Manager.');
                     showToast({
-                      title: 'SOS Incident Closed',
-                      message: `Ticket #${t.id} resolved.`,
+                      title: t('admin.sosClosedTitle', 'SOS Incident Closed'),
+                      message: t('admin.sosClosedMsg', 'Ticket #{{id}} resolved.', { id: sosTicket.id }),
                       type: 'success',
                     });
                   }}
                   className="px-3 py-1.5 bg-[#C93B2B] hover:bg-[#B33224] text-white font-bold rounded-lg transition-colors cursor-pointer shrink-0"
                 >
-                  Mark Resolved
+                  {t('admin.markResolved', 'Mark Resolved')}
                 </button>
               </div>
             ))}
@@ -379,26 +379,26 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
       {/* ========================================================================= */}
       <div className="flex items-center gap-1 border-b border-[#E8E2D5] overflow-x-auto no-scrollbar pb-1 text-xs font-bold">
         {[
-          { key: 'overview', label: 'Overview' },
-          { key: 'locations', label: `Worker Locations (${societyWorkers.length})` },
-          { key: 'workers', label: `Workers (${societyWorkersCount})` },
-          { key: 'job_verification', label: `Job Verification (${awaitingJobVerifications.length + revisitRequests.length})` },
-          { key: 'verification', label: `Worker KYC (${pendingWorkers.length})` },
-          { key: 'bookings', label: `Bookings (${societyBookings.length})` },
-          { key: 'quality', label: `Service Issues (${qualityDisputes.length})` },
-          { key: 'fund', label: 'Cooperative Fund' },
-        ].map((t) => (
+          { key: 'overview', label: t('admin.tabs.overview', 'Overview') },
+          { key: 'locations', label: t('admin.tabs.locations', 'Worker Locations ({{count}})', { count: societyWorkers.length }) },
+          { key: 'workers', label: t('admin.tabs.workers', 'Workers ({{count}})', { count: societyWorkersCount }) },
+          { key: 'job_verification', label: t('admin.tabs.job_verification', 'Job Verification ({{count}})', { count: awaitingJobVerifications.length + revisitRequests.length }) },
+          { key: 'verification', label: t('admin.tabs.verification', 'Worker KYC ({{count}})', { count: pendingWorkers.length }) },
+          { key: 'bookings', label: t('admin.tabs.bookings', 'Bookings ({{count}})', { count: societyBookings.length }) },
+          { key: 'quality', label: t('admin.tabs.quality', 'Service Issues ({{count}})', { count: qualityDisputes.length }) },
+          { key: 'fund', label: t('admin.tabs.fund', 'Cooperative Fund') },
+        ].map((tab) => (
           <button
-            key={t.key}
+            key={tab.key}
             type="button"
-            onClick={() => setActiveTab(t.key as any)}
+            onClick={() => setActiveTab(tab.key as any)}
             className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === t.key
+              activeTab === tab.key
                 ? 'bg-[#FAEDE8] text-[#80432E] border border-[#F3C5B8] shadow-2xs font-extrabold'
                 : 'text-[#77736B] hover:text-[#292824] hover:bg-[#F3EEE4]'
             }`}
           >
-            {t.label}
+            {tab.label}
           </button>
         ))}
       </div>

@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
+import { SahaAILogo } from '../../components/common/SahaAILogo';
 
 interface WorkerLoginScreenProps {
   onSuccess: (userObj: User) => void;
@@ -600,9 +601,6 @@ export const WorkerLoginScreen: React.FC<WorkerLoginScreenProps> = ({ onSuccess 
     <div className="space-y-6 pt-1 relative z-10 animate-fade-in">
       {/* Header matching requirements */}
       <div className="text-center space-y-1">
-        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E4EDF4] text-[#324F66] border border-[#B8CBDD] inline-block mb-1">
-          {t('workerLogin.portalBadge', 'WORKER PORTAL')}
-        </span>
         <h2 className="text-xl sm:text-2xl font-bold font-display text-[#292824] tracking-tight">
           {t('workerLogin.welcomeBack', 'Welcome back!')}
         </h2>

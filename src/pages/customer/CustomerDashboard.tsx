@@ -238,14 +238,15 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wider text-[#524E47]">
-            Cooperative Services
+            {t('customer.servicesHeading', 'सहाAI Services')}
           </h2>
-          <span className="text-xs text-[#77736B]">Tap any service to request</span>
+          <span className="text-xs text-[#77736B]">{t('customer.tapAnyService', 'Tap any service to request')}</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {CATEGORY_ITEMS.map((cat) => {
             const Icon = cat.icon;
+            const catKey = cat.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
             return (
               <div
                 key={cat.name}
@@ -260,17 +261,17 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                     <ArrowRight className="w-4 h-4 text-[#9A958B] group-hover:text-[#292824] group-hover:translate-x-0.5 transition-all" />
                   </div>
                   <h3 className="font-bold text-[#292824] text-sm group-hover:text-[#2A3927] leading-snug">
-                    {cat.name}
+                    {t(`customer.category.${catKey}`, cat.name)}
                   </h3>
                   <p className="text-[11px] text-[#77736B] mt-0.5 leading-normal line-clamp-2">
-                    {cat.desc}
+                    {t(`customer.categoryDesc.${catKey}`, cat.desc)}
                   </p>
                 </div>
                 <div className="mt-3 pt-2.5 border-t border-[#E8E2D5]/70 flex items-center justify-between">
                   <span className="text-[10px] font-semibold text-[#6E8B67] bg-[#E6ECE4] px-2 py-0.5 rounded-md font-mono">
-                    From {cat.price}
+                    {t('customer.fromPrice', 'From {{price}}', { price: cat.price })}
                   </span>
-                  <span className="text-[10px] text-[#77736B] font-medium"><span className="font-mono">70%</span> to worker</span>
+                  <span className="text-[10px] text-[#77736B] font-medium">{t('customer.toWorker', '70% to worker')}</span>
                 </div>
               </div>
             );
@@ -286,9 +287,9 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#324F66] flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#537895] animate-pulse" />
-              <span>Your Active Service</span>
+              <span>{t('customer.yourActiveService', 'Your Active Service')}</span>
             </span>
-            <span className="text-xs text-[#77736B] font-mono">Booking #{activeBooking.id}</span>
+            <span className="text-xs text-[#77736B] font-mono">{t('customer.bookingNum', 'Booking #{{id}}', { id: activeBooking.id })}</span>
           </div>
 
           <div className={`p-4 sm:p-5 bg-[#FCF9F3] rounded-2xl shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative border-2 transition-all ${
@@ -302,7 +303,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 type="button"
                 onClick={() => setSosJob(activeBooking)}
                 className="absolute top-3 right-3 px-2.5 py-1 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                title="Emergency Support during active service"
+                title={t('customer.emergencySosActive', 'Emergency Support during active service')}
               >
                 <ShieldAlert className="w-3.5 h-3.5 text-[#C93B2B]" />
                 <span>SOS</span>
@@ -314,7 +315,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               <div className="absolute top-0 left-0 right-0 bg-[#E6ECE4] border-b border-[#CFDDD0] rounded-t-2xl px-4 py-1.5 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#6E8B67] animate-pulse" />
                 <span className="text-[11px] font-bold text-[#364A32]">
-                  ✓ Specialist assigned — ready to track your service
+                  {t('customer.specialistAssignedBanner', '✓ Specialist assigned — ready to track your service')}
                 </span>
               </div>
             )}
@@ -344,7 +345,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   <div className="flex items-center gap-2 text-xs">
                     <strong className="text-[#292824]">{activeBooking.matchedWorker.name}</strong>
                     <span className="text-[10px] text-[#445D3E] bg-[#E6ECE4] px-1.5 py-0.5 rounded font-bold">
-                      ✓ Verified
+                      {t('customer.verified', '✓ Verified')}
                     </span>
                     <span className="text-[#77736B] flex items-center gap-0.5">
                       <Star className="w-3 h-3 fill-[#B37055] text-[#B37055]" />
@@ -354,7 +355,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 </div>
               ) : (
                 <span className="text-xs text-[#77736B]">
-                  Cooperative matching engine is confirming your specialist...
+                  {t('customer.confirmingSpecialist', 'Cooperative matching engine is confirming your specialist...')}
                 </span>
               )}
             </div>
@@ -370,7 +371,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                     : 'bg-[#537895] hover:bg-[#41637E]'
                 }`}
               >
-                <span>Track Service</span>
+                <span>{t('customer.trackService', 'Track Service')}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
 
@@ -381,7 +382,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <CreditCard className="w-3.5 h-3.5" />
-                  <span>Pay ₹{activeBooking.pricing.total}</span>
+                  <span>{t('customer.payAmountBtn', 'Pay ₹{{amount}}', { amount: activeBooking.pricing.total })}</span>
                 </button>
               )}
             </div>
@@ -395,14 +396,15 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wider text-[#524E47]">
-            Popular in {currentUser.societyName || 'Green Residency'}
+            {t('customer.popularIn', 'Popular in {{society}}', { society: currentUser.societyName || 'Green Residency' })}
           </h2>
-          <span className="text-xs text-[#6E8B67] font-semibold">Seasonal care packages</span>
+          <span className="text-xs text-[#6E8B67] font-semibold">{t('customer.seasonalCarePackages', 'Seasonal care packages')}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             {
+              id: 'monsoon',
               title: 'Monsoon Waterproofing & Leak Check',
               cat: 'Plumbing',
               prob: 'Pipe leak inspection & drainage clearing',
@@ -411,6 +413,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               badge: 'Seasonal Essential',
             },
             {
+              id: 'summer_ac',
               title: 'Pre-Summer AC Master Servicing',
               cat: 'Appliance Repairs',
               prob: 'AC deep coil cleaning & gas inspection',
@@ -419,6 +422,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               badge: 'Popular',
             },
             {
+              id: 'elec_audit',
               title: 'Apartment Electrical Safety Audit',
               cat: 'Electrical',
               prob: 'MCB load testing & socket earthing audit',
@@ -426,27 +430,27 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               price: '₹450',
               badge: 'Preventative',
             },
-          ].map((pkg, idx) => (
+          ].map((pkg) => (
             <div
-              key={idx}
+              key={pkg.id}
               onClick={() => onRequestService(pkg.cat, pkg.prob)}
               className="p-4 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl transition-all cursor-pointer flex flex-col justify-between shadow-card hover:shadow-card-hover group"
             >
               <div>
                 <span className="text-[10px] font-bold text-[#445D3E] bg-[#E6ECE4] px-2 py-0.5 rounded-md inline-block mb-2">
-                  {pkg.badge}
+                  {t(`customer.pkgBadge_${pkg.id}`, pkg.badge)}
                 </span>
                 <h3 className="font-bold text-[#292824] text-xs group-hover:text-[#2A3927] leading-snug">
-                  {pkg.title}
+                  {t(`customer.pkgTitle_${pkg.id}`, pkg.title)}
                 </h3>
                 <p className="text-[11px] text-[#77736B] mt-1 leading-normal line-clamp-2">
-                  {pkg.desc}
+                  {t(`customer.pkgDesc_${pkg.id}`, pkg.desc)}
                 </p>
               </div>
               <div className="mt-3 pt-2 border-t border-[#E8E2D5]/70 flex items-center justify-between">
                 <span className="text-xs font-black text-[#292824]">{pkg.price}</span>
                 <span className="text-xs font-bold text-[#6E8B67] flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                  <span>Book</span>
+                  <span>{t('customer.book', 'Book')}</span>
                   <ArrowRight className="w-3 h-3" />
                 </span>
               </div>
@@ -463,10 +467,10 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-[#524E47] flex items-center gap-1.5">
               <Users className="w-4 h-4 text-[#6E8B67]" />
-              <span>Your neighbors are booking</span>
+              <span>{t('customer.neighborsBooking', 'Your neighbors are booking')}</span>
             </h2>
             <p className="text-xs text-[#77736B] mt-0.5">
-              Join bulk requests in {currentUser.societyName || 'Green Residency'} for group discounts
+              {t('customer.joinBulkRequests', 'Join bulk requests in {{society}} for group discounts', { society: currentUser.societyName || 'Green Residency' })}
             </p>
           </div>
           <button
@@ -474,7 +478,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             onClick={onOpenGroupBookings ?? onOpenCommunity}
             className="text-xs font-bold text-[#6E8B67] hover:underline cursor-pointer"
           >
-            View all ({currentSocietyGroupBookings.length}) →
+            {t('customer.viewAllCount', 'View all ({{count}}) →', { count: currentSocietyGroupBookings.length })}
           </button>
         </div>
 
@@ -490,7 +494,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#80432E] bg-[#FAEDE8] border border-[#F3C5B8] px-2 py-0.5 rounded-md">
-                      {gb.serviceCategory} · {gb.targetDiscountPercent}% Community Discount
+                      {gb.serviceCategory} · {gb.targetDiscountPercent}% {t('customer.communityDiscount', 'Community Discount')}
                     </span>
                     <span className="text-xs text-[#77736B] font-medium flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
@@ -502,18 +506,18 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   </h3>
                   <div className="flex items-center gap-2 text-[11px] text-[#77736B] mt-1.5">
                     <Users className="w-3.5 h-3.5 text-[#6E8B67]" />
-                    <span><strong className="text-[#292824]">{gb.participantCount} homes</strong> joined in your society</span>
+                    <span><strong className="text-[#292824]">{t('customer.homesCount', '{{count}} homes', { count: gb.participantCount })}</strong> {t('customer.joinedInSociety', 'joined in your society')}</span>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-[#E8E2D5] flex items-center justify-between">
                   <span className="text-[11px] text-[#77736B]">
-                    Cooperative batch service
+                    {t('customer.coopBatchService', 'Cooperative batch service')}
                   </span>
                   {hasJoined ? (
                     <span className="px-3 py-1 bg-[#E6ECE4] text-[#364A32] text-xs font-bold rounded-xl border border-[#CFDDD0] flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67]" />
-                      <span>Joined</span>
+                      <span>{t('customer.joined', 'Joined')}</span>
                     </span>
                   ) : (
                     <button
@@ -521,14 +525,14 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                       onClick={() => {
                         joinCommunityBooking(gb.id, currentUser.name, currentUser.address.split(',')[0] || 'Flat 402');
                         showToast({
-                          title: 'Joined Group Booking',
-                          message: `Added to ${gb.serviceCategory} batch request.`,
+                          title: t('customer.joinedGroupBookingTitle', 'Joined Group Booking'),
+                          message: t('customer.joinedGroupBookingMsg', 'Added to {{category}} batch request.', { category: gb.serviceCategory }),
                           type: 'success',
                         });
                       }}
                       className="px-3.5 py-1.5 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
                     >
-                      Join Request
+                      {t('customer.joinRequest', 'Join Request')}
                     </button>
                   )}
                 </div>
@@ -549,8 +553,8 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               <Users className="w-5 h-5 text-[#537895]" />
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-[#292824] leading-tight">Start or Manage Group Bookings</p>
-              <p className="text-[11px] text-[#77736B] mt-0.5">Create, join, track, and pay your share — full group booking flow</p>
+              <p className="text-sm font-bold text-[#292824] leading-tight">{t('customer.startManageGroupBookings', 'Start or Manage Group Bookings')}</p>
+              <p className="text-[11px] text-[#77736B] mt-0.5">{t('customer.groupBookingSubtitle', 'Create, join, track, and pay your share — full group booking flow')}</p>
             </div>
             <ChevronRight className="w-4 h-4 text-[#77736B] group-hover:text-[#537895] group-hover:translate-x-0.5 transition-all shrink-0" />
           </button>
@@ -563,14 +567,14 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-wider text-[#524E47]">
-            Your Community
+            {t('customer.yourCommunity', 'Your Community')}
           </h2>
           <button
             type="button"
             onClick={onOpenCommunity}
             className="text-xs font-bold text-[#6E8B67] hover:underline cursor-pointer"
           >
-            Open Community Hub →
+            {t('customer.openCommunityHub', 'Open Community Hub →')}
           </button>
         </div>
 
@@ -583,7 +587,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-[#504161] bg-[#EFEBF4] px-2 py-0.5 rounded-md">
-                  Society Update
+                  {t('customer.societyUpdateBadge', 'Society Update')}
                 </span>
                 <span className="text-[10px] text-[#9A958B]">{msg.timestamp}</span>
               </div>
@@ -593,7 +597,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               <div className="text-[11px] text-[#77736B] pt-1 flex items-center gap-1.5">
                 <span className="font-semibold text-[#524E47]">{msg.authorName}</span>
                 {msg.isOfficial && (
-                  <span className="text-[10px] font-bold text-[#80432E]">· Society Manager</span>
+                  <span className="text-[10px] font-bold text-[#80432E]">· {t('customer.societyManagerRole', 'Society Manager')}</span>
                 )}
               </div>
             </div>
@@ -608,7 +612,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wider text-[#524E47]">
-              Recent Activity
+              {t('customer.recentActivity', 'Recent Activity')}
             </h2>
             {onViewActivity && (
               <button
@@ -616,7 +620,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                 onClick={onViewActivity}
                 className="text-xs font-bold text-[#6E8B67] hover:underline cursor-pointer"
               >
-                View Full Activity →
+                {t('customer.viewFullActivity', 'View Full Activity →')}
               </button>
             )}
           </div>
@@ -634,7 +638,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                   <div>
                     <strong className="text-[#292824] block">{b.serviceCategory} — {b.problemType}</strong>
                     <span className="text-[11px] text-[#77736B]">
-                      Completed on {b.updatedAt || 'Recent'} · ₹{b.pricing.total}
+                      {t('customer.completedOnDate', 'Completed on {{date}} · ₹{{amount}}', { date: b.updatedAt || 'Recent', amount: b.pricing.total })}
                     </span>
                   </div>
                 </div>
@@ -645,12 +649,12 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
                     onClick={() => onRateBooking(b)}
                     className="px-3 py-1 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] font-bold rounded-lg transition-colors cursor-pointer"
                   >
-                    Rate Service
+                    {t('customer.rateService', 'Rate Service')}
                   </button>
                 ) : (
                   <span className="text-[11px] text-[#445D3E] font-bold flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8B67]" />
-                    <span>Settled</span>
+                    <span>{t('customer.settled', 'Settled')}</span>
                   </span>
                 )}
               </div>
@@ -670,14 +674,14 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm sm:text-base font-bold text-[#292824]">
-                Need Help? Talk to a Human Support Specialist
+                {t('customer.talkToHuman', 'Need Help? Talk to a Human Support Specialist')}
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E6ECE4] text-[#364A32] hidden sm:inline">
-                No Chatbots
+                {t('customer.noChatbots', 'No Chatbots')}
               </span>
             </div>
             <p className="text-xs text-[#77736B] mt-0.5">
-              Live in-app chat, one-tap callback request, and WhatsApp support with auto-attached booking IDs.
+              {t('customer.humanSupportDesc', 'Live in-app chat, one-tap callback request, and WhatsApp support with auto-attached booking IDs.')}
             </p>
           </div>
         </div>
@@ -689,7 +693,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             className="w-full sm:w-auto px-4 py-2.5 bg-[#445D3E] hover:bg-[#364A32] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shrink-0"
           >
             <HeadphonesIcon className="w-3.5 h-3.5" />
-            <span>Connect with Human Agent</span>
+            <span>{t('customer.connectWithHuman', 'Connect with Human Agent')}</span>
           </button>
         )}
       </div>

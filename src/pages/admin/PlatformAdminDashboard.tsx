@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Badge } from '../../components/common/Badge';
 import { FederationApplication, FederationData, PlatformAuditLog } from '../../types';
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react';
 
 export const PlatformAdminDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const {
     currentUser,
     federationApplications,
@@ -227,7 +229,7 @@ export const PlatformAdminDashboard: React.FC = () => {
             }`}
           >
             <ShieldCheck className="w-4 h-4 text-purple-600" />
-            <span>Federation Verification Queue</span>
+            <span>{t('admin.tabs.fedVerificationQueue', 'Federation Verification Queue')}</span>
             {pendingCount > 0 && (
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                 {pendingCount}
@@ -244,7 +246,7 @@ export const PlatformAdminDashboard: React.FC = () => {
             }`}
           >
             <Building2 className="w-4 h-4 text-purple-600" />
-            <span>Accredited Apex Registry</span>
+            <span>{t('admin.tabs.accreditedApexRegistry', 'Accredited Apex Registry')}</span>
             <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-700">
               {approvedCount}
             </span>
@@ -259,7 +261,7 @@ export const PlatformAdminDashboard: React.FC = () => {
             }`}
           >
             <History className="w-4 h-4 text-purple-600" />
-            <span>Central Audit Log</span>
+            <span>{t('admin.tabs.centralAuditLog', 'Central Audit Log')}</span>
           </button>
 
           <button
@@ -271,7 +273,7 @@ export const PlatformAdminDashboard: React.FC = () => {
             }`}
           >
             <Sliders className="w-4 h-4 text-purple-600" />
-            <span>Platform Policy & Weights</span>
+            <span>{t('admin.tabs.coopParameters', 'Platform Policy & Weights')}</span>
           </button>
         </div>
 

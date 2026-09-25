@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from './LanguageToggle';
+import { SahaAILogo } from './SahaAILogo';
 
 interface NavbarProps {
   currentTab: string;
@@ -122,24 +123,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-6">
           <button
             onClick={handleHomeClick}
-            className="flex items-center gap-2.5 text-left group focus:outline-none cursor-pointer"
+            className="flex items-center text-left group focus:outline-none cursor-pointer py-1"
+            aria-label="सहाAI Home"
           >
-            <div className="w-9 h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-base shadow-sm group-hover:bg-emerald-800 transition-colors">
-              <span className="tracking-tighter font-extrabold">C</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-display text-xl text-slate-900 font-bold tracking-tight leading-none">
-                  Cooperative
-                </span>
-                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold px-1.5 py-0.5 rounded-full font-mono">
-                  FAIR GIG
-                </span>
-              </div>
-              <span className="text-[11px] text-slate-500 font-medium leading-none block mt-0.5">
-                Community-backed platform
-              </span>
-            </div>
+            <SahaAILogo variant="navbar" />
           </button>
 
           {/* Desktop Navigation Links */}
@@ -478,7 +465,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="font-bold text-sm text-slate-900">{displayName}</div>
                   <div className="text-xs text-slate-500 truncate mt-0.5">{currentUser.email}</div>
                   <div className="text-[11px] text-emerald-700 font-medium mt-1">
-                    {currentUser.societyName || currentUser.federationName || 'Cooperative'}
+                    {currentUser.societyName || currentUser.federationName || 'सहाAI Cooperative'}
                   </div>
                 </div>
 

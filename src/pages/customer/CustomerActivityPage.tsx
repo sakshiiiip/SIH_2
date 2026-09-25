@@ -15,6 +15,10 @@ import {
   Coffee,
   Timer,
   Wrench,
+  Filter,
+  RotateCcw,
+  Check,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 // ─── Break countdown timer hook ───────────────────────────────────────────────
@@ -178,6 +182,10 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
 
   const totalSpent = completedBookings.reduce((sum, b) => sum + (b.pricing?.total || 0), 0);
 
+  const COMPLETED_STATES = ['COMPLETED', 'PAID', 'RATED'];
+  const REVISIT_STATES = ['QUALITY_ISSUE', 'REVISIT'];
+  const historyBookings = completedBookings;
+
   const getHistoryList = () => {
     switch (historyFilter) {
       case 'finished':
@@ -283,6 +291,8 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
         {filteredList.map((b) => {
           const statusInfo    = mapBookingStatus(b.state);
           const isOnBreak     = b.state === 'WORKER_ON_BREAK';
+          const isAwaitingVerification = b.state === 'AWAITING_VERIFICATION' || b.state === 'COMPLETED';
+          const afterSrc      = b.afterImage || null;
           const isSOSApplicable = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'WORKER_ON_BREAK'].includes(b.state);
           // Disable "Mark Completed" actions while worker is on break
           const actionsDisabled = isOnBreak;
@@ -330,9 +340,8 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                     <button
                       type="button"
                       onClick={() => setSosJob(b)}
-                      title={t('sos.title', 'Emergency SOS')}
+                      title={t('sos.title', 'Emergency SOS — always available')}
                       className="px-2.5 py-1.5 bg-[#FAEDE8] hover:bg-[#F3C5B8] text-[#80432E] border border-[#F3C5B8] text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                      title="Emergency SOS — always available"
                     >
                       <ShieldAlert className="w-3.5 h-3.5 text-[#C93B2B]" />
                       <span>{t('common.sos', 'SOS')}</span>

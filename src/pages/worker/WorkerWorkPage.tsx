@@ -814,7 +814,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
               <span className="text-[#524E47]">
                 {t('worker.earnings.coopSplitModel', 'Cooperative Revenue Model:')} <strong className="text-[#364A32]">{t('worker.earnings.split70', '70% Worker')}</strong> · {t('worker.earnings.split5', '5% Society')} · {t('worker.earnings.split25', '25% Solidarity Fund')}
               </span>
-              <span className="font-mono text-[#77736B] text-[11px]">{t('worker.earnings.fairGigStandard', 'Fair Gig Standard')}</span>
+              <span className="font-mono text-[#77736B] text-[11px]">{t('worker.earnings.fairGigStandard', 'सहाAI Standard')}</span>
             </div>
           </div>
 

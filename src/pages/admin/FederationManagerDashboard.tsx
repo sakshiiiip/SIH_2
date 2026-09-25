@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCooperativeStore } from '../../store/cooperativeStore';
 import { Badge } from '../../components/common/Badge';
 import { SocietyData, Worker, WorkerVerificationStatus, PlatformAuditLog, ManagerActionType } from '../../types';
@@ -69,6 +70,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
     getSocietyManagersCount,
     showToast,
   } = useCooperativeStore();
+  const { t } = useTranslation();
 
   const [matchingWeights, setMatchingWeights] = useState(config.matchingWeights);
   const [activeSubTab, setActiveSubTab] = useState<
@@ -410,7 +412,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EFEBF4] text-[#504161] border border-[#DFD8E8]">
-                Federation Admin
+                {t('demoUsers.federationManager', 'Federation Admin')}
               </span>
               <span className="text-xs text-[#77736B]">{currentFederation.adminName || 'Meera Nambiar'}</span>
             </div>
@@ -423,7 +425,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-[#504161] bg-[#EFEBF4] border border-[#DFD8E8] px-3 py-1.5 rounded-xl flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Regional Governance ({currentFederation.region || 'Maharashtra'})</span>
+            <span>{t('admin.regionalGovActive', 'Regional Governance ({{region}})', { region: currentFederation.region || 'Maharashtra' })}</span>
           </span>
         </div>
       </div>
@@ -436,39 +438,39 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
           onClick={() => setActiveSubTab('societies')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Societies</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.societies', 'Societies')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{societies.length}</span>
-          <span className="text-[10px] text-[#504161] font-semibold">Federated Units</span>
+          <span className="text-[10px] text-[#504161] font-semibold">{t('admin.stats.federatedUnits', 'Federated Units')}</span>
         </div>
 
         <div
           onClick={() => setActiveSubTab('societies')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Society Managers</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.societyManagers', 'Society Managers')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{totalSocietyManagers}</span>
-          <span className="text-[10px] text-[#80432E] font-semibold">Local Desks</span>
+          <span className="text-[10px] text-[#80432E] font-semibold">{t('admin.stats.localDesks', 'Local Desks')}</span>
         </div>
 
         <div
           onClick={() => setActiveSubTab('worker_verification')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#504161] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Accreditation Queue</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.accreditationQueue', 'Accreditation Queue')}</span>
           <span className={`text-2xl font-bold font-mono block mt-1 tracking-tight ${federationWorkerQueue.length > 0 ? 'text-[#504161]' : 'text-[#292824]'}`}>
             {federationWorkerQueue.length}
           </span>
-          <span className="text-[10px] text-[#504161] font-semibold">Awaiting Approval</span>
+          <span className="text-[10px] text-[#504161] font-semibold">{t('admin.stats.awaitingApproval', 'Awaiting Approval')}</span>
         </div>
 
         <div
           onClick={() => setActiveSubTab('worker_directory')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Total Workforce</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.totalWorkforce', 'Total Workforce')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{workers.length}</span>
           <span className="text-[10px] text-[#537895] font-semibold">
-            {workers.filter((w) => w.verificationStatus === 'VERIFIED').length} Verified
+            {t('admin.stats.verifiedWorkersCount', '{{count}} Verified', { count: workers.filter((w) => w.verificationStatus === 'VERIFIED').length })}
           </span>
         </div>
 
@@ -476,50 +478,49 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
           onClick={() => setActiveSubTab('job_verification')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Active Jobs</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.activeJobs', 'Active Jobs')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{activeFederationBookingsCount}</span>
-          <span className="text-[10px] text-[#6E8B67] font-semibold">Cross-Society</span>
+          <span className="text-[10px] text-[#6E8B67] font-semibold">{t('admin.stats.crossSociety', 'Cross-Society')}</span>
         </div>
 
         <div
           onClick={() => setActiveSubTab('coop_fund')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">Coop Fund</span>
+          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.coopFund', 'Coop Fund')}</span>
           <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">₹{cooperativeFund.balance.toLocaleString()}</span>
-          <span className="text-[10px] text-[#6E8B67] font-semibold">25% Central Pool</span>
+          <span className="text-[10px] text-[#6E8B67] font-semibold">{t('admin.stats.centralPool', '25% Central Pool')}</span>
         </div>
       </div>
 
-      {/* ========================================================================= */}
       {/* ========================================================================= */}
       {/* 3. WORKSPACE SUB-TABS */}
       {/* ========================================================================= */}
       <div className="flex items-center gap-1 border-b border-[#E8E2D5] overflow-x-auto no-scrollbar pb-1 text-xs font-bold">
         {[
-          { key: 'overview', label: 'Overview' },
-          { key: 'map', label: `Regional Map (${societies.length} Societies)` },
-          { key: 'manager_activity', label: `Manager Activity & Audit (${auditLogs.length})` },
-          { key: 'worker_verification', label: `Worker Verification Queue (${federationWorkerQueue.length})` },
-          { key: 'worker_directory', label: `Worker Directory (${workers.length})` },
-          { key: 'societies', label: `Member Societies & Audit (${societies.length})` },
-          { key: 'accreditation', label: `Apex Accreditation (${currentApp?.status || 'APPROVED'})` },
-          { key: 'job_verification', label: `Job Review Queue (${pendingVerificationJobs.length})` },
-          { key: 'matching', label: 'Matching Preferences' },
-          { key: 'coop_fund', label: 'Cooperative Fund' },
-          { key: 'tool_bank', label: `Shared Assets (${toolBank.length})` },
-        ].map((t) => (
+          { key: 'overview', label: t('admin.tabs.overview', 'Overview') },
+          { key: 'map', label: t('admin.tabs.regionalMap', 'Regional Map ({{count}} Societies)', { count: societies.length }) },
+          { key: 'manager_activity', label: t('admin.tabs.managerActivity', 'Manager Activity & Audit ({{count}})', { count: auditLogs.length }) },
+          { key: 'worker_verification', label: t('admin.tabs.workerVerificationQueue', 'Worker Verification Queue ({{count}})', { count: federationWorkerQueue.length }) },
+          { key: 'worker_directory', label: t('admin.tabs.workerDirectory', 'Worker Directory ({{count}})', { count: workers.length }) },
+          { key: 'societies', label: t('admin.tabs.memberSocieties', 'Member Societies & Audit ({{count}})', { count: societies.length }) },
+          { key: 'accreditation', label: t('admin.tabs.apexAccreditation', 'Apex Accreditation ({{status}})', { status: currentApp?.status || 'APPROVED' }) },
+          { key: 'job_verification', label: t('admin.tabs.jobReviewQueue', 'Job Review Queue ({{count}})', { count: pendingVerificationJobs.length }) },
+          { key: 'matching', label: t('admin.tabs.matchingPreferences', 'Matching Preferences') },
+          { key: 'coop_fund', label: t('admin.tabs.fund', 'Cooperative Fund') },
+          { key: 'tool_bank', label: t('admin.tabs.sharedAssets', 'Shared Assets ({{count}})', { count: toolBank.length }) },
+        ].map((tabItem) => (
           <button
-            key={t.key}
+            key={tabItem.key}
             type="button"
-            onClick={() => setActiveSubTab(t.key as any)}
+            onClick={() => setActiveSubTab(tabItem.key as any)}
             className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-              activeSubTab === t.key
+              activeSubTab === tabItem.key
                 ? 'bg-[#EFEBF4] text-[#504161] border border-[#DFD8E8] shadow-2xs font-extrabold'
                 : 'text-[#77736B] hover:text-[#292824] hover:bg-[#F3EEE4]'
             }`}
           >
-            {t.label}
+            {tabItem.label}
           </button>
         ))}
       </div>

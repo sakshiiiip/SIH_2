@@ -12,7 +12,6 @@ import { NotificationDrawer } from './components/common/NotificationDrawer';
 import { GuidedScenarioModal } from './components/demo/GuidedScenarioModal';
 import { ToastContainer } from './components/common/Toast';
 import { CursorAura } from './components/common/CursorAura';
-import { LanguageSelectionModal } from './components/common/LanguageSelectionModal';
 
 // Pages
 import { RoleSelectionScreen } from './pages/auth/RoleSelectionScreen';
@@ -118,7 +117,6 @@ function AppContent() {
       <div className="min-h-screen bg-[#F8F4EC] text-[#292824] flex flex-col antialiased selection:bg-[#CFDDD0] selection:text-[#2A3927] relative">
         <CursorAura />
         <ToastContainer />
-        <LanguageSelectionModal />
 
         {authStep === 'select_role' ? (
           <RoleSelectionScreen
@@ -154,9 +152,6 @@ function AppContent() {
     <div className="min-h-screen bg-[#F8F4EC] text-[#292824] flex flex-col antialiased selection:bg-[#CFDDD0] selection:text-[#2A3927] pb-20 md:pb-8 relative">
       {/* GLOBAL CURSOR AMBIENT AURA */}
       <CursorAura />
-
-      {/* ONBOARDING LANGUAGE SELECTION MODAL */}
-      <LanguageSelectionModal />
 
       {/* GLOBAL ANIMATED TOAST NOTIFICATIONS */}
       <ToastContainer />
@@ -254,7 +249,6 @@ function AppContent() {
                 onOpenVerification={() => setCurrentTab('worker_verification')}
                 onOpenCommunity={() => setCurrentTab('worker_community')}
                 onOpenMyWork={() => setCurrentTab('worker_work')}
-                onOpenPayments={() => setCurrentTab('worker_payments')}
                 onOpenPayments={() => setCurrentTab('worker_payments')}
                 onOpenNotifications={() => setCurrentTab('worker_notifications')}
                 onOpenProfile={() => setCurrentTab('worker_profile')}

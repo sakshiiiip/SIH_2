@@ -34,6 +34,7 @@ import {
   useBackgroundParallax,
 } from '../../hooks/useCursorReactive';
 import { LanguageToggle } from '../../components/common/LanguageToggle';
+import { SahaAILogo } from '../../components/common/SahaAILogo';
 
 import { WorkerLoginScreen } from './WorkerLoginScreen';
 import { FederationRegistrationPage } from '../admin/FederationRegistrationPage';
@@ -311,7 +312,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
       />
 
       <div className="relative z-10 w-full max-w-2xl space-y-4 my-auto">
-        {/* Back navigation button and language toggle */}
+        {/* Top bar with back navigation and language toggle */}
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={onBack}
@@ -321,6 +322,11 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
             <span>{t('roleLogin.backToRoleSelection', { defaultValue: 'Back to Role Selection' })}</span>
           </button>
           <LanguageToggle variant="pill" />
+        </div>
+
+        {/* Centered official सहाAI logo with 2-line tagline directly above login card */}
+        <div className="flex justify-center pt-1 pb-2">
+          <SahaAILogo variant="full" size="lg" />
         </div>
 
         {/* Premium Centered Login Card with Subtle 3D Depth & Pointer Light */}

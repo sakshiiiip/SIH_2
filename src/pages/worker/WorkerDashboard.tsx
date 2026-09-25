@@ -413,6 +413,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   'Green Residency'}
               </span>
 
+              <span>·</span>
+
+              <span className="font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">
+                सहाAI Member
+              </span>
+
             </div>
 
           </div>

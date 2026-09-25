@@ -15,6 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '../../components/common/LanguageToggle';
 import { useBackgroundParallax } from '../../hooks/useCursorReactive';
+import { SahaAILogo } from '../../components/common/SahaAILogo';
 
 interface RoleSelectionScreenProps {
   onSelectRoleForAuth: (role: UserRole) => void;
@@ -48,20 +49,23 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
       {/* Main Container */}
       <div className="max-w-3xl w-full mx-auto relative z-10 space-y-7 animate-fade-in">
         {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E6ECE4] border border-[#CFDDD0] text-xs font-semibold text-[#364A32] shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-[#6E8B67] animate-pulse" />
-            <span>{t('app.subtagline', 'Community-backed platform')}</span>
-          </div>
+        <div className="text-center space-y-4">
+          <SahaAILogo
+            variant="full"
+            className="mx-auto"
+            imgClassName={viewLevel === 'main' ? 'h-24 sm:h-28' : 'h-20 sm:h-24'}
+          />
 
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-[#292824] tracking-tight leading-[1.05]">
-            {viewLevel === 'main' ? t('auth.welcome', 'Welcome to Cooperative') : t('roleSelection.title', 'Services & Operations')}
-          </h1>
-          <p className="text-sm sm:text-base text-[#77736B] max-w-md mx-auto font-normal leading-relaxed">
-            {viewLevel === 'main'
-              ? t('auth.chooseRoleSubtitle', 'How would you like to continue?')
-              : t('roleSelection.subtitle', 'Choose your operational role to access your dedicated workspace.')}
-          </p>
+          <div>
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-[#292824] tracking-tight leading-[1.05]">
+              {viewLevel === 'main' ? t('auth.welcome', 'Welcome 👋') : t('roleSelection.title', 'Services & Operations')}
+            </h1>
+            <p className="text-sm sm:text-base text-[#77736B] max-w-md mx-auto font-normal leading-relaxed mt-2">
+              {viewLevel === 'main'
+                ? t('auth.chooseRoleSubtitle', 'How would you like to continue?')
+                : t('roleSelection.subtitle', 'Choose your operational role to access your dedicated workspace.')}
+            </p>
+          </div>
         </div>
 
         {/* ========================================================================= */}
@@ -100,7 +104,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
               <div className="pt-4 border-t border-[#E8E2D5] flex items-center justify-between relative z-10">
                 <span className="text-xs font-bold text-[#445D3E] flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>{t('landing.fairGigBadge', 'Fair Gig & Verified Help')}</span>
+                  <span>{t('landing.fairGigBadge', 'Verified Help')}</span>
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-[#E6ECE4] text-[#445D3E] flex items-center justify-center group-hover:bg-[#6E8B67] group-hover:text-white transition-colors">
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

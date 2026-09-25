@@ -1,17 +1,17 @@
 {
-  "name": "Cooperative — Gig Services Platform",
-  "short_name": "Cooperative",
-  "description": "Trusted help. Powered by your community. Fair gig services platform connecting ordinary households with verified cooperative workers.",
+  "name": "सहाAI — Cooperative Gig Platform",
+  "short_name": "सहाAI",
+  "description": "सहाAI — Skill Se Pehchaan. Kaam Se Udaan. Fair gig services platform connecting ordinary households with verified cooperative workers.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F8F4EC",
-  "theme_color": "#6E8B67",
+  "theme_color": "#087757",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/logo.svg",
+      "src": "/sahaai-logo.png",
       "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
