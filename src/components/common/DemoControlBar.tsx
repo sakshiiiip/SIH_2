@@ -12,9 +12,30 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
   const { currentRole, currentUser, bookings, resetToDemoData, logout } = useCooperativeStore();
   const { t } = useTranslation();
 
-  const activeBookingsCount = bookings.filter(
-    (b) => !['COMPLETED', 'PAID', 'RATED'].includes(b.state)
-  ).length;
+  // Only show active jobs indicator in customer and worker dashboards
+  const isCustomerOrWorker = currentRole === 'customer' || currentRole === 'worker';
+
+  const activeBookingsCount = isCustomerOrWorker
+    ? bookings.filter((b) => {
+        if (['COMPLETED', 'PAID', 'RATED'].includes(b.state)) return false;
+        if (currentRole === 'customer') {
+          return (
+            b.customerId === currentUser.id ||
+            b.customerName === currentUser.name ||
+            !b.customerId
+          );
+        }
+        if (currentRole === 'worker') {
+          return (
+            b.matchedWorkerId === currentUser.id ||
+            b.matchedWorker?.id === currentUser.id ||
+            b.matchedWorker?.name === currentUser.name ||
+            b.matchedWorkerId === 'w_rahul'
+          );
+        }
+        return false;
+      }).length
+    : 0;
 
   const getRoleIcon = () => {
     switch (currentRole) {
@@ -72,8 +93,8 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
-          {/* Active indicator */}
-          {activeBookingsCount > 0 && (
+          {/* Active indicator - Only in customer and worker dashboard, removed from everywhere else */}
+          {isCustomerOrWorker && activeBookingsCount > 0 && (
             <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/80 border border-emerald-700/60 text-emerald-200 rounded-lg text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>{t('demoBar.activeJobs', { count: activeBookingsCount, defaultValue: `${activeBookingsCount} active jobs` })}</span>
