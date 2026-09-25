@@ -119,33 +119,21 @@ export const RatingAndDisputeModal: React.FC<RatingAndDisputeModalProps> = ({
             </span>
             <div className="grid grid-cols-2 gap-2">
               <div className="relative rounded-xl overflow-hidden border border-[#E8E2D5] bg-white h-24">
-                {booking.beforeImage ? (
-                  <img
-                    src={booking.beforeImage}
-                    alt="Before"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[10px] text-[#77736B]">
-                    {t('dispute.noBefore', 'No Before Photo')}
-                  </div>
-                )}
+                <img
+                  src={booking.beforeImage && !booking.beforeImage.startsWith('http') ? booking.beforeImage : '/before-repair-pipe.png'}
+                  alt="Before"
+                  className="w-full h-full object-cover"
+                />
                 <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
                   {t('dispute.before', 'Before')}
                 </span>
               </div>
               <div className="relative rounded-xl overflow-hidden border border-[#6E8B67] bg-white h-24">
-                {booking.afterImage || (booking.workPhotos && booking.workPhotos[0]) ? (
-                  <img
-                    src={booking.afterImage || (booking.workPhotos && booking.workPhotos[0])}
-                    alt="After"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[10px] text-[#77736B]">
-                    {t('dispute.noAfter', 'No After Photo')}
-                  </div>
-                )}
+                <img
+                  src={booking.afterImage && !booking.afterImage.startsWith('http') ? booking.afterImage : '/after-repair-pipe.png'}
+                  alt="After"
+                  className="w-full h-full object-cover"
+                />
                 <span className="absolute bottom-1 left-1 bg-[#445D3E] text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
                   {t('dispute.after', 'After ✓')}
                 </span>

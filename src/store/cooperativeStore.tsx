@@ -55,7 +55,7 @@ import {
 import { calculateCandidateScores } from '../utils/matchingEngine';
 import { workerAuthService } from '../services/workerAuthService';
 
-const STORAGE_KEY = 'cooperative_platform_state_v5';
+const STORAGE_KEY = 'cooperative_platform_state_v6';
 
 interface CooperativeStoreContextType {
   // Session & Authentication
@@ -308,7 +308,12 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
   });
   const [bookings, setBookings] = useState<Booking[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_bookings');
-    return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
+    const loaded: Booking[] = saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
+    return loaded.map((b) => ({
+      ...b,
+      beforeImage: b.beforeImage && !b.beforeImage.startsWith('http') ? b.beforeImage : '/before-repair-pipe.png',
+      afterImage: b.afterImage && !b.afterImage.startsWith('http') ? b.afterImage : (b.afterImage ? '/after-repair-pipe.png' : undefined),
+    }));
   });
   const [communityBookings, setCommunityBookings] = useState<CommunityBooking[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY + '_community');
