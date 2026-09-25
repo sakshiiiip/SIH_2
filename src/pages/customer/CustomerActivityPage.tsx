@@ -409,36 +409,22 @@ export const CustomerActivityPage: React.FC<CustomerActivityPageProps> = ({
                     {(b.beforeImage || afterSrc) && (
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
-                          {b.beforeImage ? (
-                            <img
-                              src={b.beforeImage}
-                              alt="Before Repair"
-                              className="w-full h-28 object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-28 flex flex-col items-center justify-center text-slate-400 text-[10px]">
-                              <ImageIcon className="w-5 h-5 mb-1" />
-                              {t('customer.noBeforePhoto', 'No Before Photo')}
-                            </div>
-                          )}
+                          <img
+                            src={b.beforeImage && !b.beforeImage.startsWith('http') ? b.beforeImage : '/before-repair-pipe.png'}
+                            alt="Before Repair"
+                            className="w-full h-28 object-cover"
+                          />
                           <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                             {t('customer.beforeRepair', 'Before Repair')}
                           </span>
                         </div>
 
                         <div className="relative rounded-xl overflow-hidden border border-[#6E8B67] bg-[#F6FAF5]">
-                          {afterSrc ? (
-                            <img
-                              src={afterSrc}
-                              alt="After Repair"
-                              className="w-full h-28 object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-28 flex flex-col items-center justify-center text-slate-400 text-[10px]">
-                              <ImageIcon className="w-5 h-5 mb-1" />
-                              {t('customer.noAfterPhoto', 'No After Photo')}
-                            </div>
-                          )}
+                          <img
+                            src={afterSrc && !afterSrc.startsWith('http') ? afterSrc : '/after-repair-pipe.png'}
+                            alt="After Repair"
+                            className="w-full h-28 object-cover"
+                          />
                           <span className="absolute bottom-1 left-1 bg-[#445D3E] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                             {t('customer.afterRepair', 'After Repair ✓')}
                           </span>
