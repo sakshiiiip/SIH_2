@@ -32,7 +32,9 @@ import {
   ShieldAlert,
   MapPin,
   HeadphonesIcon,
+  Coffee,
 } from 'lucide-react';
+import { BreakCountdownTimer } from '../../components/common/BreakCountdownTimer';
 
 interface CustomerDashboardProps {
   onRequestService: (serviceCategory?: string, problemType?: string) => void;
@@ -69,7 +71,17 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   onViewActivity,
   onOpenSupport,
 }) => {
-  const { currentUser, bookings, communityBookings, communityMessages, joinCommunityBooking, showToast } = useCooperativeStore();
+  const {
+    currentUser,
+    bookings,
+    communityBookings,
+    communityMessages,
+    joinCommunityBooking,
+    showToast,
+    acceptWorkerBreak,
+    declineWorkerBreak,
+    autoResumeWorkerBreak,
+  } = useCooperativeStore();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -103,7 +115,11 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
   }, [activeBooking?.state]);
 
   // Is SOS relevant for current active booking state?
-  const isSOSActiveState = activeBooking && ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(activeBooking.state);
+  const isSOSActiveState =
+    activeBooking &&
+    ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'BREAK_REQUESTED', 'WORKER_ON_BREAK', 'WORK_RESUMED'].includes(
+      activeBooking.state
+    );
 
   // Time-based greeting
   const getGreeting = () => {
@@ -292,9 +308,13 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
             <span className="text-xs text-[#77736B] font-mono">{t('customer.bookingNum', 'Booking #{{id}}', { id: activeBooking.id })}</span>
           </div>
 
-          <div className={`p-4 sm:p-5 bg-[#FCF9F3] rounded-2xl shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative border-2 transition-all ${
+          <div className={`p-4 sm:p-5 bg-[#FCF9F3] rounded-2xl shadow-card flex flex-col gap-4 relative border-2 transition-all ${
             activeBooking.state === 'WORKER_ASSIGNED'
               ? 'border-[#6E8B67] ring-2 ring-[#CFDDD0] ring-offset-1'
+              : activeBooking.state === 'BREAK_REQUESTED'
+              ? 'border-[#C97A3E] ring-2 ring-[#FCE8D8]'
+              : activeBooking.state === 'WORKER_ON_BREAK'
+              ? 'border-[#D9822B] bg-[#FFFBF5]'
               : 'border-[#B8CBDD]'
           }`}>
             {/* Contextual SOS button in top-right of active card */}
@@ -320,72 +340,148 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               </div>
             )}
 
-            <div className={`space-y-2 min-w-0 pr-12 sm:pr-0 ${activeBooking.state === 'WORKER_ASSIGNED' ? 'pt-6' : ''}`}>
-              <div className="flex items-center gap-2">
-                <Badge variant={activeStatusInfo.badgeVariant} dot size="sm">
-                  {activeStatusInfo.headline}
-                </Badge>
-                <span className="text-xs text-[#77736B]">· {activeStatusInfo.description}</span>
-              </div>
-
-              <div>
-                <h3 className="text-base font-extrabold text-[#292824]">
-                  {activeBooking.serviceCategory} — {activeBooking.problemType}
-                </h3>
-              </div>
-
-              {/* Worker snippet */}
-              {activeBooking.matchedWorker ? (
-                <div className="flex items-center gap-2.5 pt-0.5">
-                  <img
-                    src={activeBooking.matchedWorker.avatar}
-                    alt={activeBooking.matchedWorker.name}
-                    className="w-7 h-7 rounded-full object-cover border border-[#E8E2D5]"
-                  />
-                  <div className="flex items-center gap-2 text-xs">
-                    <strong className="text-[#292824]">{activeBooking.matchedWorker.name}</strong>
-                    <span className="text-[10px] text-[#445D3E] bg-[#E6ECE4] px-1.5 py-0.5 rounded font-bold">
-                      {t('customer.verified', '✓ Verified')}
-                    </span>
-                    <span className="text-[#77736B] flex items-center gap-0.5">
-                      <Star className="w-3 h-3 fill-[#B37055] text-[#B37055]" />
-                      <span>{activeBooking.matchedWorker.rating}</span>
-                    </span>
-                  </div>
+            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${activeBooking.state === 'WORKER_ASSIGNED' ? 'pt-6' : ''}`}>
+              <div className="space-y-2 min-w-0 pr-12 sm:pr-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant={activeStatusInfo.badgeVariant} dot size="sm">
+                    {activeStatusInfo.headline}
+                  </Badge>
+                  <span className="text-xs text-[#77736B]">· {activeStatusInfo.description}</span>
                 </div>
-              ) : (
-                <span className="text-xs text-[#77736B]">
-                  {t('customer.confirmingSpecialist', 'Cooperative matching engine is confirming your specialist...')}
-                </span>
-              )}
-            </div>
 
-            {/* Compact Action Buttons */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => onTrackBooking(activeBooking)}
-                className={`px-4 py-2 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-                  activeBooking.state === 'WORKER_ASSIGNED'
-                    ? 'bg-[#445D3E] hover:bg-[#33462F] animate-pulse'
-                    : 'bg-[#537895] hover:bg-[#41637E]'
-                }`}
-              >
-                <span>{t('customer.trackService', 'Track Service')}</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+                <div>
+                  <h3 className="text-base font-extrabold text-[#292824]">
+                    {activeBooking.serviceCategory} — {activeBooking.problemType}
+                  </h3>
+                </div>
 
-              {activeBooking.state === 'COMPLETED' && (
+                {/* Worker snippet */}
+                {activeBooking.matchedWorker ? (
+                  <div className="flex items-center gap-2.5 pt-0.5">
+                    <img
+                      src={activeBooking.matchedWorker.avatar}
+                      alt={activeBooking.matchedWorker.name}
+                      className="w-7 h-7 rounded-full object-cover border border-[#E8E2D5]"
+                    />
+                    <div className="flex items-center gap-2 text-xs">
+                      <strong className="text-[#292824]">{activeBooking.matchedWorker.name}</strong>
+                      <span className="text-[10px] text-[#445D3E] bg-[#E6ECE4] px-1.5 py-0.5 rounded font-bold">
+                        {t('customer.verified', '✓ Verified')}
+                      </span>
+                      <span className="text-[#77736B] flex items-center gap-0.5">
+                        <Star className="w-3 h-3 fill-[#B37055] text-[#B37055]" />
+                        <span>{activeBooking.matchedWorker.rating}</span>
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-xs text-[#77736B]">
+                    {t('customer.confirmingSpecialist', 'Cooperative matching engine is confirming your specialist...')}
+                  </span>
+                )}
+              </div>
+
+              {/* Compact Action Buttons */}
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => onPayBooking(activeBooking)}
-                  className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => onTrackBooking(activeBooking)}
+                  className={`px-4 py-2 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                    activeBooking.state === 'WORKER_ASSIGNED'
+                      ? 'bg-[#445D3E] hover:bg-[#33462F] animate-pulse'
+                      : 'bg-[#537895] hover:bg-[#41637E]'
+                  }`}
                 >
-                  <CreditCard className="w-3.5 h-3.5" />
-                  <span>{t('customer.payAmountBtn', 'Pay ₹{{amount}}', { amount: activeBooking.pricing.total })}</span>
+                  <span>{t('customer.trackService', 'Track Service')}</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
-              )}
+
+                {activeBooking.state === 'COMPLETED' && (
+                  <button
+                    type="button"
+                    onClick={() => onPayBooking(activeBooking)}
+                    className="px-4 py-2 bg-[#6E8B67] hover:bg-[#587352] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>{t('customer.payAmountBtn', 'Pay ₹{{amount}}', { amount: activeBooking.pricing.total })}</span>
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* BREAK REQUEST SECTION (Directly inside customer active service card) */}
+            {activeBooking.state === 'BREAK_REQUESTED' && (
+              <div className="p-3.5 bg-[#FFF7ED] border border-[#FDBA74] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#EA580C] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Coffee className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs sm:text-sm font-bold text-[#9A3412]">
+                      Worker {activeBooking.matchedWorker?.name || 'Worker'} has requested a {activeBooking.breakDetails?.estimatedDurationMins || 15}-minute break.
+                    </p>
+                    <p className="text-[11px] text-[#C2410C]">
+                      {t('customer.breakReviewNotice', 'Please approve to pause work countdown or decline if urgent.')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => declineWorkerBreak(activeBooking.id)}
+                    className="px-3 py-1.5 bg-white hover:bg-[#FFF1E6] text-[#C2410C] border border-[#FDBA74] text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                  >
+                    {t('customer.decline', 'Decline')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => acceptWorkerBreak(activeBooking.id)}
+                    className="px-3.5 py-1.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Coffee className="w-3.5 h-3.5" />
+                    <span>{t('customer.acceptBreak', 'Accept Break')}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* WORKER ON BREAK SECTION */}
+            {activeBooking.state === 'WORKER_ON_BREAK' && (
+              <div className="p-3.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Coffee className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs sm:text-sm font-bold text-[#166534]">
+                        {t('customer.workerOnBreak', 'Worker on Break')}
+                      </span>
+                      <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-ping" />
+                    </div>
+                    <p className="text-[11px] text-[#15803D]">
+                      {t('customer.breakTimerAutoNotice', 'Job is paused. Work will automatically resume when break expires.')}
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0 self-end sm:self-center">
+                  <BreakCountdownTimer
+                    startedAt={activeBooking.breakDetails?.startedAt}
+                    durationMins={activeBooking.breakDetails?.estimatedDurationMins || 15}
+                    onExpire={() => autoResumeWorkerBreak(activeBooking.id)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* WORK RESUMED SECTION */}
+            {activeBooking.state === 'WORK_RESUMED' && (
+              <div className="p-3 bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl flex items-center gap-2.5 animate-fade-in text-xs text-[#1E40AF]">
+                <span className="w-2 h-2 rounded-full bg-[#2563EB] animate-pulse" />
+                <span className="font-bold">{t('customer.workResumed', 'Work Resumed')}</span>
+                <span className="text-[#3B82F6]">· {t('customer.workResumedNotice', 'Worker is back on task.')}</span>
+              </div>
+            )}
           </div>
         </div>
       )}

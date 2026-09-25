@@ -93,11 +93,11 @@ export function mapBookingStatus(state: BookingState): StatusMappingResult {
         stepIndex: 3,
       };
 
-    case 'WORKER_ON_BREAK':
+    case 'BREAK_REQUESTED':
       return {
         customerStatus: 'WORKING',
-        headline: 'Worker on Short Break',
-        description: 'Your specialist is on a brief break and will resume shortly',
+        headline: 'Break Requested',
+        description: 'Specialist requested a short break',
         badgeVariant: 'urgent',
         stepIndex: 3,
       };
@@ -105,18 +105,18 @@ export function mapBookingStatus(state: BookingState): StatusMappingResult {
     case 'WORKER_ON_BREAK':
       return {
         customerStatus: 'WORKING',
-        headline: 'Worker on Short Break',
-        description: 'Your specialist is on a brief break and will resume shortly',
+        headline: 'Worker on Break',
+        description: 'Specialist is currently on break',
         badgeVariant: 'urgent',
         stepIndex: 3,
       };
 
-    case 'WORKER_ON_BREAK':
+    case 'WORK_RESUMED':
       return {
         customerStatus: 'WORKING',
-        headline: 'Worker on Short Break',
-        description: 'Your specialist is on a brief break and will resume shortly',
-        badgeVariant: 'urgent',
+        headline: 'Work Resumed',
+        description: 'Specialist resumed work at your residence',
+        badgeVariant: 'coop',
         stepIndex: 3,
       };
 

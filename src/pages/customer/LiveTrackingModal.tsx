@@ -9,6 +9,8 @@ import { CooperativeMap } from '../../components/common/Map/CooperativeMap';
 import { MapMarkerEntity } from '../../types/location';
 import { mapBookingStatus } from '../../utils/statusMapper';
 import { formatDistance, estimateETA, generateGoogleMapsUrl } from '../../utils/geoUtils';
+import { BreakCountdownTimer } from '../../components/common/BreakCountdownTimer';
+import { useCooperativeStore } from '../../store/cooperativeStore';
 import {
   CheckCircle2,
   Clock,
@@ -25,6 +27,7 @@ import {
   ChevronRight,
   Navigation,
   ExternalLink,
+  Coffee,
 } from 'lucide-react';
 
 interface LiveTrackingModalProps {
@@ -43,6 +46,7 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
   onOpenSOS,
 }) => {
   const { t } = useTranslation();
+  const { acceptWorkerBreak, declineWorkerBreak, autoResumeWorkerBreak } = useCooperativeStore();
   if (!isOpen || !booking) return null;
 
   const statusInfo = mapBookingStatus(booking.state);
@@ -107,6 +111,71 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
       maxWidth="lg"
     >
       <div className="space-y-5">
+        {/* BREAK REQUEST ALERT */}
+        {booking.state === 'BREAK_REQUESTED' && (
+          <div className="p-3.5 bg-[#FFF7ED] border border-[#FDBA74] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#EA580C] text-white flex items-center justify-center shrink-0">
+                <Coffee className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-[#9A3412]">
+                  Worker {booking.matchedWorker?.name || 'Worker'} has requested a {booking.breakDetails?.estimatedDurationMins || 15}-minute break.
+                </p>
+                <p className="text-[11px] text-[#C2410C]">
+                  {t('customer.breakReviewNotice', 'Please approve to pause work countdown or decline if urgent.')}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+              <button
+                type="button"
+                onClick={() => declineWorkerBreak(booking.id)}
+                className="px-3 py-1.5 bg-white hover:bg-[#FFF1E6] text-[#C2410C] border border-[#FDBA74] text-xs font-bold rounded-lg transition-colors cursor-pointer"
+              >
+                {t('customer.decline', 'Decline')}
+              </button>
+              <button
+                type="button"
+                onClick={() => acceptWorkerBreak(booking.id)}
+                className="px-3.5 py-1.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <Coffee className="w-3.5 h-3.5" />
+                <span>{t('customer.acceptBreak', 'Accept Break')}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* WORKER ON BREAK ALERT */}
+        {booking.state === 'WORKER_ON_BREAK' && (
+          <div className="p-3.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0">
+                <Coffee className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm font-bold text-[#166534]">
+                    {t('customer.workerOnBreak', 'Worker on Break')}
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-ping" />
+                </div>
+                <p className="text-[11px] text-[#15803D]">
+                  {t('customer.breakTimerAutoNotice', 'Job is paused. Work will automatically resume when break expires.')}
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0 self-end sm:self-center">
+              <BreakCountdownTimer
+                startedAt={booking.breakDetails?.startedAt}
+                durationMins={booking.breakDetails?.estimatedDurationMins || 15}
+                onExpire={() => autoResumeWorkerBreak(booking.id)}
+              />
+            </div>
+          </div>
+        )}
+
         {/* RE-MATCHING ALERT IF APPLICABLE */}
         {booking.state === 'RE_MATCHING' && (
           <div className="p-3.5 bg-[#FAEDE8] border border-[#F3C5B8] rounded-2xl flex items-start gap-3 animate-fade-in">

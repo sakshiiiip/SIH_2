@@ -89,7 +89,7 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
     ...openPendingJobs,
   ];
   const storeInProgress = workerBookings.filter((b) =>
-    ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'AWAITING_VERIFICATION'].includes(b.state)
+    ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'BREAK_REQUESTED', 'WORKER_ON_BREAK', 'WORK_RESUMED', 'AWAITING_VERIFICATION'].includes(b.state)
   );
   const storeCompleted = workerBookings.filter((b) =>
     ['COMPLETED', 'PAID', 'RATED'].includes(b.state)

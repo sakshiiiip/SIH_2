@@ -30,7 +30,8 @@ function useBreakCountdown(breakDetails: Booking['breakDetails']) {
     if (!breakDetails) { setRemaining(null); return; }
 
     const tick = () => {
-      const elapsed = (Date.now() - new Date(breakDetails.startedAt).getTime()) / 1000 / 60;
+      const startedAt = breakDetails.startedAt || breakDetails.requestedAt || new Date().toISOString();
+      const elapsed = (Date.now() - new Date(startedAt).getTime()) / 1000 / 60;
       const rem = Math.max(0, breakDetails.estimatedDurationMins - elapsed);
       setRemaining(rem);
     };
@@ -56,10 +57,11 @@ function BreakBanner({ booking }: BreakBannerProps) {
 
   if (!bd) return null;
 
-  const startTime = new Date(bd.startedAt).toLocaleTimeString('en-IN', {
+  const startedAt = bd.startedAt || bd.requestedAt || new Date().toISOString();
+  const startTime = new Date(startedAt).toLocaleTimeString('en-IN', {
     hour: '2-digit', minute: '2-digit', hour12: true,
   });
-  const resumeMs   = new Date(bd.startedAt).getTime() + bd.estimatedDurationMins * 60_000;
+  const resumeMs   = new Date(startedAt).getTime() + bd.estimatedDurationMins * 60_000;
   const resumeTime = new Date(resumeMs).toLocaleTimeString('en-IN', {
     hour: '2-digit', minute: '2-digit', hour12: true,
   });

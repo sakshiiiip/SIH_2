@@ -149,9 +149,17 @@ interface CooperativeStoreContextType {
     summary?: string,
     evidenceImages?: string[]
   ) => void;
-  /** Worker takes a break — moves booking state to WORKER_ON_BREAK */
+  /** Worker requests a break — moves booking state to BREAK_REQUESTED */
+  requestWorkerBreak: (bookingId: string, durationMins: number, reason?: string) => void;
+  /** Customer accepts break request — moves booking state to WORKER_ON_BREAK */
+  acceptWorkerBreak: (bookingId: string) => void;
+  /** Customer declines break request — returns booking state to IN_PROGRESS */
+  declineWorkerBreak: (bookingId: string) => void;
+  /** Automatically resumes when timer ends — moves booking state to WORK_RESUMED then IN_PROGRESS */
+  autoResumeWorkerBreak: (bookingId: string) => void;
+  /** Legacy break triggers */
   startWorkerBreak: (bookingId: string, durationMins: number, reason?: string) => void;
-  /** Worker resumes — moves booking state back to IN_PROGRESS */
+  endWorkerBreak: (bookingId: string) => void;
   
   uploadJobPhotos: (bookingId: string, photos: { beforeImage?: string; afterImage?: string }) => void;
   confirmCustomerJob: (bookingId: string) => void;
@@ -159,8 +167,6 @@ interface CooperativeStoreContextType {
   requestRevisit: (bookingId: string, revisitData: { reason: string }) => void;
   scheduleRevisit: (bookingId: string, newDate: string) => void;
   cancelJob: (bookingId: string, cancellationData: { cancelledBy: string; reason: string }) => void;
-
-  endWorkerBreak: (bookingId: string) => void;
   payBooking: (bookingId: string) => void;
   rateBooking: (bookingId: string, stars: number, comment: string) => void;
   reportQualityIssue: (
@@ -1974,37 +1980,85 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
   };
 
   // WORKER BREAK MANAGEMENT
-  const startWorkerBreak = (
+  const requestWorkerBreak = (
     bookingId: string,
     durationMins: number,
     reason?: string,
   ) => {
+    const booking = bookings.find((b) => b.id === bookingId);
+    const workerName = booking?.matchedWorker?.name || currentUser?.name || 'Priya';
+
     setBookings((prev) =>
       prev.map((b) =>
         b.id === bookingId
           ? {
               ...b,
-              state: 'WORKER_ON_BREAK' as BookingState,
+              state: 'BREAK_REQUESTED' as BookingState,
               updatedAt: new Date().toISOString(),
               breakDetails: {
-                startedAt: new Date().toISOString(),
+                requestedAt: new Date().toISOString(),
                 estimatedDurationMins: durationMins,
                 reason,
+                status: 'REQUESTED' as const,
               },
             }
           : b,
       ),
     );
+
+    showToast({
+      title: 'Break Requested',
+      message: `Requested ${durationMins}-minute break. Waiting for customer response.`,
+      type: 'info',
+    });
+
     addNotification({
       recipientRole: 'customer',
-      title: 'Worker is on a Short Break',
-      message: `Your worker has paused for ${durationMins} mins${reason ? ` (${reason})` : ''}. Work will resume shortly.`,
+      title: 'Break Request',
+      message: `${workerName} has requested a ${durationMins}-minute break.`,
       type: 'info',
       relatedBookingId: bookingId,
     });
   };
 
-  const endWorkerBreak = (bookingId: string) => {
+  const acceptWorkerBreak = (bookingId: string) => {
+    let dur = 15;
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          dur = b.breakDetails?.estimatedDurationMins || 15;
+          return {
+            ...b,
+            state: 'WORKER_ON_BREAK' as BookingState,
+            updatedAt: new Date().toISOString(),
+            breakDetails: {
+              ...b.breakDetails,
+              startedAt: new Date().toISOString(),
+              estimatedDurationMins: dur,
+              status: 'ACCEPTED' as const,
+            },
+          };
+        }
+        return b;
+      }),
+    );
+
+    showToast({
+      title: 'Break Accepted',
+      message: `Worker break approved for ${dur} minutes.`,
+      type: 'success',
+    });
+
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Break Request Accepted',
+      message: `Your ${dur}-minute break was accepted by the customer.`,
+      type: 'success',
+      relatedBookingId: bookingId,
+    });
+  };
+
+  const declineWorkerBreak = (bookingId: string) => {
     setBookings((prev) =>
       prev.map((b) =>
         b.id === bookingId
@@ -2017,18 +2071,80 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
           : b,
       ),
     );
-    
 
-  
+    showToast({
+      title: 'Break Request Declined',
+      message: 'You declined the break request. Work remains in progress.',
+      type: 'info',
+    });
 
-  
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Break Request Declined',
+      message: 'Customer requested to continue work without break.',
+      type: 'warning',
+      relatedBookingId: bookingId,
+    });
+  };
+
+  const autoResumeWorkerBreak = (bookingId: string) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? {
+              ...b,
+              state: 'WORK_RESUMED' as BookingState,
+              updatedAt: new Date().toISOString(),
+              breakDetails: undefined,
+            }
+          : b,
+      ),
+    );
+
+    showToast({
+      title: 'Work Resumed',
+      message: 'Break ended. Service is back in progress.',
+      type: 'success',
+    });
+
     addNotification({
       recipientRole: 'customer',
-      title: 'Worker Resumed Work',
-      message: 'Your specialist has resumed work. Service is back in progress.',
+      title: 'Work Resumed',
+      message: 'Break ended. Your specialist has resumed work.',
       type: 'success',
       relatedBookingId: bookingId,
     });
+
+    addNotification({
+      recipientRole: 'worker',
+      title: 'Work Resumed',
+      message: 'Break ended. Job status updated to Work in Progress.',
+      type: 'info',
+      relatedBookingId: bookingId,
+    });
+
+    // After 4 seconds, clean state to standard IN_PROGRESS
+    setTimeout(() => {
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.id === bookingId && b.state === 'WORK_RESUMED'
+            ? { ...b, state: 'IN_PROGRESS' as BookingState, updatedAt: new Date().toISOString() }
+            : b
+        )
+      );
+    }, 4000);
+  };
+
+  const startWorkerBreak = (
+    bookingId: string,
+    durationMins: number,
+    reason?: string,
+  ) => {
+    requestWorkerBreak(bookingId, durationMins, reason);
+  };
+
+  const endWorkerBreak = (bookingId: string) => {
+    autoResumeWorkerBreak(bookingId);
   };
 
   
@@ -3048,6 +3164,10 @@ export function CooperativeStoreProvider({ children }: { children: ReactNode }) 
         verifyBookingOTP,
         verifyOTPAndStartJob,
         completeBooking,
+        requestWorkerBreak,
+        acceptWorkerBreak,
+        declineWorkerBreak,
+        autoResumeWorkerBreak,
         startWorkerBreak,
         endWorkerBreak,
         uploadJobPhotos,

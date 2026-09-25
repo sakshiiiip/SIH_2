@@ -144,7 +144,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     (b) =>
       (b.matchedWorkerId === currentWorker.id ||
         b.matchedWorkerId === 'w_rahul') &&
-      ['CONFIRMED', 'TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(
+      ['CONFIRMED', 'TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'BREAK_REQUESTED', 'WORKER_ON_BREAK', 'WORK_RESUMED'].includes(
         b.state
       ) &&
       isWorkerSkillMatching(

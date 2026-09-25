@@ -13,6 +13,7 @@ import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Card } from '../../components/common/Card';
+import { BreakCountdownTimer } from '../../components/common/BreakCountdownTimer';
 import {
   Navigation,
   MapPin,
@@ -34,6 +35,7 @@ import {
   ExternalLink,
   Compass,
   Sparkles,
+  Hourglass,
 } from 'lucide-react';
 
 // ─── Break reason options ─────────────────────────────────────────────────────
@@ -344,6 +346,8 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
     updateBookingState,
     verifyBookingOTP,
     completeBooking,
+    requestWorkerBreak,
+    autoResumeWorkerBreak,
     startWorkerBreak,
     endWorkerBreak,
     uploadJobPhotos,
@@ -468,7 +472,7 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
 
   const handleBreakConfirm = (durationMins: BreakDuration, reason?: string) => {
     setShowBreakPicker(false);
-    startWorkerBreak(bookingId, durationMins, reason);
+    requestWorkerBreak(bookingId, durationMins, reason);
   };
 
   const handleResumeWork = () => endWorkerBreak(bookingId);
@@ -651,14 +655,18 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
               </div>
             )}
 
-            {/* STATE 4: IN_PROGRESS → 4-step wizard + Take a Break */}
-            {booking.state === 'IN_PROGRESS' && (
+            {/* STATE 4: IN_PROGRESS or WORK_RESUMED → 4-step wizard + Take a Break */}
+            {(booking.state === 'IN_PROGRESS' || booking.state === 'WORK_RESUMED') && (
               <div className="space-y-5">
                 {/* Status row + Take a Break CTA */}
                 <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-2 text-emerald-800 text-xs font-semibold">
                     <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                    <span>{t('worker.jobExec.workUnderway', 'Work Underway (OTP Verified)')}</span>
+                    <span>
+                      {booking.state === 'WORK_RESUMED'
+                        ? t('worker.jobExec.workResumedActive', 'Work Resumed (Active)')
+                        : t('worker.jobExec.workUnderway', 'Work Underway (OTP Verified)')}
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -857,9 +865,53 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
               </div>
             )}
 
-            {/* STATE 4b: WORKER_ON_BREAK → Resume controls */}
+            {/* STATE 4a: BREAK_REQUESTED → Waiting for customer approval */}
+            {booking.state === 'BREAK_REQUESTED' && (
+              <div className="space-y-4 animate-fade-in">
+                <div className="p-4 bg-orange-50 border-2 border-orange-300 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-10 h-10 rounded-xl bg-orange-200 flex items-center justify-center shrink-0">
+                      <Hourglass className="w-5 h-5 text-orange-700 animate-spin" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold text-orange-950">
+                        {t('worker.jobExec.breakRequestedTitle', 'Break Request Submitted')}
+                      </p>
+                      <p className="text-xs text-orange-800">
+                        {t('worker.jobExec.breakRequestedSubtitle', 'Waiting for customer approval...')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white/80 rounded-xl border border-orange-200 text-xs text-orange-900 space-y-1">
+                    <p>
+                      <strong>{t('worker.jobExec.requestedDuration', 'Requested Duration:')}</strong>{' '}
+                      {booking.breakDetails?.estimatedDurationMins || 15} minutes
+                    </p>
+                    {booking.breakDetails?.reason && (
+                      <p>
+                        <strong>{t('worker.jobExec.reason', 'Reason:')}</strong> {booking.breakDetails.reason}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-orange-700 pt-1">
+                      {t('worker.jobExec.customerPromptedNotice', 'The customer has been notified directly on their screen to Accept or Decline your break.')}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => updateBookingState(booking.id, 'IN_PROGRESS')}
+                  className="w-full py-2.5 bg-white hover:bg-orange-50 text-orange-700 border border-orange-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  {t('worker.jobExec.cancelBreakRequest', 'Cancel Break Request & Keep Working')}
+                </button>
+              </div>
+            )}
+
+            {/* STATE 4b: WORKER_ON_BREAK → Active Break with Countdown & Auto Resume */}
             {booking.state === 'WORKER_ON_BREAK' && (
-              <div className="space-y-4">
+              <div className="space-y-4 animate-fade-in">
                 <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3">
                   <div className="flex items-center gap-2.5">
                     <span className="w-9 h-9 rounded-xl bg-amber-200 flex items-center justify-center shrink-0">
@@ -868,13 +920,21 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                     <div>
                       <p className="text-sm font-bold text-amber-900">{t('worker.jobExec.onBreakTitle', "You're on a Break")}</p>
                       <p className="text-[11px] text-amber-700">
-                        {t('worker.jobExec.onBreakSubtitle', 'Customer has been notified · Job paused')}
+                        {t('worker.jobExec.breakAcceptedNotice', 'Customer accepted your break · Timer is active')}
                       </p>
                     </div>
                     <span className="ml-auto flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                       {t('worker.jobExec.onBreakPaused', 'PAUSED')}
                     </span>
+                  </div>
+
+                  <div className="flex justify-center py-2">
+                    <BreakCountdownTimer
+                      startedAt={booking.breakDetails?.startedAt}
+                      durationMins={booking.breakDetails?.estimatedDurationMins || 15}
+                      onExpire={() => autoResumeWorkerBreak(booking.id)}
+                    />
                   </div>
 
                   {booking.breakDetails && (
@@ -907,11 +967,11 @@ export const WorkerJobExecutionModal: React.FC<WorkerJobExecutionModalProps> = (
                   className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] shadow-xs"
                 >
                   <Play className="w-5 h-5" />
-                  {t('worker.jobExec.resumeWork', 'Resume Work')}
+                  {t('worker.jobExec.resumeWorkEarly', 'Resume Work Early')}
                 </button>
 
                 <p className="text-center text-[11px] text-slate-500">
-                  {t('worker.jobExec.resumeNotice', 'Resuming will notify the customer that work has restarted.')}
+                  {t('worker.jobExec.autoResumeTimerNotice', 'When the timer expires, work will automatically resume.')}
                 </p>
               </div>
             )}
