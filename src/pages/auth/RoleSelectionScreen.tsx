@@ -276,10 +276,10 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-2xl bg-[#141413] text-purple-300 border border-[#2A2926] flex items-center justify-center shadow-xs">
+                    <div className="w-12 h-12 rounded-2xl bg-[#EFEBF4] text-[#504161] border border-[#D5CBE5] flex items-center justify-center shadow-xs">
                       <ShieldCheck className="w-6 h-6" />
                     </div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#141413] text-purple-200 border border-[#2A2926]">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EFEBF4] text-[#504161] border border-[#D5CBE5]">
                       {t('roleSelection.authorityBadge', 'Central Authority')}
                     </span>
                   </div>
@@ -295,8 +295,8 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({
                 </div>
 
                 <div className="pt-3 border-t border-[#E8E2D5] flex items-center justify-between">
-                  <span className="text-xs font-semibold text-purple-950 font-bold">{t('roleSelection.loginAuthority', 'Login as Authority')}</span>
-                  <ArrowRight className="w-4 h-4 text-purple-900 group-hover:translate-x-0.5 transition-transform" />
+                  <span className="text-xs font-semibold text-[#504161] font-bold">{t('roleSelection.loginAuthority', 'Login as Authority')}</span>
+                  <ArrowRight className="w-4 h-4 text-[#504161] group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
             </div>

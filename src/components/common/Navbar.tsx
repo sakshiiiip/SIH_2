@@ -95,7 +95,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const getRoleBadgeVariant = () => {
     switch (currentRole) {
       case 'platform_admin':
-        return 'bg-[#141413] text-purple-200 border-[#2A2926]';
+        return 'bg-[#EFEBF4] text-[#504161] border-[#D5CBE5]';
       case 'worker':
         return 'bg-[#E4EDF4] text-[#263D50] border-[#CDE0EC]';
       case 'society_manager':
@@ -407,7 +407,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => onSelectTab('plat_dashboard')}
                   className={`px-3 py-1.5 rounded-xl transition-colors cursor-pointer ${
                     currentTab === 'plat_dashboard'
-                      ? 'text-purple-900 bg-purple-100 font-bold'
+                      ? 'text-[#504161] bg-[#EFEBF4] font-bold border border-[#D5CBE5]'
                       : 'hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >

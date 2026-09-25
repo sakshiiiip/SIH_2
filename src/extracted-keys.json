@@ -503,7 +503,7 @@
   "federationAuth.pendingHeading": "Registration Pending Platform Verification",
   "federationAuth.applicationRef": "Application Ref: ",
   "federationAuth.workspaceLocked": "Workspace Access Locked",
-  "federationAuth.pendingMessage": "Your statutory application for {{name}} has been transmitted and is currently undergoing audit by the Platform Central Authority (Dr. Rajeshwar Sengupta, Chief Registrar). Workspace access will be unlocked once approved.",
+  "federationAuth.pendingMessage": "Your statutory application for {{name}} has been transmitted and is currently undergoing audit by the Platform Central Authority (Rajeshwar Sen Gupta, Chief Registrar). Workspace access will be unlocked once approved.",
   "federationAuth.regNo": "Registration No:",
   "federationAuth.representative": "Representative:",
   "federationAuth.declaredScope": "Declared Scope:",

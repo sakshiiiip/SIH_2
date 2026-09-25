@@ -421,7 +421,7 @@ export const FederationRegistrationPage: React.FC<FederationRegistrationPageProp
                 Federation Application Successfully Submitted!
               </h2>
               <p className="text-xs text-green-900 mt-1 max-w-lg mx-auto">
-                Application reference <strong>#{submittedApp.id}</strong> has been transmitted to the <strong>Platform Central Authority (Dr. Rajeshwar Sengupta, Chief Registrar)</strong> for verification.
+                Application reference <strong>#{submittedApp.id}</strong> has been transmitted to the <strong>Platform Central Authority (Rajeshwar Sen Gupta, Chief Registrar)</strong> for verification.
               </p>
             </div>
 

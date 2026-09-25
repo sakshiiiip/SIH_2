@@ -405,7 +405,7 @@ export const en: Record<string, string> = {
   "federationAuth.enterWorkspace": "Enter Federation Workspace",
   "federationAuth.pendingBadge": "PENDING VERIFICATION",
   "federationAuth.pendingHeading": "Registration Pending Platform Verification",
-  "federationAuth.pendingMessage": "Your statutory application for {{name}} has been transmitted and is currently undergoing audit by the Platform Central Authority (Dr. Rajeshwar Sengupta, Chief Registrar). Workspace access will be unlocked once approved.",
+  "federationAuth.pendingMessage": "Your statutory application for {{name}} has been transmitted and is currently undergoing audit by the Platform Central Authority (Rajeshwar Sen Gupta, Chief Registrar). Workspace access will be unlocked once approved.",
   "federationAuth.regNo": "Registration No:",
   "federationAuth.rejectedBadge": "REGISTRATION REJECTED",
   "federationAuth.rejectedHeading": "Statutory Accreditation Denied",

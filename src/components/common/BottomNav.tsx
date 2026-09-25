@@ -205,15 +205,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   // 4. PLATFORM ADMIN MOBILE NAVIGATION
   if (currentRole === 'platform_admin') {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-md safe-bottom text-white">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-md safe-bottom">
         <div className="flex items-center justify-around px-2 h-16 max-w-lg mx-auto">
           <button
             onClick={() => onSelectTab('plat_dashboard')}
             className={`flex flex-col items-center justify-center flex-1 h-full min-h-[44px] transition-colors cursor-pointer ${
-              currentTab === 'plat_dashboard' ? 'text-purple-300 font-bold' : 'text-slate-400 hover:text-white'
+              currentTab === 'plat_dashboard' ? 'text-[#504161] font-bold' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            <ShieldAlert className="w-5 h-5 mb-0.5" />
+            <ShieldAlert className="w-5 h-5 mb-0.5 text-[#504161]" />
             <span className="text-[10px]">{t('nav.centralAuthority', 'Central Authority')}</span>
           </button>
         </div>

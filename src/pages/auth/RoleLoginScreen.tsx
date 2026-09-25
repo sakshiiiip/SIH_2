@@ -124,11 +124,11 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
           subtitle: t('roleLogin.platformAdminSubtitle', { defaultValue: 'Apex Federation Accreditation, Statutory Verification & Central Regulatory Governance' }),
           badge: t('roleLogin.platformAdminBadge', { defaultValue: 'Platform Central Authority' }),
           badgeVariant: 'coop' as const,
-          icon: <ShieldCheck className="w-6 h-6 text-purple-400" />,
-          accentRgb: '147, 51, 234',
-          btnClass: 'bg-[#141413] hover:bg-black text-white shadow-md border border-purple-500/30',
-          focusRing: 'focus:ring-purple-600 focus:border-purple-600',
-          ambientBg: 'from-purple-900/20 via-transparent to-transparent',
+          icon: <ShieldCheck className="w-6 h-6 text-[#504161]" />,
+          accentRgb: '201, 189, 216',
+          btnClass: 'bg-[#504161] hover:bg-[#3E314D] text-white shadow-sm',
+          focusRing: 'focus:ring-[#504161] focus:border-[#504161]',
+          ambientBg: 'from-[#EFEBF4]/40 via-transparent to-transparent',
           buttonLabel: t('roleLogin.enterCentralAuthority', { defaultValue: 'Enter Central Authority Desk' }),
         };
       case 'worker':
@@ -531,7 +531,7 @@ export const RoleLoginScreen: React.FC<RoleLoginScreenProps> = ({
                             </div>
                             <p className="text-[11px] leading-relaxed text-amber-900">
                               {t('federationAuth.pendingMessage', {
-                                defaultValue: 'Your statutory application for {{name}} has been transmitted and is currently undergoing audit by the Platform Central Authority (Dr. Rajeshwar Sengupta, Chief Registrar). Workspace access will be unlocked once approved.',
+                                defaultValue: 'Your statutory application for {{name}} has been transmitted and is currently undergoing audit by the Platform Central Authority (Rajeshwar Sen Gupta, Chief Registrar). Workspace access will be unlocked once approved.',
                                 name: federationStatusView.app.federationName,
                               })}
                             </p>
