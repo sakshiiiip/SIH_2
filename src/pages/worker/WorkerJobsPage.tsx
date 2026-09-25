@@ -34,7 +34,10 @@ import {
   RotateCcw,
   Filter,
   ImageIcon,
+  Coffee,
 } from 'lucide-react';
+import { BreakPicker } from './WorkerJobExecutionModal';
+import { BreakCountdownTimer } from '../../components/common/BreakCountdownTimer';
 
 type JobTab = 'upcoming' | 'in_progress' | 'completed' | 'cancelled' | 'history';
 type HistoryFilter = 'all' | 'finished' | 'revisited' | 'cancelled';
@@ -45,11 +48,21 @@ interface WorkerJobsPageProps {
 
 export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails }) => {
   const { t } = useTranslation();
-  const { currentUser, bookings, workers, updateBookingState, verifyOTPAndStartJob, acceptJob } = useCooperativeStore();
+  const {
+    currentUser,
+    bookings,
+    workers,
+    updateBookingState,
+    verifyOTPAndStartJob,
+    acceptJob,
+    requestWorkerBreak,
+    autoResumeWorkerBreak,
+  } = useCooperativeStore();
   const [activeTab, setActiveTab] = useState<JobTab>('upcoming');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
   const [sosJob, setSosJob] = useState<Booking | null>(null);
   const [executionBooking, setExecutionBooking] = useState<Booking | null>(null);
+  const [breakPickerBooking, setBreakPickerBooking] = useState<Booking | null>(null);
   const [otpInputs, setOtpInputs] = useState<Record<string, string>>({});
   const [otpErrors, setOtpErrors] = useState<Record<string, string>>({});
 
@@ -313,8 +326,17 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                       </Button>
                     </div>
                   )}
-                  {job.state === 'IN_PROGRESS' && (
+                  {['IN_PROGRESS', 'WORK_RESUMED'].includes(job.state) && (
                     <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800"
+                        leftIcon={<Coffee className="w-3.5 h-3.5 text-amber-700" />}
+                        onClick={() => setBreakPickerBooking(job)}
+                      >
+                        {t('worker.jobExec.takeABreak', 'Take a Break')}
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -332,6 +354,42 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
                         {t('worker.jobs.executionWizard', 'Execution Wizard')}
                       </Button>
                     </>
+                  )}
+                  {job.state === 'BREAK_REQUESTED' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-orange-800 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-200 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+                        <span>Break Requested ({job.breakDetails?.estimatedDurationMins || 15}m) — Awaiting Customer</span>
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateBookingState(job.id, 'IN_PROGRESS')}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                  {job.state === 'WORKER_ON_BREAK' && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="px-2.5 py-1 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-2">
+                        <Coffee className="w-3.5 h-3.5 text-amber-700" />
+                        <span className="text-xs font-bold text-amber-900">On Break:</span>
+                        <BreakCountdownTimer
+                          startedAt={job.breakDetails?.startedAt}
+                          durationMins={job.breakDetails?.estimatedDurationMins || 15}
+                          onExpire={() => autoResumeWorkerBreak(job.id)}
+                        />
+                      </div>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => autoResumeWorkerBreak(job.id)}
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        {t('worker.jobExec.resumeWorkEarly', 'Resume Work Early')}
+                      </Button>
+                    </div>
                   )}
                   {job.state === 'AWAITING_VERIFICATION' && (
                     <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200 flex items-center gap-1">
@@ -630,6 +688,17 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
           booking={executionBooking}
         />
       )}
+
+      {/* Break Picker Overlay */}
+      {breakPickerBooking && (
+        <BreakPicker
+          onConfirm={(duration, reason) => {
+            requestWorkerBreak(breakPickerBooking.id, duration, reason);
+            setBreakPickerBooking(null);
+          }}
+          onCancel={() => setBreakPickerBooking(null)}
+        />
+      )}
     </div>
   );
 };
@@ -755,7 +824,15 @@ function InProgressJobCard({ job, onSOS }: { job: WorkerJobRequest; onSOS: () =>
       <p className="text-xs text-[#77736B] italic border-t border-[#E8E2D5] pt-2">
         "{job.description}"
       </p>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 flex-wrap">
+        <button
+          type="button"
+          onClick={() => alert('Break Request feature: When on an active assigned booking, submit duration to notify resident for break approval.')}
+          className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-xl cursor-pointer"
+        >
+          <Coffee className="w-3.5 h-3.5 text-amber-700" />
+          {t('worker.jobExec.takeABreak', 'Take a Break')}
+        </button>
         <button
           type="button"
           onClick={() => alert(`Calling ${job.customer.name}: ${job.customer.phone}`)}

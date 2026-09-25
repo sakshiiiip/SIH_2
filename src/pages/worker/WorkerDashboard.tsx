@@ -31,7 +31,10 @@ import {
   Map,
   Radio,
   DollarSign,
+  Coffee,
 } from 'lucide-react';
+import { BreakPicker } from './WorkerJobExecutionModal';
+import { BreakCountdownTimer } from '../../components/common/BreakCountdownTimer';
 
 interface WorkerDashboardProps {
   onOpenToolBank?: () => void;
@@ -70,6 +73,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     rejectBookingByWorker,
     toggleWorkerAvailability,
     showToast,
+    requestWorkerBreak,
+    autoResumeWorkerBreak,
+    updateBookingState,
   } = useCooperativeStore();
   const { t } = useTranslation();
 
@@ -86,6 +92,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     workers[0];
 
   const [selectedBookingForExecution, setSelectedBookingForExecution] =
+    useState<Booking | null>(null);
+
+  const [breakPickerBooking, setBreakPickerBooking] =
     useState<Booking | null>(null);
 
   const [sosJob, setSosJob] = useState<Booking | null>(null);
@@ -1013,16 +1022,65 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
             </div>
 
-            <div className="pt-2 border-t border-[#E8E2D5] flex items-center justify-between">
+            <div className="pt-2 border-t border-[#E8E2D5] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <span className="text-[11px] text-[#77736B]">{t('worker.dashboard.jobRef', { id: nextJob.id, defaultValue: `Job Reference #${nextJob.id}` })}</span>
-              <button
-                type="button"
-                onClick={onOpenMyWork}
-                className="px-4 py-1.5 bg-[#537895] hover:bg-[#41637E] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
-              >
-                {t('worker.dashboard.openInMyWork', 'Open in My Work →')}
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {nextJob.booking && ['IN_PROGRESS', 'WORK_RESUMED'].includes(nextJob.booking.state) && (
+                  <button
+                    type="button"
+                    onClick={() => setBreakPickerBooking(nextJob.booking)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                  >
+                    <Coffee className="w-3.5 h-3.5 text-amber-700" />
+                    <span>{t('worker.jobExec.takeABreak', 'Take a Break')}</span>
+                  </button>
+                )}
 
+                {nextJob.booking?.state === 'BREAK_REQUESTED' && (
+                  <span className="text-[11px] font-bold text-orange-800 bg-orange-50 border border-orange-300 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+                    <span>Break Requested · Awaiting Customer</span>
+                  </span>
+                )}
+
+                {nextJob.booking?.state === 'WORKER_ON_BREAK' && (
+                  <div className="flex items-center gap-2">
+                    <div className="px-2 py-1 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                      <Coffee className="w-3.5 h-3.5 text-amber-700" />
+                      <BreakCountdownTimer
+                        startedAt={nextJob.booking.breakDetails?.startedAt}
+                        durationMins={nextJob.booking.breakDetails?.estimatedDurationMins || 15}
+                        onExpire={() => autoResumeWorkerBreak(nextJob.booking!.id)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => autoResumeWorkerBreak(nextJob.booking!.id)}
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs"
+                    >
+                      {t('worker.jobExec.resumeWorkEarly', 'Resume Work')}
+                    </button>
+                  </div>
+                )}
+
+                {nextJob.booking ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBookingForExecution(nextJob.booking)}
+                    className="px-3.5 py-1.5 bg-[#445D3E] hover:bg-[#33462F] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
+                  >
+                    {t('worker.jobs.executionWizard', 'Execution Wizard →')}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onOpenMyWork}
+                    className="px-4 py-1.5 bg-[#537895] hover:bg-[#41637E] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  >
+                    {t('worker.dashboard.openInMyWork', 'Open in My Work →')}
+                  </button>
+                )}
+              </div>
             </div>
 
           </div>
@@ -1132,6 +1190,17 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           onClose={() =>
             setSelectedBookingForExecution(null)
           }
+        />
+      )}
+
+      {/* Break Picker Overlay */}
+      {breakPickerBooking && (
+        <BreakPicker
+          onConfirm={(duration, reason) => {
+            requestWorkerBreak(breakPickerBooking.id, duration, reason);
+            setBreakPickerBooking(null);
+          }}
+          onCancel={() => setBreakPickerBooking(null)}
         />
       )}
 

@@ -45,12 +45,12 @@ type BreakDuration = typeof BREAK_DURATIONS[number];
 
 // ─── Break picker modal ───────────────────────────────────────────────────────
 
-interface BreakPickerProps {
+export interface BreakPickerProps {
   onConfirm: (durationMins: BreakDuration, reason?: string) => void;
   onCancel: () => void;
 }
 
-function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
+export function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
   const { t } = useTranslation();
   const [duration, setDuration] = useState<BreakDuration>(15);
   const [reason, setReason] = useState<string>('');
@@ -79,7 +79,7 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
             </span>
             <div>
               <p className="text-sm font-bold text-[#292824]">{t('worker.breakPicker.title', 'Take a Break')}</p>
-              <p className="text-[11px] text-[#77736B]">{t('worker.breakPicker.subtitle', 'Customer will be notified automatically')}</p>
+              <p className="text-[11px] text-[#77736B]">{t('worker.breakPicker.subtitle', 'Customer will be asked to approve your break')}</p>
             </div>
           </div>
           <button
@@ -174,7 +174,7 @@ function BreakPicker({ onConfirm, onCancel }: BreakPickerProps) {
             className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
           >
             <Coffee className="w-4 h-4" />
-            {t('worker.breakPicker.confirmBtn', { duration, defaultValue: `Start ${duration}-Minute Break` })}
+            {t('worker.breakPicker.requestBtn', { duration, defaultValue: `Request ${duration}-Minute Break` })}
           </button>
         </div>
       </div>
