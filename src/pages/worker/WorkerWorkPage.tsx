@@ -33,7 +33,10 @@ import {
   AlertCircle,
   Image as ImageIcon,
   RefreshCw,
+  Coffee,
 } from 'lucide-react';
+import { BreakPicker } from './WorkerJobExecutionModal';
+import { BreakCountdownTimer } from '../../components/common/BreakCountdownTimer';
 
 interface WorkerWorkPageProps {
   initialTab?: 'jobs' | 'earnings';
@@ -50,8 +53,15 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
   onOpenJobExecution,
 }) => {
   const { t } = useTranslation();
-  const { currentUser, bookings, updateBookingState, verifyOTPAndStartJob, showToast } =
-    useCooperativeStore();
+  const {
+    currentUser,
+    bookings,
+    updateBookingState,
+    verifyOTPAndStartJob,
+    showToast,
+    requestWorkerBreak,
+    autoResumeWorkerBreak,
+  } = useCooperativeStore();
 
   const [mainTab, setMainTab] = useState<MainTab>(initialTab);
   const [jobFilter, setJobFilter] = useState<JobFilter>('upcoming');
@@ -64,6 +74,10 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
   const verificationBeforeInputRef = useRef<HTMLInputElement>(null);
   const verificationAfterInputRef = useRef<HTMLInputElement>(null);
   const [detailsJobId, setDetailsJobId] = useState<string | null>(null);
+  const [breakPickerBooking, setBreakPickerBooking] = useState<Booking | null>(null);
+  const [mockBreakState, setMockBreakState] = useState<'IDLE' | 'BREAK_REQUESTED' | 'WORKER_ON_BREAK'>('IDLE');
+  const [mockBreakDuration, setMockBreakDuration] = useState(15);
+  const [mockBreakStartedAt, setMockBreakStartedAt] = useState<string>('');
 
   // OTP inputs
   const [otpInputs, setOtpInputs] = useState<Record<string, string>>({});
@@ -81,7 +95,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
     ['PENDING_WORKER_ACCEPTANCE', 'CONFIRMED'].includes(b.state)
   );
   const storeInProgress = workerBookings.filter((b) =>
-    ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(b.state)
+    ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'BREAK_REQUESTED', 'WORKER_ON_BREAK', 'WORK_RESUMED'].includes(b.state)
   );
   const storeCompleted = workerBookings.filter((b) =>
     ['COMPLETED', 'PAID', 'RATED'].includes(b.state)
@@ -449,18 +463,67 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                         </div>
                       )}
 
-                      {job.state === 'IN_PROGRESS' && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => {
-                            updateBookingState(job.id, 'COMPLETED');
-                            showToast({ title: t('worker.jobs.jobMarkedComplete', 'Job Marked Complete!'), message: t('worker.jobs.jobMarkedCompleteMsg', 'Job closed. Earnings credited to your ledger.'), type: 'success' });
-                          }}
-                          leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
-                        >
-                          {t('worker.jobs.markComplete', 'Mark Complete')}
-                        </Button>
+                      {['IN_PROGRESS', 'WORK_RESUMED'].includes(job.state) && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800"
+                            leftIcon={<Coffee className="w-3.5 h-3.5 text-amber-700" />}
+                            onClick={() => setBreakPickerBooking(job)}
+                          >
+                            {t('worker.jobExec.takeABreak', 'Take a Break')}
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => {
+                              updateBookingState(job.id, 'COMPLETED');
+                              showToast({ title: t('worker.jobs.jobMarkedComplete', 'Job Marked Complete!'), message: t('worker.jobs.jobMarkedCompleteMsg', 'Job closed. Earnings credited to your ledger.'), type: 'success' });
+                            }}
+                            leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                          >
+                            {t('worker.jobs.markComplete', 'Mark Complete')}
+                          </Button>
+                        </>
+                      )}
+
+                      {job.state === 'BREAK_REQUESTED' && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-orange-800 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-200 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+                            <span>Break Requested ({job.breakDetails?.estimatedDurationMins || 15}m) — Awaiting Customer</span>
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateBookingState(job.id, 'IN_PROGRESS')}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
+
+                      {job.state === 'WORKER_ON_BREAK' && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="px-2.5 py-1 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-2">
+                            <Coffee className="w-3.5 h-3.5 text-amber-700" />
+                            <span className="text-xs font-bold text-amber-900">On Break:</span>
+                            <BreakCountdownTimer
+                              startedAt={job.breakDetails?.startedAt}
+                              durationMins={job.breakDetails?.estimatedDurationMins || 15}
+                              onExpire={() => autoResumeWorkerBreak(job.id)}
+                            />
+                          </div>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => autoResumeWorkerBreak(job.id)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                          >
+                            {t('worker.jobExec.resumeWorkEarly', 'Resume Work Early')}
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -514,7 +577,7 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                     {t('worker.callCustomer', 'Call Customer')}
                   </button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {/* Job Verification */}
                     <button
                       type="button"
@@ -531,6 +594,67 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
                       <Camera className="w-3.5 h-3.5" />
                       {t('worker.jobs.jobVerification', 'Job Verification')}
                     </button>
+
+                    {/* Take a break button & break status on mock job */}
+                    {mockBreakState === 'IDLE' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800"
+                        leftIcon={<Coffee className="w-3.5 h-3.5 text-amber-700" />}
+                        onClick={() => {
+                          const activeBooking = storeInProgress.find((b) => ['IN_PROGRESS', 'WORK_RESUMED'].includes(b.state));
+                          if (activeBooking) {
+                            setBreakPickerBooking(activeBooking);
+                          } else {
+                            setBreakPickerBooking({
+                              id: MOCK_IN_PROGRESS_JOB.jobId,
+                              customerName: MOCK_IN_PROGRESS_JOB.customer.name,
+                            } as any);
+                          }
+                        }}
+                      >
+                        {t('worker.jobExec.takeABreak', 'Take a Break')}
+                      </Button>
+                    )}
+
+                    {mockBreakState === 'BREAK_REQUESTED' && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-orange-800 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-200 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+                          <span>Break Requested ({mockBreakDuration}m) — Awaiting Customer</span>
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setMockBreakState('IDLE')}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+
+                    {mockBreakState === 'WORKER_ON_BREAK' && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="px-2.5 py-1 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-2">
+                          <Coffee className="w-3.5 h-3.5 text-amber-700" />
+                          <span className="text-xs font-bold text-amber-900">On Break:</span>
+                          <BreakCountdownTimer
+                            startedAt={mockBreakStartedAt}
+                            durationMins={mockBreakDuration}
+                            onExpire={() => setMockBreakState('IDLE')}
+                          />
+                        </div>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => setMockBreakState('IDLE')}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          {t('worker.jobExec.resumeWorkEarly', 'Resume Work Early')}
+                        </Button>
+                      </div>
+                    )}
 
                     <Button
                       variant="primary"
@@ -1086,6 +1210,27 @@ export const WorkerWorkPage: React.FC<WorkerWorkPageProps> = ({
           </Button>
         </div>
       </Modal>
+
+      {/* Break Picker Overlay */}
+      {breakPickerBooking && (
+        <BreakPicker
+          onConfirm={(duration, reason) => {
+            if (breakPickerBooking.id === MOCK_IN_PROGRESS_JOB.jobId) {
+              setMockBreakDuration(duration);
+              setMockBreakStartedAt(new Date().toISOString());
+              setMockBreakState('BREAK_REQUESTED');
+              const real = bookings.find((b) => ['IN_PROGRESS', 'WORK_RESUMED'].includes(b.state));
+              if (real) {
+                requestWorkerBreak(real.id, duration, reason);
+              }
+            } else {
+              requestWorkerBreak(breakPickerBooking.id, duration, reason);
+            }
+            setBreakPickerBooking(null);
+          }}
+          onCancel={() => setBreakPickerBooking(null)}
+        />
+      )}
     </div>
   );
 };

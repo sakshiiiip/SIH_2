@@ -152,13 +152,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const storeUpcomingBooking = bookings.find(
     (b) =>
       (b.matchedWorkerId === currentWorker.id ||
-        b.matchedWorkerId === 'w_rahul') &&
+        b.matchedWorkerId === 'w_rahul' ||
+        b.matchedWorkerId === currentUser.id) &&
       ['CONFIRMED', 'TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'BREAK_REQUESTED', 'WORKER_ON_BREAK', 'WORK_RESUMED'].includes(
         b.state
-      ) &&
-      isWorkerSkillMatching(
-        currentWorker,
-        b.category || b.serviceCategory
       )
   );
 
@@ -1029,6 +1026,20 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setBreakPickerBooking(nextJob.booking)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                  >
+                    <Coffee className="w-3.5 h-3.5 text-amber-700" />
+                    <span>{t('worker.jobExec.takeABreak', 'Take a Break')}</span>
+                  </button>
+                )}
+
+                {!nextJob.booking && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const active = bookings.find((b) => ['IN_PROGRESS', 'WORK_RESUMED'].includes(b.state)) || bookings[0];
+                      if (active) setBreakPickerBooking(active);
+                    }}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold rounded-xl transition-all cursor-pointer"
                   >
                     <Coffee className="w-3.5 h-3.5 text-amber-700" />

@@ -18,8 +18,11 @@ import {
   CheckCircle2,
   CalendarClock,
   Camera,
-  KeyRound
+  KeyRound,
+  Coffee,
 } from 'lucide-react';
+import { BreakPicker } from './WorkerJobExecutionModal';
+import { BreakCountdownTimer } from '../../components/common/BreakCountdownTimer';
 
 interface WorkerJobDetailsProps {
   jobId: string;
@@ -28,7 +31,14 @@ interface WorkerJobDetailsProps {
 
 export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBack }) => {
   const { t } = useTranslation();
-  const { bookings, updateBookingState, verifyOTPAndStartJob, showToast } = useCooperativeStore();
+  const {
+    bookings,
+    updateBookingState,
+    verifyOTPAndStartJob,
+    showToast,
+    requestWorkerBreak,
+    autoResumeWorkerBreak,
+  } = useCooperativeStore();
   
   // Real booking
   const job = bookings.find((b) => b.id === jobId);
@@ -36,6 +46,7 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
   const [otpInput, setOtpInput] = useState('');
   const [otpError, setOtpError] = useState('');
   const [sosJob, setSosJob] = useState<Booking | null>(null);
+  const [showBreakPicker, setShowBreakPicker] = useState(false);
 
   if (!job) {
     return (
@@ -49,7 +60,7 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
     );
   }
 
-  const isActive = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS'].includes(job.state);
+  const isActive = ['TRAVELLING', 'ARRIVED', 'IN_PROGRESS', 'BREAK_REQUESTED', 'WORKER_ON_BREAK', 'WORK_RESUMED'].includes(job.state);
 
   const handleOtpVerify = () => {
     if (!otpInput.trim()) {
@@ -215,8 +226,16 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
               </div>
             )}
 
-            {job.state === 'IN_PROGRESS' && (
+            {['IN_PROGRESS', 'WORK_RESUMED'].includes(job.state) && (
               <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowBreakPicker(true)}
+                  leftIcon={<Coffee className="w-4 h-4 text-amber-700" />}
+                  className="w-full sm:w-auto bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800"
+                >
+                  {t('worker.jobExec.takeABreak', 'Take a Break')}
+                </Button>
                 <Button variant="outline" onClick={() => alert('Job verification photos can be captured and reviewed during active job execution.')} leftIcon={<Camera className="w-4 h-4" />} className="w-full sm:w-auto">
                   {t('worker.jobs.jobVerification', 'Verify Work')}
                 </Button>
@@ -224,6 +243,44 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
                   {t('worker.stepLabels.4', 'Mark Complete')}
                 </Button>
               </>
+            )}
+
+            {job.state === 'BREAK_REQUESTED' && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-orange-800 bg-orange-50 px-3 py-2 rounded-xl border border-orange-200 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+                  <span>Break Requested ({job.breakDetails?.estimatedDurationMins || 15}m) — Awaiting Customer</span>
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateBookingState(job.id, 'IN_PROGRESS')}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+
+            {job.state === 'WORKER_ON_BREAK' && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-2">
+                  <Coffee className="w-4 h-4 text-amber-700" />
+                  <span className="text-xs font-bold text-amber-900">On Break:</span>
+                  <BreakCountdownTimer
+                    startedAt={job.breakDetails?.startedAt}
+                    durationMins={job.breakDetails?.estimatedDurationMins || 15}
+                    onExpire={() => autoResumeWorkerBreak(job.id)}
+                  />
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => autoResumeWorkerBreak(job.id)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  {t('worker.jobExec.resumeWorkEarly', 'Resume Work Early')}
+                </Button>
+              </div>
             )}
 
             {['COMPLETED', 'PAID', 'RATED'].includes(job.state) && (
@@ -243,6 +300,16 @@ export const WorkerJobDetails: React.FC<WorkerJobDetailsProps> = ({ jobId, onBac
 
       {sosJob && (
         <WorkerSOSModal isOpen={sosJob !== null} onClose={() => setSosJob(null)} job={sosJob} />
+      )}
+
+      {showBreakPicker && (
+        <BreakPicker
+          onConfirm={(duration, reason) => {
+            requestWorkerBreak(job.id, duration, reason);
+            setShowBreakPicker(false);
+          }}
+          onCancel={() => setShowBreakPicker(false)}
+        />
       )}
     </div>
   );

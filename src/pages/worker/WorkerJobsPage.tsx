@@ -85,14 +85,13 @@ export const WorkerJobsPage: React.FC<WorkerJobsPageProps> = ({ onOpenJobDetails
       isWorkerSkillMatching(currentWorker, b.category || b.serviceCategory)
   );
 
-  // Filter store bookings assigned to this worker and matching trade
+  // Filter store bookings assigned to this worker
   const workerBookings = bookings.filter(
     (b) =>
-      (b.matchedWorkerId === currentWorker.id ||
-        b.workerId === currentWorker.id ||
-        (currentWorker.id === 'w_rahul' && b.matchedWorkerId === 'w_rahul') ||
-        b.matchedWorkerId === currentUser.id) &&
-      isWorkerSkillMatching(currentWorker, b.category || b.serviceCategory)
+      b.matchedWorkerId === currentWorker.id ||
+      b.workerId === currentWorker.id ||
+      (currentWorker.id === 'w_rahul' && b.matchedWorkerId === 'w_rahul') ||
+      b.matchedWorkerId === currentUser.id
   );
 
   const storeUpcoming = [
