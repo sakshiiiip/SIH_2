@@ -433,7 +433,7 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
       {/* ========================================================================= */}
       {/* 2. STATS ROW: "MY FEDERATION" LIVE COUNTS */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div
           onClick={() => setActiveSubTab('societies')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
@@ -472,15 +472,6 @@ export const FederationManagerDashboard: React.FC<FederationManagerDashboardProp
           <span className="text-[10px] text-[#537895] font-semibold">
             {t('admin.stats.verifiedWorkersCount', '{{count}} Verified', { count: workers.filter((w) => w.verificationStatus === 'VERIFIED').length })}
           </span>
-        </div>
-
-        <div
-          onClick={() => setActiveSubTab('job_verification')}
-          className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
-        >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.activeJobs', 'Active Jobs')}</span>
-          <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{activeFederationBookingsCount}</span>
-          <span className="text-[10px] text-[#6E8B67] font-semibold">{t('admin.stats.crossSociety', 'Cross-Society')}</span>
         </div>
 
         <div

@@ -285,7 +285,7 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
       {/* ========================================================================= */}
       {/* 2. STATS ROW: "MY SOCIETY" LIVE COUNTS */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div
           onClick={() => setActiveTab('workers')}
           className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
@@ -314,17 +314,8 @@ export const SocietyManagerDashboard: React.FC<SocietyManagerDashboardProps> = (
         </div>
 
         <div
-          onClick={() => setActiveTab('bookings')}
-          className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
-        >
-          <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.activeJobs', 'Active Jobs')}</span>
-          <span className="text-2xl font-bold font-mono text-[#292824] block mt-1 tracking-tight">{activeJobsCount}</span>
-          <span className="text-[10px] text-[#6E8B67] font-semibold">{t('admin.stats.inProgress', 'In Progress')}</span>
-        </div>
-
-        <div
           onClick={() => setActiveTab('quality')}
-          className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card col-span-2 sm:col-span-1"
+          className="p-3.5 bg-[#FCF9F3] border border-[#E8E2D5] hover:border-[#CFDDD0] rounded-2xl cursor-pointer transition-all shadow-card"
         >
           <span className="text-[11px] font-semibold text-[#77736B] uppercase tracking-wider block">{t('admin.stats.serviceIssues', 'Service Issues')}</span>
           <span className={`text-2xl font-bold font-mono block mt-1 tracking-tight ${qualityDisputes.length > 0 ? 'text-[#B86B6B]' : 'text-[#6E8B67]'}`}>

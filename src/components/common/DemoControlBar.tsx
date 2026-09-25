@@ -12,8 +12,12 @@ export const DemoControlBar: React.FC<DemoControlBarProps> = ({ onOpenGuidedScen
   const { currentRole, currentUser, bookings, resetToDemoData, logout } = useCooperativeStore();
   const { t } = useTranslation();
 
-  // Only show active jobs indicator in customer and worker dashboards
-  const isCustomerOrWorker = currentRole === 'customer' || currentRole === 'worker';
+  // Only show active jobs indicator strictly in customer and worker dashboards
+  const activeRole = currentRole || currentUser.role;
+  const isAdminOrManager =
+    ['society_manager', 'federation_admin', 'federation_manager', 'platform_admin'].includes(activeRole) ||
+    ['society_manager', 'federation_admin', 'federation_manager', 'platform_admin'].includes(currentUser.role);
+  const isCustomerOrWorker = !isAdminOrManager && (activeRole === 'customer' || activeRole === 'worker');
 
   const activeBookingsCount = isCustomerOrWorker
     ? bookings.filter((b) => {

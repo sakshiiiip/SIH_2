@@ -132,19 +132,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSelectTab }) =
       )}
 
       {/* 7 OVERVIEW METRICS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="p-4 sm:p-5">
-          <span className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">
-            Active Requests
-          </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-            {activeBookings.length}
-          </div>
-          <span className="text-[11px] text-teal-700 font-medium mt-1 block">
-            Across 4 residential wards
-          </span>
-        </Card>
-
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Card className="p-4 sm:p-5">
           <span className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">
             Verified Workers
